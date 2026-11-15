@@ -21,7 +21,7 @@
 필요한 것: Git, Python 3.10 이상(추가 패키지 없음), GitHub 로그인.
 
 ```bash
-git clone https://github.com/<계정>/quiet-traveler.git
+git clone https://github.com/alsrlgus533-commits/quiet-traveler.git
 cd quiet-traveler
 copy .env.example .env      # macOS/Linux 는 cp
 ```
