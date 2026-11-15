@@ -1,6 +1,9 @@
 # API 키 (절대 올리지 않음)
 .env
 
+# 매일 새로 받는 예측 (python fetch_forecast.py 로 생성)
+forecast.json
+
 # 실행 로그·임시 파일
 *.log
 __pycache__/

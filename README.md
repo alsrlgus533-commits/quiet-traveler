@@ -9,7 +9,7 @@
 | 파일 | 내용 |
 |---|---|
 | `index.html` | 앱 전체(HTML·CSS·JS 한 파일). 장소 목록 `PLACES`, 대신 가기 `SWAPS`, 예측 API 관광지명 `API_NAME` 이 맨 위 스크립트에 있음 |
-| `forecast.json` | 한국관광공사 관광지 집중률 30일 예측(제주 448곳). `fetch_forecast.py` 가 매일 갱신 |
+| `forecast.json` | 한국관광공사 관광지 집중률 30일 예측(제주 448곳). git 에 올리지 않음 — 각 PC에서 `fetch_forecast.py` 로 생성 |
 | `timeofday.json` | 제주데이터허브 시간대별 카드 결제 비율. 과거 자료라 다시 받을 필요 없음 |
 | `timeofday_raw.json` | 위 비율을 계산한 원본 응답 |
 | `fetch_forecast.py` | 관광공사 예측 받기 (`--sample` 이면 키 없이 샘플 생성) |
@@ -28,19 +28,19 @@ copy .env.example .env      # macOS/Linux 는 cp
 
 `.env` 에 키를 채운다. 키는 git 에 올라가 있지 않으므로 원래 PC의 `.env` 에서 옮기거나 공공데이터포털·데이터허브 마이페이지에서 다시 확인한다.
 
+예측 파일(`forecast.json`)도 git 에 없으므로 처음 한 번 받는다:
+
+```bash
+python fetch_forecast.py
+```
+
 로컬에서 보기:
 
 ```bash
 python -m http.server 5173
 ```
 
-브라우저에서 http://localhost:5173 을 연다. (`index.html` 을 더블클릭해 열면 `forecast.json` 을 못 읽어 샘플 예측으로 보인다.)
-
-예측 새로 받기:
-
-```bash
-python fetch_forecast.py
-```
+브라우저에서 http://localhost:5173 을 연다. (`index.html` 을 더블클릭해 열거나 `forecast.json` 이 없으면 샘플 예측으로 보인다.)
 
 ## 작업을 옮길 때
 
