@@ -83,6 +83,13 @@ section{display:flex;flex-direction:column;gap:12px}
 .chip{padding:6px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:14px}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 
+/* 분위기 그림 (AI 일러스트 — 특정 장소 사진이 아님) */
+figure.hero,figure.band{margin:0}
+figure.hero img,figure.band img{display:block;width:100%;object-fit:cover;border-radius:var(--r);
+  background:var(--accent-soft)}
+figure.hero img{aspect-ratio:16/7}
+figure.band img{aspect-ratio:5/2}
+
 /* 목록 */
 .list{display:flex;flex-direction:column}
 .place{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:14px 2px;border-bottom:1px solid var(--line);
@@ -129,6 +136,11 @@ footer p{margin:0}
 </style>
 
 <div class="wrap">
+  <figure class="hero">
+    <img src="images/hero.webp" decoding="async"
+         alt="돌담과 억새밭 사이로 빈 길이 이어지고 멀리 한라산이 보이는 제주 들판 그림">
+  </figure>
+
   <header>
     <span class="eyebrow">제주 · 한적한 곳 찾기</span>
     <h1>조용한 여행자</h1>
@@ -155,12 +167,14 @@ footer p{margin:0}
   <section>
     <div class="sec-head"><h2>지금 조용한 곳</h2><span id="countLabel"></span></div>
     <div class="chips" id="themes" role="group" aria-label="테마"></div>
+    <figure class="band" id="themeBand" hidden></figure>
     <div class="list" id="list"></div>
   </section>
 
   <footer>
     <p id="srcNote"></p>
     <p>집중률은 각 관광지가 자기 평소 대비 얼마나 몰리는지를 나타내요. 장소끼리 사람 수를 비교한 값은 아니에요. 한산함 점수는 장소별 기본 방문 규모에 그날의 집중률과 유형별 시간대 패턴(숲길·오름·바다·마을)을 곱한 추정치입니다. 예측 대상이 아닌 마을 3곳은 제주 전체 예측으로 추정했어요.</p>
+    <p>화면의 그림은 분위기를 전하기 위해 만든 AI 일러스트예요. 특정 장소를 찍은 사진이 아닙니다.</p>
     <p id="cardNote" hidden></p>
   </footer>
 </div>
@@ -225,6 +239,14 @@ const SWAPS = [
   {famous:"섭지코지", api:"섭지코지", prof:"coast", alt:"hado"},
 ];
 const THEMES = ["전체","숲길","오름","바다","마을","저장"];
+
+// 테마별 분위기 그림. 유형을 나타낸 일러스트이며 개별 장소 사진이 아니다.
+const THEME_IMG = {
+  "숲길":["forest","삼나무와 편백이 늘어선 숲길 그림"],
+  "오름":["oreum","억새가 덮인 둥근 오름과 분화구 그림"],
+  "바다":["sea","현무암 해안을 따라 얕은 바다가 펼쳐진 그림"],
+  "마을":["village","돌담 골목과 감귤나무가 있는 마을 그림"]
+};
 
 // ---------- 시간대 패턴 ----------
 const g = (h,c,w) => Math.exp(-(((h-c)/w)**2));
@@ -386,6 +408,13 @@ function renderSwaps(){
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
+  renderThemeBand();
+}
+function renderThemeBand(){
+  const el = $("themeBand"), m = THEME_IMG[state.theme];
+  if(!m){ el.hidden = true; el.innerHTML = ""; return; }
+  el.hidden = false;
+  el.innerHTML = `<img src="images/${m[0]}.webp" loading="lazy" decoding="async" alt="${m[1]}">`;
 }
 function renderList(){
   let ps = PLACES.filter(p => state.theme==="전체" || (state.theme==="저장" ? state.saved.has(p.id) : p.theme===state.theme));
