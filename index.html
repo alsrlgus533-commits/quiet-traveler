@@ -7,18 +7,18 @@
 <style>
 /* Layout: 한 손 세로 스크롤. 날짜 띠 → 시간 → 오늘의 제주 → 붐비는 곳 대신 → 조용한 곳 목록 → 아래에서 올라오는 상세 시트 */
 :root{
-  --bg:#EDF1EC; --surface:#F8FAF6; --ink:#1D2523; --muted:#5F6A65; --line:#D3DBD4;
-  --accent:#2C6A64; --accent-soft:#D9E7E3; --calm:#3B7A5A; --busy:#B35E3B; --mid:#9A7B2F;
+  --bg:#F0F3EA; --surface:#FBFCF6; --ink:#1C2A24; --muted:#5C6A61; --line:#DBE2D4;
+  --accent:#2C786A; --accent-soft:#DCEBE3; --calm:#367A56; --busy:#A5542F; --mid:#836920;
   --f-display:"Gowun Batang","Nanum Myeongjo",serif;
   --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#111614; --surface:#19201D; --ink:#E3E9E4; --muted:#98A49E; --line:#2B3430;
-  --accent:#80B9B0; --accent-soft:#213531; --calm:#86C29E; --busy:#E2926C; --mid:#D2B567; color-scheme:dark}}
+  --bg:#121714; --surface:#1A211C; --ink:#E6EBE3; --muted:#9BA79D; --line:#2D3730;
+  --accent:#8CC6B8; --accent-soft:#223733; --calm:#8FCBA0; --busy:#E89B70; --mid:#DCBF6B; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#111614; --surface:#19201D; --ink:#E3E9E4; --muted:#98A49E; --line:#2B3430;
-  --accent:#80B9B0; --accent-soft:#213531; --calm:#86C29E; --busy:#E2926C; --mid:#D2B567; color-scheme:dark}
+  --bg:#121714; --surface:#1A211C; --ink:#E6EBE3; --muted:#9BA79D; --line:#2D3730;
+  --accent:#8CC6B8; --accent-soft:#223733; --calm:#8FCBA0; --busy:#E89B70; --mid:#DCBF6B; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
@@ -33,8 +33,6 @@ button{font:inherit;color:inherit}
 header{display:flex;flex-direction:column;gap:6px}
 header h1{font-size:34px;line-height:1.15}
 header p{margin:0;color:var(--muted)}
-.badge{align-self:flex-start;font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
-.badge.sample{border-color:var(--mid);color:var(--mid)}
 
 /* 날짜 띠 */
 .dates{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:4px}
@@ -59,7 +57,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .today .big{font-family:var(--f-display);font-size:38px;line-height:1;min-width:64px;text-align:center}
 .today .big span{font-size:14px}
 .today p{margin:0}
-.today p + p{font-size:13px;color:var(--muted)}
 
 section{display:flex;flex-direction:column;gap:12px}
 .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -68,14 +65,12 @@ section{display:flex;flex-direction:column;gap:12px}
 
 /* 붐비는 곳 대신 */
 .swaps{display:flex;flex-direction:column;gap:10px}
-.swap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:var(--surface);
+.swap{display:flex;flex-direction:column;gap:3px;background:var(--surface);
   border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:left;cursor:pointer;width:100%}
-.swap .from{color:var(--muted);min-width:0}
-.swap .from s{text-decoration-color:var(--busy)}
-.swap .to{min-width:0}
-.swap .to b{font-family:var(--f-display);font-size:16px}
-.swap small{display:block;font-size:12px}
-.swap .arrow{color:var(--accent);font-size:18px}
+.swap .ask{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;color:var(--muted)}
+.swap .ask em{font-style:normal;white-space:nowrap}
+.swap b{font-family:var(--f-display);font-size:17px}
+.swap small{font-size:12px}
 .c-busy{color:var(--busy)} .c-mid{color:var(--mid)} .c-calm{color:var(--calm)}
 
 /* 필터 */
@@ -121,9 +116,12 @@ figure.band img{aspect-ratio:5/2}
 .best{background:var(--accent-soft);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .best b{font-family:var(--f-display);font-size:20px}
 .bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding-top:6px;border-bottom:1px solid var(--line)}
-.bars div{flex:1;border-radius:3px 3px 0 0;background:var(--line);min-height:3px;position:relative}
-.bars div.best-h{background:var(--calm)}
-.bars div.now{outline:2px solid var(--ink);outline-offset:1px}
+.bars button{flex:1;border:0;padding:0;border-radius:3px 3px 0 0;background:var(--line);min-height:3px;
+  cursor:pointer;transition:background .12s}
+.bars button.best-h{background:var(--calm)}
+.bars button.now{outline:2px solid var(--ink);outline-offset:1px}
+.bars button:hover{background:var(--muted)}
+.bars button.best-h:hover{background:var(--accent)}
 .bar-x{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
 .sheet-actions{display:flex;gap:8px;flex-wrap:wrap}
 .link{display:inline-block;padding:10px 16px;border-radius:99px;background:var(--accent);color:var(--bg);text-decoration:none;font-weight:500}
@@ -142,7 +140,6 @@ figure.band img{aspect-ratio:5/2}
     <span class="eyebrow">제주 · 한적한 곳 찾기</span>
     <h1>조용한 여행자</h1>
     <p>사람 많은 곳을 피해, 날짜와 시간에 맞춰 덜 붐비는 제주를 골라 드려요.</p>
-    <span class="badge" id="srcBadge">예측 불러오는 중</span>
   </header>
 
   <section aria-label="날짜 선택">
@@ -157,7 +154,7 @@ figure.band img{aspect-ratio:5/2}
   <div class="today" id="today"></div>
 
   <section>
-    <div class="sec-head"><h2>붐비는 곳 대신</h2><span>관광공사 예측 집중률</span></div>
+    <div class="sec-head"><h2>조금 돌아가 볼까요</h2></div>
     <div class="swaps" id="swaps"></div>
   </section>
 
@@ -269,7 +266,8 @@ function buildProfiles(){
 buildProfiles();
 
 // ---------- 상태 ----------
-const state = { forecast:null, dates:[], date:null, hour:10, theme:"전체", saved:loadSaved(), open:null };
+const state = { forecast:null, dates:[], date:null, hour:10, theme:"전체", saved:loadSaved(), open:null,
+  sheetHour:10 };   // sheetHour: 상세 시트 안에서만 보는 시간. 바깥 목록은 건드리지 않는다.
 function loadSaved(){ try{ return new Set(JSON.parse(localStorage.getItem("qt-saved")||"[]")); }catch(e){ return new Set(); } }
 function storeSaved(){ try{ localStorage.setItem("qt-saved", JSON.stringify([...state.saved])); }catch(e){} }
 
@@ -318,7 +316,6 @@ function computeDayStats(){
   const today = ymd(new Date());
   let ds = Object.keys(by).sort();
   const future = ds.filter(d=>d>=today);
-  state.stale = future.length===0;
   state.dates = (future.length?future:ds).slice(0,14);
   state.date = state.dates[0];
 }
@@ -339,6 +336,10 @@ function crowdAt(p, h, date){ return Math.min(100, Math.round(100*p.pop*PROF[p.p
 function vsUsual(rate, avg){
   const k = rate/avg;
   return k>1.15 ? {t:"평소보다 붐빔", c:"c-busy"} : k<.85 ? {t:"평소보다 한산", c:"c-calm"} : {t:"평소 수준", c:"c-mid"};
+}
+// 한산함 점수(0~100)를 그대로 보여 주면 뜻이 안 통해서, 세 단계 말로 옮긴다.
+function quietWord(q){
+  return q>=65 ? "한산해요" : q>=45 ? "적당해요" : "붐벼요";
 }
 function level(quiet){
   if(quiet>=80) return {t:"고요", c:"c-calm", n:5};
@@ -370,31 +371,43 @@ function renderDates(){
   }).join("");
 }
 function renderToday(){
-  const f=dayFactor(state.date), dt=parseYmd(state.date);
+  const f=dayFactor(state.date);
   const a=dayAvg[state.date];
   const msg = f>1.08 ? "제주 전체가 평소보다 붐비는 날이에요. 이른 아침이나 중산간을 추천해요."
             : f<.95 ? "평소보다 한산한 날이에요. 조용한 여행에 좋은 날입니다."
             : "평소와 비슷한 날이에요. 유명한 곳은 오전 일찍 다녀오세요.";
   $("today").innerHTML = `<div class="big num">${a!=null?Math.round(a):"–"}<span>%</span></div>
-    <div><p>${msg}</p><p>${dt.getMonth()+1}월 ${dt.getDate()}일(${WD[dt.getDay()]}) 주요 관광지 평균 예상 집중률</p></div>`;
+    <div><p>${msg}</p></div>`;
 }
 function renderSwaps(){
+  // 유명한 곳은 '자기 평소 대비' 로 줄 세운다. 집중률 값을 장소끼리 비교하면 안 되기 때문.
   const rows = SWAPS.map(s=>{
     const rate = rateOf(s.api, state.date);
     if(rate==null) return null;
-    const alt = PLACES.find(p=>p.id===s.alt);
-    const fc = Math.round(rate);
-    const aq = 100-crowdAt(alt, state.hour, state.date);
-    return {s, alt, fc, aq};
-  }).filter(Boolean).sort((a,b)=>b.fc-a.fc).slice(0,4);
+    const avg = spotAvg[s.api];
+    if(!avg) return null;
+    return {s, ratio: rate/avg, uf: vsUsual(rate, avg)};
+  }).filter(Boolean).filter(r=>r.uf.c==="c-busy").sort((a,b)=>b.ratio-a.ratio).slice(0,4);
+
+  // 대신 갈 곳은 고정 쌍 대신, 그 짝과 같은 테마에서 지금 가장 한산한 곳으로 고른다.
+  // (카드끼리 같은 곳을 추천하지 않도록 쓴 곳은 빼 가며 고른다)
+  const used = new Set();
+  for(const r of rows){
+    const paired = PLACES.find(p=>p.id===r.s.alt);
+    const pool = PLACES.filter(p=>p.theme===paired.theme && !used.has(p.id));
+    const best = (pool.length?pool:[paired])
+      .map(p=>({p, q:100-crowdAt(p, state.hour, state.date)}))
+      .sort((a,b)=>b.q-a.q)[0];
+    r.alt = best.p; r.aq = best.q; used.add(best.p.id);
+  }
   $("swaps").innerHTML = rows.length ? rows.map(r=>{
-    const lf=level(100-r.fc), la=level(r.aq);
+    const la=level(r.aq);
     return `<button class="swap" data-id="${r.alt.id}">
-      <span class="from"><s>${r.s.famous}</s><small class="${lf.c}">집중률 <span class="num">${r.fc}%</span></small></span>
-      <span class="arrow" aria-hidden="true">→</span>
-      <span class="to"><b>${r.alt.name}</b><small class="${la.c}">${la.t} · 한산함 <span class="num">${r.aq}</span></small></span>
+      <span class="ask">${r.s.famous} 대신, 여긴 어때요?${r.uf&&r.uf.c==="c-busy"?`<em class="c-busy">오늘 더 붐벼요</em>`:""}</span>
+      <b>${r.alt.name}</b>
+      <small class="${la.c}">${quietWord(r.aq)}</small>
     </button>`;
-  }).join("") : '<p class="empty">이 날짜의 관광지 예측이 없어요.</p>';
+  }).join("") : '<p class="empty">오늘은 유명한 곳도 평소 수준이에요. 가고 싶던 곳으로 다녀오세요.</p>';
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
@@ -419,11 +432,6 @@ function renderList(){
     </button>`;
   }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
 }
-function renderSource(){
-  const f=state.forecast, b=$("srcBadge");
-  if(f.sample){ b.textContent="샘플 예측 · 실제 수치 아님"; b.classList.add("sample"); }
-  else { b.textContent=`관광공사 예측 · ${f.fetchedAt?f.fetchedAt.slice(0,10):""} 갱신`; b.classList.remove("sample"); }
-  if(state.stale && !f.sample) b.textContent+=" · 지난 예측";}
 function renderAll(){
   $("hourLabel").textContent = state.hour+"시";
   renderDates(); renderToday(); renderSwaps(); renderThemes(); renderList();
@@ -433,25 +441,26 @@ function renderAll(){
 // ---------- 상세 시트 ----------
 function forecastBlock(p){
   const r = p.api ? rateOf(p.api, state.date) : null;
-  if(r==null) return `<p class="note">관광공사 예측 대상이 아닌 곳이라, 유형별 방문 패턴과 그날 제주 전체 예측으로 추정했어요.</p>`;
+  if(r==null) return `<p class="note">예측 대상이 아닌 곳이라, 유형별 방문 패턴과 그날 제주 전체 예측으로 추정했어요.</p>`;
   const avg = spotAvg[p.api], u = vsUsual(r, avg);
   const quietDays = state.dates.map(d=>({d, r:rateOf(p.api,d)})).filter(x=>x.r!=null).sort((a,b)=>a.r-b.r).slice(0,3)
     .map(x=>{ const t=parseYmd(x.d); return `${t.getMonth()+1}/${t.getDate()}(${WD[t.getDay()]})`; });
   return `<div class="fc">
-    <p><span class="eyebrow">이날 관광공사 예측</span><br>집중률 <b class="num">${Math.round(r)}%</b> · <span class="${u.c}">${u.t}</span> <span class="note num">(30일 평균 ${Math.round(avg)}%)</span></p>
+    <p><span class="eyebrow">이날 예측</span><br><b class="${u.c}">${u.t}</b></p>
     <p class="note">앞으로 2주 중 가장 한산할 날: <span class="num">${quietDays.join(", ")}</span></p>
   </div>`;
 }
 let lastFocus=null;
 function openSheet(id, refresh){
   const p = PLACES.find(x=>x.id===id); if(!p) return;
-  if(!refresh) lastFocus=document.activeElement;
+  if(!refresh){ lastFocus=document.activeElement; state.sheetHour = state.hour; }
   state.open=id;
+  const sh = state.sheetHour;
   const bw = bestWindow(p, state.date);
   const hours=[]; for(let h=6;h<=20;h++) hours.push(h);
   const peak = Math.max(50, ...hours.map(h=>crowdAt(p,h,state.date)));
   const swap = SWAPS.find(s=>s.alt===id);
-  const q = 100-crowdAt(p,state.hour,state.date), l=level(q);
+  const q = 100-crowdAt(p,sh,state.date), l=level(q);
   const saved = state.saved.has(id);
   const mapUrl = "https://map.kakao.com/?q="+encodeURIComponent(p.name);
   $("sheet").innerHTML = `<div class="sheet-in">
@@ -464,13 +473,13 @@ function openSheet(id, refresh){
     ${swap?`<p class="note">${swap.famous} 대신 가기 좋은 곳이에요.</p>`:""}
     ${forecastBlock(p)}
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
-      <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv">${state.hour}시 ${l.t} <span class="num">${q}</span></div></div></div>
+      <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv"><span class="num">${sh}시</span> ${quietWord(q)}</div></div></div>
     <div>
-      <div class="bars" role="img" aria-label="시간대별 혼잡 추정, 막대가 낮을수록 조용함">
-        ${hours.map(h=>`<div class="${h>=bw&&h<bw+2?"best-h":""} ${h===state.hour?"now":""}" style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></div>`).join("")}
+      <div class="bars" role="group" aria-label="시간대별 혼잡 추정. 막대를 누르면 그 시간으로 바뀌어요">
+        ${hours.map(h=>`<button type="button" class="${h>=bw&&h<bw+2?"best-h":""} ${h===sh?"now":""}" data-h="${h}" aria-pressed="${h===sh}" aria-label="${h}시 ${quietWord(100-crowdAt(p,h,state.date))}" style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></button>`).join("")}
       </div>
       <div class="bar-x num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
-      <p class="note">막대가 낮을수록 조용해요. 초록은 추천 시간, 테두리는 선택한 시간.</p>
+      <p class="note">막대를 눌러 시간을 바꿔 보세요. 낮을수록 조용하고, 초록은 추천 시간이에요.</p>
     </div>
     <div class="sheet-actions">
       <a class="link" href="${mapUrl}" target="_blank" rel="noopener">카카오맵에서 보기</a>
@@ -479,6 +488,14 @@ function openSheet(id, refresh){
   </div>`;
   $("sheet").hidden=false; $("scrim").hidden=false;
   $("closeBtn").onclick=closeSheet;
+  $("sheet").querySelectorAll(".bars button").forEach(b=>{
+    b.onclick = ()=>{
+      state.sheetHour = +b.dataset.h;         // 바깥 목록과 슬라이더는 그대로 둔다
+      openSheet(id, true);                    // 시트만 다시 그린다
+      const again = $("sheet").querySelector(`.bars button[data-h="${state.sheetHour}"]`);
+      if(again) again.focus();                // 다시 그리면서 날아간 포커스를 되돌린다
+    };
+  });
   $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); openSheet(id,true); };
   if(!refresh) $("closeBtn").focus();
 }
@@ -486,7 +503,7 @@ function closeSheet(){ state.open=null; $("sheet").hidden=true; $("scrim").hidde
 
 // ---------- 이벤트 ----------
 $("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!b) return; state.date=b.dataset.d; renderAll(); });
-$("hour").addEventListener("input", e=>{ state.hour=+e.target.value; renderAll(); });
+$("hour").addEventListener("input", e=>{ state.hour=+e.target.value; state.sheetHour=state.hour; renderAll(); });
 $("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.theme=b.dataset.t; renderThemes(); renderList(); });
 document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap"); if(b) openSheet(b.dataset.id); });
 $("scrim").addEventListener("click", closeSheet);
@@ -504,7 +521,6 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.open) clo
   }catch(e){}
   state.forecast = await loadForecast();
   computeDayStats();
-  renderSource();
   renderAll();
 })();
 </script>
