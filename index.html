@@ -1,0 +1,499 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>조용한 여행자</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: 한 손 세로 스크롤. 날짜 띠 → 시간 → 오늘의 제주 → 붐비는 곳 대신 → 조용한 곳 목록 → 아래에서 올라오는 상세 시트 */
+:root{
+  --bg:#EDF1EC; --surface:#F8FAF6; --ink:#1D2523; --muted:#5F6A65; --line:#D3DBD4;
+  --accent:#2C6A64; --accent-soft:#D9E7E3; --calm:#3B7A5A; --busy:#B35E3B; --mid:#9A7B2F;
+  --f-display:"Gowun Batang","Nanum Myeongjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111614; --surface:#19201D; --ink:#E3E9E4; --muted:#98A49E; --line:#2B3430;
+  --accent:#80B9B0; --accent-soft:#213531; --calm:#86C29E; --busy:#E2926C; --mid:#D2B567; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#19201D; --ink:#E3E9E4; --muted:#98A49E; --line:#2B3430;
+  --accent:#80B9B0; --accent-soft:#213531; --calm:#86C29E; --busy:#E2926C; --mid:#D2B567; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:460px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:26px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+header{display:flex;flex-direction:column;gap:6px}
+header h1{font-size:34px;line-height:1.15}
+header p{margin:0;color:var(--muted)}
+.badge{align-self:flex-start;font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.badge.sample{border-color:var(--mid);color:var(--mid)}
+
+/* 날짜 띠 */
+.dates{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:4px}
+.dates::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;width:56px;padding:8px 0 9px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.day small{font-size:11px;color:var(--muted)}
+.day b{font-size:17px;font-weight:600}
+.day i{width:6px;height:6px;border-radius:50%;background:var(--calm)}
+.day i.mid{background:var(--mid)} .day i.busy{background:var(--busy)}
+.day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.day[aria-pressed="true"] small{color:inherit;opacity:.8}
+
+.time{display:flex;flex-direction:column;gap:6px}
+.time-row{display:flex;justify-content:space-between;align-items:baseline}
+.time-row strong{font-family:var(--f-display);font-size:20px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+
+/* 오늘의 제주 */
+.today{background:var(--accent-soft);border-radius:var(--r);padding:16px 18px;display:flex;gap:14px;align-items:center}
+.today .big{font-family:var(--f-display);font-size:38px;line-height:1;min-width:64px;text-align:center}
+.today .big span{font-size:14px}
+.today p{margin:0}
+.today p + p{font-size:13px;color:var(--muted)}
+
+section{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec-head h2{font-size:21px}
+.sec-head span{font-size:12px;color:var(--muted)}
+
+/* 붐비는 곳 대신 */
+.swaps{display:flex;flex-direction:column;gap:10px}
+.swap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:left;cursor:pointer;width:100%}
+.swap .from{color:var(--muted);min-width:0}
+.swap .from s{text-decoration-color:var(--busy)}
+.swap .to{min-width:0}
+.swap .to b{font-family:var(--f-display);font-size:16px}
+.swap small{display:block;font-size:12px}
+.swap .arrow{color:var(--accent);font-size:18px}
+.c-busy{color:var(--busy)} .c-mid{color:var(--mid)} .c-calm{color:var(--calm)}
+
+/* 필터 */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* 목록 */
+.list{display:flex;flex-direction:column}
+.place{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:14px 2px;border-bottom:1px solid var(--line);
+  background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;width:100%}
+.place h3{font-size:18px}
+.place .meta{font-size:13px;color:var(--muted);grid-column:1}
+.place .score{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.score .lv{font-size:13px;font-weight:600}
+.ripple{display:flex;gap:3px;align-items:flex-end;height:16px}
+.ripple u{width:5px;border-radius:2px;background:var(--line);text-decoration:none}
+.ripple u.on{background:currentColor}
+.empty{color:var(--muted);padding:18px 0}
+
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:6px}
+footer p{margin:0}
+
+/* 상세 시트 */
+.scrim{position:fixed;inset:0;background:rgba(10,14,12,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:20px 20px 0 0;
+  max-height:86vh;overflow-y:auto;
+  padding:10px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
+  animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet-in{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.sheet-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet-top h2{font-size:26px}
+.icon-btn{border:1px solid var(--line);background:transparent;border-radius:99px;padding:6px 12px;cursor:pointer;font-size:13px;white-space:nowrap}
+.icon-btn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.sheet p{margin:0}
+.best{background:var(--accent-soft);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.best b{font-family:var(--f-display);font-size:20px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding-top:6px;border-bottom:1px solid var(--line)}
+.bars div{flex:1;border-radius:3px 3px 0 0;background:var(--line);min-height:3px;position:relative}
+.bars div.best-h{background:var(--calm)}
+.bars div.now{outline:2px solid var(--ink);outline-offset:1px}
+.bar-x{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.sheet-actions{display:flex;gap:8px;flex-wrap:wrap}
+.link{display:inline-block;padding:10px 16px;border-radius:99px;background:var(--accent);color:var(--bg);text-decoration:none;font-weight:500}
+.note{font-size:12px;color:var(--muted)}
+.fc{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.fc b{font-family:var(--f-display);font-size:18px}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">제주 · 한적한 곳 찾기</span>
+    <h1>조용한 여행자</h1>
+    <p>사람 많은 곳을 피해, 날짜와 시간에 맞춰 덜 붐비는 제주를 골라 드려요.</p>
+    <span class="badge" id="srcBadge">예측 불러오는 중</span>
+  </header>
+
+  <section aria-label="날짜 선택">
+    <div class="dates" id="dates"></div>
+    <div class="time">
+      <div class="time-row"><span class="eyebrow">도착 시간</span><strong class="num" id="hourLabel">10시</strong></div>
+      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="도착 시간">
+      <div class="ticks num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
+    </div>
+  </section>
+
+  <div class="today" id="today"></div>
+
+  <section>
+    <div class="sec-head"><h2>붐비는 곳 대신</h2><span>관광공사 예측 집중률</span></div>
+    <div class="swaps" id="swaps"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>지금 조용한 곳</h2><span id="countLabel"></span></div>
+    <div class="chips" id="themes" role="group" aria-label="테마"></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <footer>
+    <p id="srcNote"></p>
+    <p>집중률은 각 관광지가 자기 평소 대비 얼마나 몰리는지를 나타내요. 장소끼리 사람 수를 비교한 값은 아니에요. 한산함 점수는 장소별 기본 방문 규모에 그날의 집중률과 유형별 시간대 패턴(숲길·오름·바다·마을)을 곱한 추정치입니다. 예측 대상이 아닌 마을 3곳은 제주 전체 예측으로 추정했어요.</p>
+    <p id="cardNote" hidden></p>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden></div>
+
+<script>
+// ---------- 장소 데이터 ----------
+const PLACES = [
+  {id:"samdasu", name:"삼다수숲길", area:"제주시 조천읍 교래리", theme:"숲길", prof:"forest", pop:.28,
+   desc:"삼나무와 편백 사이로 길게 이어지는 숲길. 찾는 사람이 적어 숲 소리가 또렷하게 들려요."},
+  {id:"mechewat", name:"머체왓숲길", area:"서귀포시 남원읍 한남리", theme:"숲길", prof:"forest", pop:.30,
+   desc:"돌무더기(머체)와 계곡을 따라 걷는 숲길. 사려니숲길보다 한결 한산해요."},
+  {id:"healing", name:"서귀포 치유의숲", area:"서귀포시 호근동", theme:"숲길", prof:"forest", pop:.36,
+   desc:"난대림 속 산책로. 사전 예약으로 입장 인원을 나눠 받아 붐비지 않아요."},
+  {id:"ttarabi", name:"따라비오름", area:"서귀포시 표선면 가시리", theme:"오름", prof:"oreum", pop:.34,
+   desc:"굼부리 세 개가 겹친 부드러운 오름. 억새 철 주말만 피하면 한적해요."},
+  {id:"andol", name:"안돌오름", area:"제주시 구좌읍 송당리", theme:"오름", prof:"oreum", pop:.22,
+   desc:"송당 오름 무리 안쪽의 낮은 오름. 삼나무 숲을 지나 금방 정상에 닿아요."},
+  {id:"jeoji", name:"저지오름", area:"제주시 한경면 저지리", theme:"오름", prof:"oreum", pop:.30,
+   desc:"숲이 정상까지 덮인 오름. 둘레길과 분화구 길을 함께 걸을 수 있어요."},
+  {id:"pyeongdae", name:"평대리 해변", area:"제주시 구좌읍 평대리", theme:"바다", prof:"beach", pop:.30,
+   desc:"월정리와 세화 사이의 얕은 바다. 해변이 비어 있는 시간이 많아요."},
+  {id:"panpo", name:"판포포구", area:"제주시 한경면 판포리", theme:"바다", prof:"beach", pop:.32,
+   desc:"물빛이 맑은 작은 포구. 협재보다 사람이 훨씬 적어요. 한여름 오후는 조금 붐벼요."},
+  {id:"sinchang", name:"신창풍차해안", area:"제주시 한경면 신창리", theme:"바다", prof:"coast", pop:.32,
+   desc:"바다 위 풍력발전기를 따라 걷는 해안 길. 해 질 무렵 말고는 조용해요."},
+  {id:"ojori", name:"오조리 식산봉", area:"서귀포시 성산읍 오조리", theme:"바다", prof:"coast", pop:.24,
+   desc:"성산일출봉을 마주 보는 잔잔한 내수면과 낮은 봉우리. 일출봉을 멀리서 조용히 볼 수 있어요."},
+  {id:"suwolbong", name:"수월봉 해안", area:"제주시 한경면 고산리", theme:"바다", prof:"coast", pop:.30,
+   desc:"화산재 지층이 드러난 해안 절벽 길. 차귀도가 가까이 보여요."},
+  {id:"daepyeong", name:"대평리 박수기정", area:"서귀포시 안덕면 대평리", theme:"바다", prof:"coast", pop:.30,
+   desc:"바다로 떨어지는 절벽 아래 작은 포구 마을."},
+  {id:"hado", name:"하도 철새도래지", area:"제주시 구좌읍 하도리", theme:"바다", prof:"coast", pop:.20,
+   desc:"철새가 쉬어 가는 해안 습지. 겨울 아침이 가장 고요해요."},
+  {id:"jongdal", name:"종달리 마을", area:"제주시 구좌읍 종달리", theme:"마을", prof:"village", pop:.32,
+   desc:"돌담 골목과 작은 책방이 있는 동쪽 끝 마을. 우도 가는 배도 이곳에서 탈 수 있어요."},
+  {id:"gasi", name:"가시리 마을", area:"서귀포시 표선면 가시리", theme:"마을", prof:"village", pop:.24,
+   desc:"중산간의 조용한 마을. 녹산로와 따라비오름이 가까워요."},
+  {id:"wimi", name:"위미리 마을", area:"서귀포시 남원읍 위미리", theme:"마을", prof:"village", pop:.30,
+   desc:"돌담과 감귤밭 사이의 바닷가 마을. 겨울에는 동백이 피어요."},
+];
+// 관광공사 예측 API의 관광지명 (마을 단위 3곳은 예측 대상이 아니어서 패턴 추정)
+const API_NAME = {
+  samdasu:"삼다수숲길", mechewat:"머체왓숲길", healing:"서귀포 치유의 숲", ttarabi:"따라비 오름",
+  andol:"안돌오름", jeoji:"저지오름(닥몰오름,새오름)", pyeongdae:"평대해변", panpo:"판포포구",
+  sinchang:"신창풍차해안도로", ojori:"오조포구", suwolbong:"수월봉", daepyeong:"대평포구",
+  hado:"제주 하도리 철새도래지",
+};
+PLACES.forEach(p => p.api = API_NAME[p.id] || null);
+// 유명 관광지 → 대신 갈 곳
+const SWAPS = [
+  {famous:"성산일출봉", api:"성산일출봉 [유네스코 세계자연유산]", prof:"oreum", alt:"ojori"},
+  {famous:"우도", api:"우도(해양도립공원)", prof:"beach", alt:"jongdal"},
+  {famous:"협재해수욕장", api:"협재해수욕장", prof:"beach", alt:"panpo"},
+  {famous:"비자림", api:"비자림", prof:"forest", alt:"samdasu"},
+  {famous:"월정리해변", api:"월정리해변(월정리해수욕장)", prof:"beach", alt:"pyeongdae"},
+  {famous:"한담해변", api:"한담해변", prof:"coast", alt:"sinchang"},
+  {famous:"새별오름", api:"새별오름", prof:"oreum", alt:"ttarabi"},
+  {famous:"쇠소깍", api:"쇠소깍", prof:"coast", alt:"wimi"},
+  {famous:"섭지코지", api:"섭지코지", prof:"coast", alt:"hado"},
+];
+const THEMES = ["전체","숲길","오름","바다","마을","저장"];
+
+// ---------- 시간대 패턴 ----------
+const g = (h,c,w) => Math.exp(-(((h-c)/w)**2));
+const RAW = {
+  forest: h => g(h,12,3),
+  oreum:  h => .45*g(h,6.5,1) + .8*g(h,16.5,1.6) + .6*g(h,12,2.6),
+  beach:  h => g(h,15,2.6),
+  coast:  h => .55*g(h,13,3) + g(h,18,1.3),
+  village:h => g(h,14,3),
+};
+// 제주데이터허브 시간대별 카드 결제 비율(내국인 관광객·주요 관광지)로 유형별 곡선을 보정한다.
+// 시간대 경계는 데이터에 정의가 없어 일반적인 구분으로 가정: 오전 6–11, 점심 11–14, 오후 14–17, 저녁 17–21, 밤 21–
+const SLOT_OF = h => h<11?"오전" : h<14?"점심" : h<17?"오후" : h<21?"저녁" : "밤";
+const SLOT_HOURS = {"오전":5,"점심":3,"오후":3,"저녁":4,"밤":3};
+let CARD = null;   // {share:{오전:..}, period:[..]}
+const PROF = {};
+function buildProfiles(){
+  let cw = null;
+  if(CARD && CARD.share){
+    const per = h => (CARD.share[SLOT_OF(h)]||0)/SLOT_HOURS[SLOT_OF(h)];
+    let m=0; for(let h=6;h<=20;h++) m=Math.max(m,per(h));
+    if(m>0) cw = h => per(h)/m;
+  }
+  for (const k in RAW){
+    const f = cw ? (h => .65*RAW[k](h) + .35*cw(h)) : RAW[k];
+    let m=0; for(let h=6;h<=20;h++) m=Math.max(m,f(h));
+    PROF[k]=h=>f(h)/m;
+  }
+}
+buildProfiles();
+
+// ---------- 상태 ----------
+const state = { forecast:null, dates:[], date:null, hour:10, theme:"전체", saved:loadSaved(), open:null };
+function loadSaved(){ try{ return new Set(JSON.parse(localStorage.getItem("qt-saved")||"[]")); }catch(e){ return new Set(); } }
+function storeSaved(){ try{ localStorage.setItem("qt-saved", JSON.stringify([...state.saved])); }catch(e){} }
+
+// ---------- 예측 데이터 ----------
+function sampleForecast(){
+  const base={};
+  SWAPS.forEach((s,i)=>base[s.api]=60+i*2);
+  Object.values(API_NAME).forEach(n=>base[n]=40);
+  const items=[]; let s=7; const rnd=()=>{ s=(s*16807)%2147483647; return s/2147483647; };
+  const t=new Date();
+  for(let i=0;i<30;i++){
+    const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()+i);
+    const wk=(d.getDay()===0||d.getDay()===6)?1.18:1;
+    for(const n in base) items.push({date:ymd(d),name:n,rate:Math.round(Math.max(5,Math.min(100,base[n]*wk+(rnd()*18-9)))*10)/10});
+  }
+  return {sample:true, fallback:true, fetchedAt:null, items};
+}
+function ymd(d){ return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0"); }
+function parseYmd(s){ return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8)); }
+
+async function loadForecast(){
+  try{
+    const r = await fetch("forecast.json",{cache:"no-store"});
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    if(!j.items || !j.items.length) throw 0;
+    return j;
+  }catch(e){ return sampleForecast(); }
+}
+
+const rateIdx = {}, spotAvg = {};
+function rateOf(name, date){ const v = rateIdx[date+"|"+name]; return v==null ? null : v; }
+const dayAvg = {};
+function computeDayStats(){
+  const by={}, sp={};
+  for(const it of state.forecast.items){
+    if(it.rate==null) continue;
+    (by[it.date] ||= []).push(+it.rate);
+    rateIdx[it.date+"|"+it.name] = +it.rate;
+    (sp[it.name] ||= []).push(+it.rate);
+  }
+  for(const n in sp) spotAvg[n] = sp[n].reduce((a,b)=>a+b,0)/sp[n].length;
+  const all=[];
+  for(const d in by){ dayAvg[d]=by[d].reduce((a,b)=>a+b,0)/by[d].length; all.push(dayAvg[d]); }
+  state.overall = all.reduce((a,b)=>a+b,0)/(all.length||1);
+  const today = ymd(new Date());
+  let ds = Object.keys(by).sort();
+  const future = ds.filter(d=>d>=today);
+  state.stale = future.length===0;
+  state.dates = (future.length?future:ds).slice(0,14);
+  state.date = state.dates[0];
+}
+function dayFactor(date){
+  const a = dayAvg[date];
+  if(a==null){ const wd=parseYmd(date).getDay(); return (wd===0||wd===6)?1.15:1; }
+  return Math.max(.8, Math.min(1.3, a/state.overall));
+}
+
+// ---------- 점수 ----------
+// 집중률은 각 관광지가 '자기 평소' 대비 얼마나 몰리는지라서, 장소의 기본 붐빔(pop)에 곱하는 배율로 쓴다.
+function relFactor(p, date){
+  const r = p.api ? rateOf(p.api, date) : null;
+  if(r==null || !spotAvg[p.api]) return dayFactor(date);
+  return Math.max(.5, Math.min(1.8, r/spotAvg[p.api]));
+}
+function crowdAt(p, h, date){ return Math.min(100, Math.round(100*p.pop*PROF[p.prof](h)*relFactor(p,date)*1.5 + 6)); }
+function vsUsual(rate, avg){
+  const k = rate/avg;
+  return k>1.15 ? {t:"평소보다 붐빔", c:"c-busy"} : k<.85 ? {t:"평소보다 한산", c:"c-calm"} : {t:"평소 수준", c:"c-mid"};
+}
+function level(quiet){
+  if(quiet>=80) return {t:"고요", c:"c-calm", n:5};
+  if(quiet>=65) return {t:"한적", c:"c-calm", n:4};
+  if(quiet>=45) return {t:"보통", c:"c-mid", n:3};
+  if(quiet>=25) return {t:"붐빔", c:"c-busy", n:2};
+  return {t:"북적", c:"c-busy", n:1};
+}
+function ripple(n){ return '<span class="ripple" aria-hidden="true">'+[1,2,3,4,5].map(i=>`<u class="${i<=n?"on":""}" style="height:${6+i*2}px"></u>`).join("")+'</span>'; }
+// 제주 대략의 일출·일몰 시각(월별). 어두운 시간은 추천하지 않는다.
+const SUN_UP  =[8,7,7,6,6,6,6,6,7,7,7,8];
+const SUN_DOWN=[17,18,19,19,19,20,20,19,19,18,17,17];
+function bestWindow(p, date){
+  const m = parseYmd(date).getMonth();
+  let best=SUN_UP[m], min=1e9;
+  for(let h=SUN_UP[m]; h<=SUN_DOWN[m]-2; h++){ const v=crowdAt(p,h,date)+crowdAt(p,h+1,date); if(v<min){min=v;best=h;} }
+  return best;
+}
+const WD="일월화수목금토";
+
+// ---------- 그리기 ----------
+const $ = id => document.getElementById(id);
+function renderDates(){
+  $("dates").innerHTML = state.dates.map(d=>{
+    const dt=parseYmd(d), f=dayFactor(d);
+    const cls = f>1.08?"busy":f>.97?"mid":"";
+    return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일">
+      <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b><i class="${cls}"></i></button>`;
+  }).join("");
+}
+function renderToday(){
+  const f=dayFactor(state.date), dt=parseYmd(state.date);
+  const a=dayAvg[state.date];
+  const msg = f>1.08 ? "제주 전체가 평소보다 붐비는 날이에요. 이른 아침이나 중산간을 추천해요."
+            : f<.95 ? "평소보다 한산한 날이에요. 조용한 여행에 좋은 날입니다."
+            : "평소와 비슷한 날이에요. 유명한 곳은 오전 일찍 다녀오세요.";
+  $("today").innerHTML = `<div class="big num">${a!=null?Math.round(a):"–"}<span>%</span></div>
+    <div><p>${msg}</p><p>${dt.getMonth()+1}월 ${dt.getDate()}일(${WD[dt.getDay()]}) 주요 관광지 평균 예상 집중률</p></div>`;
+}
+function renderSwaps(){
+  const rows = SWAPS.map(s=>{
+    const rate = rateOf(s.api, state.date);
+    if(rate==null) return null;
+    const alt = PLACES.find(p=>p.id===s.alt);
+    const fc = Math.round(rate);
+    const aq = 100-crowdAt(alt, state.hour, state.date);
+    return {s, alt, fc, aq};
+  }).filter(Boolean).sort((a,b)=>b.fc-a.fc).slice(0,4);
+  $("swaps").innerHTML = rows.length ? rows.map(r=>{
+    const lf=level(100-r.fc), la=level(r.aq);
+    return `<button class="swap" data-id="${r.alt.id}">
+      <span class="from"><s>${r.s.famous}</s><small class="${lf.c}">집중률 <span class="num">${r.fc}%</span></small></span>
+      <span class="arrow" aria-hidden="true">→</span>
+      <span class="to"><b>${r.alt.name}</b><small class="${la.c}">${la.t} · 한산함 <span class="num">${r.aq}</span></small></span>
+    </button>`;
+  }).join("") : '<p class="empty">이 날짜의 관광지 예측이 없어요.</p>';
+}
+function renderThemes(){
+  $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
+}
+function renderList(){
+  let ps = PLACES.filter(p => state.theme==="전체" || (state.theme==="저장" ? state.saved.has(p.id) : p.theme===state.theme));
+  ps = ps.map(p=>({p, q:100-crowdAt(p,state.hour,state.date)})).sort((a,b)=>b.q-a.q);
+  $("countLabel").textContent = `${state.hour}시 기준 · ${ps.length}곳`;
+  $("list").innerHTML = ps.length ? ps.map(({p,q})=>{
+    const l=level(q);
+    return `<button class="place" data-id="${p.id}">
+      <h3>${p.name}${state.saved.has(p.id)?' <span class="c-calm" aria-label="저장됨">♡</span>':""}</h3>
+      <span class="score ${l.c}">${ripple(l.n)}<span class="lv">${l.t} <span class="num">${q}</span></span></span>
+      <span class="meta">${p.theme} · ${p.area}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}</span>
+    </button>`;
+  }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
+}
+function renderSource(){
+  const f=state.forecast, b=$("srcBadge");
+  if(f.sample){ b.textContent="샘플 예측 · 실제 수치 아님"; b.classList.add("sample"); }
+  else { b.textContent=`관광공사 예측 · ${f.fetchedAt?f.fetchedAt.slice(0,10):""} 갱신`; b.classList.remove("sample"); }
+  if(state.stale && !f.sample) b.textContent+=" · 지난 예측";
+  $("srcNote").textContent = f.sample
+    ? "지금 보이는 집중률은 화면 확인용 샘플입니다. 한국관광공사 관광지 집중률 방문자 추이 예측 API(data.go.kr 15128555) 키를 넣고 갱신하면 실제 30일 예측으로 바뀝니다."
+    : "집중률: 한국관광공사 관광지 집중률 방문자 추이 예측 정보(이동통신 방문자 데이터 기반 30일 예측, data.go.kr 15128555).";
+}
+function renderAll(){
+  $("hourLabel").textContent = state.hour+"시";
+  renderDates(); renderToday(); renderSwaps(); renderThemes(); renderList();
+  if(state.open) openSheet(state.open, true);
+}
+
+// ---------- 상세 시트 ----------
+function forecastBlock(p){
+  const r = p.api ? rateOf(p.api, state.date) : null;
+  if(r==null) return `<p class="note">관광공사 예측 대상이 아닌 곳이라, 유형별 방문 패턴과 그날 제주 전체 예측으로 추정했어요.</p>`;
+  const avg = spotAvg[p.api], u = vsUsual(r, avg);
+  const quietDays = state.dates.map(d=>({d, r:rateOf(p.api,d)})).filter(x=>x.r!=null).sort((a,b)=>a.r-b.r).slice(0,3)
+    .map(x=>{ const t=parseYmd(x.d); return `${t.getMonth()+1}/${t.getDate()}(${WD[t.getDay()]})`; });
+  return `<div class="fc">
+    <p><span class="eyebrow">이날 관광공사 예측</span><br>집중률 <b class="num">${Math.round(r)}%</b> · <span class="${u.c}">${u.t}</span> <span class="note num">(30일 평균 ${Math.round(avg)}%)</span></p>
+    <p class="note">앞으로 2주 중 가장 한산할 날: <span class="num">${quietDays.join(", ")}</span></p>
+  </div>`;
+}
+let lastFocus=null;
+function openSheet(id, refresh){
+  const p = PLACES.find(x=>x.id===id); if(!p) return;
+  if(!refresh) lastFocus=document.activeElement;
+  state.open=id;
+  const bw = bestWindow(p, state.date);
+  const hours=[]; for(let h=6;h<=20;h++) hours.push(h);
+  const peak = Math.max(50, ...hours.map(h=>crowdAt(p,h,state.date)));
+  const swap = SWAPS.find(s=>s.alt===id);
+  const q = 100-crowdAt(p,state.hour,state.date), l=level(q);
+  const saved = state.saved.has(id);
+  const mapUrl = "https://map.kakao.com/?q="+encodeURIComponent(p.name);
+  $("sheet").innerHTML = `<div class="sheet-in">
+    <div class="grab"></div>
+    <div class="sheet-top">
+      <div><span class="eyebrow">${p.theme} · ${p.area}</span><h2 id="sheetTitle">${p.name}</h2></div>
+      <button class="icon-btn" id="closeBtn">닫기</button>
+    </div>
+    <p>${p.desc}</p>
+    ${swap?`<p class="note">${swap.famous} 대신 가기 좋은 곳이에요.</p>`:""}
+    ${forecastBlock(p)}
+    <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
+      <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv">${state.hour}시 ${l.t} <span class="num">${q}</span></div></div></div>
+    <div>
+      <div class="bars" role="img" aria-label="시간대별 혼잡 추정, 막대가 낮을수록 조용함">
+        ${hours.map(h=>`<div class="${h>=bw&&h<bw+2?"best-h":""} ${h===state.hour?"now":""}" style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></div>`).join("")}
+      </div>
+      <div class="bar-x num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
+      <p class="note">막대가 낮을수록 조용해요. 초록은 추천 시간, 테두리는 선택한 시간.</p>
+    </div>
+    <div class="sheet-actions">
+      <a class="link" href="${mapUrl}" target="_blank" rel="noopener">카카오맵에서 보기</a>
+      <button class="icon-btn" id="saveBtn" aria-pressed="${saved}">${saved?"♡ 저장됨":"♡ 저장"}</button>
+    </div>
+  </div>`;
+  $("sheet").hidden=false; $("scrim").hidden=false;
+  $("closeBtn").onclick=closeSheet;
+  $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); openSheet(id,true); };
+  if(!refresh) $("closeBtn").focus();
+}
+function closeSheet(){ state.open=null; $("sheet").hidden=true; $("scrim").hidden=true; if(lastFocus) lastFocus.focus(); }
+
+// ---------- 이벤트 ----------
+$("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!b) return; state.date=b.dataset.d; renderAll(); });
+$("hour").addEventListener("input", e=>{ state.hour=+e.target.value; renderAll(); });
+$("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.theme=b.dataset.t; renderThemes(); renderList(); });
+document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap"); if(b) openSheet(b.dataset.id); });
+$("scrim").addEventListener("click", closeSheet);
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.open) closeSheet(); });
+
+// ---------- 시작 ----------
+(async()=>{
+  const now=new Date().getHours();
+  state.hour = Math.min(20, Math.max(6, now));
+  $("hour").value = state.hour;
+  try{
+    const r = await fetch("timeofday.json",{cache:"no-store"});
+    if(r.ok){
+      CARD = await r.json(); buildProfiles();
+      const n = $("cardNote");
+      n.textContent = `시간대 곡선 보정: 제주데이터허브 관광지 시간대별 카드 데이터(내국인 관광객·주요 관광지). 어느 시간대에 결제가 몰렸는지 비율만 쓰고, 붐빈 정도 자체는 쓰지 않았어요.`;
+      n.hidden = false;
+    }
+  }catch(e){}
+  state.forecast = await loadForecast();
+  computeDayStats();
+  renderSource();
+  renderAll();
+})();
+</script>
