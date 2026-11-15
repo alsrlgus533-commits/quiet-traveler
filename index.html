@@ -31,6 +31,9 @@ button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 
 header{display:flex;flex-direction:column;gap:6px}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.theme-btn{border:1px solid var(--line);background:transparent;border-radius:99px;
+  padding:4px 11px;cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap}
 header h1{font-size:34px;line-height:1.15}
 header p{margin:0;color:var(--muted)}
 
@@ -134,6 +137,11 @@ figure.band img{aspect-ratio:5/2}
 .fc b{font-family:var(--f-display);font-size:18px}
 </style>
 
+<script>
+// 본문이 그려지기 전에 적용해야 밝았다 어두워지는 깜빡임이 없다.
+try{ var t=localStorage.getItem("qt-theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+</script>
+
 <div class="wrap">
   <figure class="hero">
     <img src="images/hero.webp" decoding="async"
@@ -141,7 +149,10 @@ figure.band img{aspect-ratio:5/2}
   </figure>
 
   <header>
-    <span class="eyebrow">제주 · 한적한 곳 찾기</span>
+    <div class="top-row">
+      <span class="eyebrow">제주 · 한적한 곳 찾기</span>
+      <button class="theme-btn" id="themeBtn" type="button"></button>
+    </div>
     <h1>조용한 여행자</h1>
     <p>사람 많은 곳을 피해, 날짜와 시간에 맞춰 덜 붐비는 제주를 골라 드려요.</p>
   </header>
@@ -515,6 +526,29 @@ $("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if
 document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap"); if(b) openSheet(b.dataset.id); });
 $("scrim").addEventListener("click", closeSheet);
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.open) closeSheet(); });
+
+// ---------- 테마 ----------
+// 저장한 값이 있으면 그걸 쓰고, 없으면 기기 설정을 따른다.
+function currentTheme(){
+  return document.documentElement.dataset.theme
+      || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+}
+function paintThemeBtn(){
+  const dark = currentTheme()==="dark", b = $("themeBtn");
+  b.textContent = dark ? "☀ 밝게" : "☾ 어둡게";
+  b.setAttribute("aria-label", dark ? "밝은 화면으로 바꾸기" : "어두운 화면으로 바꾸기");
+}
+$("themeBtn").addEventListener("click", ()=>{
+  const next = currentTheme()==="dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try{ localStorage.setItem("qt-theme", next); }catch(e){}
+  paintThemeBtn();
+});
+// 저장한 값이 없을 때 기기 설정이 바뀌면 따라간다.
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
+  if(!document.documentElement.dataset.theme) paintThemeBtn();
+});
+paintThemeBtn();
 
 // ---------- 시작 ----------
 (async()=>{
