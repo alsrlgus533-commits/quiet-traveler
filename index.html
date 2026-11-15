@@ -103,9 +103,6 @@ figure.band img{aspect-ratio:5/2}
 .ripple u.on{background:currentColor}
 .empty{color:var(--muted);padding:18px 0}
 
-footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:6px}
-footer p{margin:0}
-
 /* 상세 시트 */
 .scrim{position:fixed;inset:0;background:rgba(10,14,12,.45);z-index:20}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:20px 20px 0 0;
@@ -170,13 +167,6 @@ footer p{margin:0}
     <figure class="band" id="themeBand" hidden></figure>
     <div class="list" id="list"></div>
   </section>
-
-  <footer>
-    <p id="srcNote"></p>
-    <p>집중률은 각 관광지가 자기 평소 대비 얼마나 몰리는지를 나타내요. 장소끼리 사람 수를 비교한 값은 아니에요. 한산함 점수는 장소별 기본 방문 규모에 그날의 집중률과 유형별 시간대 패턴(숲길·오름·바다·마을)을 곱한 추정치입니다. 예측 대상이 아닌 마을 3곳은 제주 전체 예측으로 추정했어요.</p>
-    <p>화면의 그림은 분위기를 전하기 위해 만든 AI 일러스트예요. 특정 장소를 찍은 사진이 아닙니다.</p>
-    <p id="cardNote" hidden></p>
-  </footer>
 </div>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -433,11 +423,7 @@ function renderSource(){
   const f=state.forecast, b=$("srcBadge");
   if(f.sample){ b.textContent="샘플 예측 · 실제 수치 아님"; b.classList.add("sample"); }
   else { b.textContent=`관광공사 예측 · ${f.fetchedAt?f.fetchedAt.slice(0,10):""} 갱신`; b.classList.remove("sample"); }
-  if(state.stale && !f.sample) b.textContent+=" · 지난 예측";
-  $("srcNote").textContent = f.sample
-    ? "지금 보이는 집중률은 화면 확인용 샘플입니다. 한국관광공사 관광지 집중률 방문자 추이 예측 API(data.go.kr 15128555) 키를 넣고 갱신하면 실제 30일 예측으로 바뀝니다."
-    : "집중률: 한국관광공사 관광지 집중률 방문자 추이 예측 정보(이동통신 방문자 데이터 기반 30일 예측, data.go.kr 15128555).";
-}
+  if(state.stale && !f.sample) b.textContent+=" · 지난 예측";}
 function renderAll(){
   $("hourLabel").textContent = state.hour+"시";
   renderDates(); renderToday(); renderSwaps(); renderThemes(); renderList();
@@ -514,11 +500,7 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.open) clo
   try{
     const r = await fetch("timeofday.json",{cache:"no-store"});
     if(r.ok){
-      CARD = await r.json(); buildProfiles();
-      const n = $("cardNote");
-      n.textContent = `시간대 곡선 보정: 제주데이터허브 관광지 시간대별 카드 데이터(내국인 관광객·주요 관광지). 어느 시간대에 결제가 몰렸는지 비율만 쓰고, 붐빈 정도 자체는 쓰지 않았어요.`;
-      n.hidden = false;
-    }
+      CARD = await r.json(); buildProfiles();    }
   }catch(e){}
   state.forecast = await loadForecast();
   computeDayStats();
