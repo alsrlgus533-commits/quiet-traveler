@@ -11,8 +11,8 @@
 | `index.html` | 앱 전체(HTML·CSS·JS 한 파일). 장소 목록 `PLACES`, 대신 가기 `SWAPS`, 예측 API 관광지명 `API_NAME`, 사진이 있는 장소 `PHOTO` 가 맨 위 스크립트에 있음 |
 | `forecast.json` | 한국관광공사 관광지 집중률 30일 예측(제주 448곳). git 에 올리지 않음 — 각 PC에서 `fetch_forecast.py` 로 생성 |
 | `fetch_forecast.py` | 관광공사 예측 받기 (`--sample` 이면 키 없이 샘플 생성) |
-| `images/*.webp` | 대표 그림 `hero` 와 테마 그림 `forest`·`oreum`·`sea`·`village`. AI 일러스트(ComfyUI + Qwen-Image 2512) |
-| `images/hero-*.webp` | 대표 그림을 하늘·한라산(`mountain`)·들판(`field`)·갈대(`reeds`) 네 층으로 나눈 것. 겹치면 `hero.webp` 와 같다. 화면은 이 네 장을 쓰고, `hero.webp` 는 층을 다시 만들 때의 원본 |
+| `images/hero-tall.webp` | 페이지 전체 배경. 세로로 긴 그림(위: 하늘·한라산, 아래: 돌담길). 페이지를 내린 만큼 위에서 아래로 넘어간다. AI 일러스트(ComfyUI + Qwen-Image 2512) |
+| `images/*.webp` | 테마 그림 `forest`·`oreum`·`sea`·`village`. AI 일러스트 |
 | `images/places/*.webp` | 목록 행 배경에 까는 장소별 실제 사진 16장(TourAPI 14장, 비짓제주 2장). 출처는 `images/places/README.md` |
 | `images/places/full/*.webp` | 같은 사진의 큰 판(폭 940px, 자르지 않음). 장소를 눌렀을 때 상세 시트 윗부분 배경. 시트를 열 때만 받는다 |
 | `.env.example` | API 키 자리. 복사해서 `.env` 로 만들어 씀 |
