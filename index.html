@@ -26,7 +26,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 .wrap{max-width:460px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:26px}
 h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0}
 button{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted)}
 .num{font-variant-numeric:tabular-nums}
 
@@ -40,6 +40,11 @@ header p{margin:0;color:var(--muted)}
 /* 날짜 띠 */
 .dates{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:4px}
 .dates::-webkit-scrollbar{display:none}
+/* 넘길 날짜가 남은 쪽 끝을 흐리게 */
+.dates.more-r{mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
+.dates.more-l{mask-image:linear-gradient(90deg,transparent,#000 40px)}
+.dates.more-l.more-r{mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
+.dates.dragging,.dates.dragging .day{cursor:grabbing;user-select:none}
 .day{flex:0 0 auto;width:56px;padding:8px 0 9px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
   display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 .day small{font-size:11px;color:var(--muted)}
@@ -48,18 +53,20 @@ header p{margin:0;color:var(--muted)}
 .day i.mid{background:var(--mid)} .day i.busy{background:var(--busy)}
 .day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .day[aria-pressed="true"] small{color:inherit;opacity:.8}
+.day[aria-pressed="true"] i{box-shadow:0 0 0 2px var(--bg)}
 
 .time{display:flex;flex-direction:column;gap:6px}
 .time-row{display:flex;justify-content:space-between;align-items:baseline}
 .time-row strong{font-family:var(--f-display);font-size:20px}
-input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=range]{width:100%;height:28px;margin:0;accent-color:var(--accent)}
 .ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
 
 /* 오늘의 제주 */
-.today{background:var(--accent-soft);border-radius:var(--r);padding:16px 18px;display:flex;gap:14px;align-items:center}
-.today .big{font-family:var(--f-display);font-size:38px;line-height:1;min-width:64px;text-align:center}
-.today .big span{font-size:14px}
-.today p{margin:0}
+.today{background:var(--accent-soft);border-radius:var(--r);padding:15px 18px;display:flex;gap:12px;align-items:flex-start}
+.today i{flex:0 0 auto;width:10px;height:10px;border-radius:50%;margin-top:8px;background:var(--calm)}
+.today i.mid{background:var(--mid)} .today i.busy{background:var(--busy)}
+.today b{display:block;font-family:var(--f-display);font-size:18px}
+.today p{margin:2px 0 0;font-size:13px;color:var(--muted)}
 
 section{display:flex;flex-direction:column;gap:12px}
 .sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -76,6 +83,19 @@ section{display:flex;flex-direction:column;gap:12px}
 .swap small{font-size:12px}
 .c-busy{color:var(--busy)} .c-mid{color:var(--mid)} .c-calm{color:var(--calm)}
 
+/* 조용한 코스 */
+.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.stop{display:grid;grid-template-columns:44px 1fr auto;align-items:baseline;gap:2px 10px;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer}
+.stop time{font-weight:600;font-size:14px}
+.stop .name{font-family:var(--f-display);font-weight:700;font-size:17px}
+.stop .lv{font-size:13px;font-weight:600;white-space:nowrap}
+.stop .meta{grid-column:2/4;font-size:12px;color:var(--muted)}
+.leg{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);padding:4px 0 4px 20px;min-height:36px;
+  border-left:2px dotted var(--line);margin-left:35px}
+.leg a{color:var(--accent);padding:6px 2px}
+.plan .note{font-size:12px;color:var(--muted);padding-top:8px}
+
 /* 필터 */
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{padding:6px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:14px}
@@ -83,9 +103,30 @@ section{display:flex;flex-direction:column;gap:12px}
 
 /* 분위기 그림 (AI 일러스트 — 특정 장소 사진이 아님) */
 figure.hero,figure.band{margin:0}
-figure.hero img,figure.band img{display:block;width:100%;object-fit:cover;border-radius:var(--r);
-  background:var(--accent-soft)}
-figure.hero img{aspect-ratio:16/7}
+figure.band img{display:block;width:100%;object-fit:cover;border-radius:var(--r);background:var(--accent-soft)}
+/* 대표 그림은 화면 폭 전체에 고정된 배경. 하늘·한라산·들판·갈대 네 층(겹치면 원래 그림)이
+   처음에 차례로 살살 내려앉으며 그림이 완성된다. 스크롤하면 먼 층일수록 느리게 올라가고(스크립트),
+   본문은 바탕색 판이 되어 그 위를 덮으며 올라온다. 그림 아래쪽은 바탕색으로 녹여 판과 이어 보이게 한다. */
+:root{--hero-h:clamp(340px,70svh,640px)}
+figure.hero{position:fixed;top:0;left:0;right:0;height:var(--hero-h);z-index:-1;pointer-events:none;
+  will-change:opacity}
+figure.hero .layer{position:absolute;inset:0;will-change:transform}
+figure.hero img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 38%}
+figure.hero:not(.go) img{opacity:0}
+figure.hero.go img{animation:settle 1.8s cubic-bezier(.22,.7,.25,1) both}
+figure.hero .layer:nth-child(1) img{--from:-12px}
+figure.hero .layer:nth-child(2) img{--from:-48px;animation-delay:.35s}
+figure.hero .layer:nth-child(3) img{--from:-34px;animation-delay:.8s}
+figure.hero .layer:nth-child(4) img{--from:-24px;animation-delay:1.2s}
+@keyframes settle{from{opacity:0;transform:translateY(var(--from))}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){figure.hero.go img{animation:none}}
+figure.hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 45%,color-mix(in srgb,var(--bg) 60%,transparent) 70%,var(--bg) 84%)}
+/* 판의 바탕을 화면 양옆 끝까지 넓힌다(본문 폭 460px 은 그대로). */
+.wrap{margin-top:calc(var(--hero-h) - 110px);background:var(--bg);
+  box-shadow:0 0 0 100vmax var(--bg);clip-path:inset(0 -100vmax)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) figure.hero img{filter:brightness(.78) saturate(.9)}}
+:root[data-theme="dark"] figure.hero img{filter:brightness(.78) saturate(.9)}
 figure.band img{aspect-ratio:5/2}
 
 /* 목록 */
@@ -93,12 +134,14 @@ figure.band img{aspect-ratio:5/2}
 .place{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:14px 2px;border-bottom:1px solid var(--line);
   background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;width:100%;
   position:relative;isolation:isolate}
-/* 행 배경 사진. 밝은 테마에선 흐려지고 어두운 테마에선 어두워져 글자 대비가 유지된다. */
-.place .shot{position:absolute;inset:3px -6px;z-index:-1;border-radius:10px;
-  background-size:cover;background-position:center;opacity:.28}
-.place h3{font-size:18px}
+/* 행 배경 사진. 글자가 놓이는 왼쪽은 비우고 오른쪽으로 갈수록 드러나게 해서 글자 대비를 지킨다. */
+.place .shot{position:absolute;left:-6px;top:3px;width:calc(100% + 12px);height:calc(100% - 6px);z-index:-1;
+  object-fit:cover;border-radius:10px;opacity:.62;
+  -webkit-mask-image:linear-gradient(90deg,transparent 48%,#000 96%);mask-image:linear-gradient(90deg,transparent 48%,#000 96%)}
+.place .name{font-family:var(--f-display);font-weight:700;font-size:18px}
 .place .meta{font-size:13px;color:var(--muted);grid-column:1}
-.place .score{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.place .score{grid-row:1/3;grid-column:2;display:flex;flex-direction:column;align-items:flex-end;gap:4px;align-self:center;
+  padding:5px 8px;border-radius:10px;background:var(--bg);background:color-mix(in srgb,var(--bg) 84%,transparent)}
 .score .lv{font-size:13px;font-weight:600}
 .ripple{display:flex;gap:3px;align-items:flex-end;height:16px}
 .ripple u{width:5px;border-radius:2px;background:var(--line);text-decoration:none}
@@ -106,14 +149,24 @@ figure.band img{aspect-ratio:5/2}
 .empty{color:var(--muted);padding:18px 0}
 
 /* 상세 시트 */
+/* 시트가 열려 있는 동안 뒤 화면이 같이 스크롤되지 않게 한다. */
+html.sheet-open,html.sheet-open body{overflow:hidden}
 .scrim{position:fixed;inset:0;background:rgba(10,14,12,.45);z-index:20}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:20px 20px 0 0;
-  max-height:86vh;overflow-y:auto;
+  max-height:86vh;overflow-y:auto;overscroll-behavior:contain;
   padding:10px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
   animation:up .22s ease-out}
 @keyframes up{from{transform:translateY(24px)}to{transform:none}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}}
 .sheet-in{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+/* 장소 사진 배경 */
+.sheet{isolation:isolate}
+.sheet-photo{position:absolute;top:0;left:0;right:0;height:min(340px,46vh);z-index:-1;overflow:hidden}
+.sheet-photo img{display:block;width:100%;height:100%;object-fit:cover}
+.sheet-photo::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 18%,color-mix(in srgb,var(--surface) 82%,transparent) 50%,var(--surface) 80%)}
+.sheet.has-photo .sheet-top{margin-top:min(150px,20vh)}
+.sheet.has-photo .grab{background:rgba(255,255,255,.85)}
 .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
 .sheet-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .sheet-top h2{font-size:26px}
@@ -123,12 +176,13 @@ figure.band img{aspect-ratio:5/2}
 .best{background:var(--accent-soft);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .best b{font-family:var(--f-display);font-size:20px}
 .bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding-top:6px;border-bottom:1px solid var(--line)}
-.bars button{flex:1;border:0;padding:0;border-radius:3px 3px 0 0;background:var(--line);min-height:3px;
-  cursor:pointer;transition:background .12s}
-.bars button.best-h{background:var(--calm)}
-.bars button.now{outline:2px solid var(--ink);outline-offset:1px}
-.bars button:hover{background:var(--muted)}
-.bars button.best-h:hover{background:var(--accent)}
+/* 버튼은 칸 전체 높이를 차지하고(누르기 쉽게), 안쪽 i 가 막대 높이를 그린다. */
+.bars button{flex:1;height:100%;display:flex;align-items:flex-end;border:0;padding:0;background:none;cursor:pointer}
+.bars button i{display:block;width:100%;min-height:3px;border-radius:3px 3px 0 0;background:var(--line);transition:background .12s}
+.bars button.best-h i{background:var(--calm)}
+.bars button.now i{outline:2px solid var(--ink);outline-offset:1px}
+.bars button:hover i{background:var(--muted)}
+.bars button.best-h:hover i{background:var(--accent)}
 .bar-x{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
 .sheet-actions{display:flex;gap:8px;flex-wrap:wrap}
 .link{display:inline-block;padding:10px 16px;border-radius:99px;background:var(--accent);color:var(--bg);text-decoration:none;font-weight:500}
@@ -139,14 +193,19 @@ figure.band img{aspect-ratio:5/2}
 
 <script>
 // 본문이 그려지기 전에 적용해야 밝았다 어두워지는 깜빡임이 없다.
-try{ var t=localStorage.getItem("qt-theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+document.documentElement.lang = "ko";
+try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentElement.dataset.theme=saved; }catch(e){}
 </script>
 
+<figure class="hero">
+  <div class="layer" data-depth=".1"><img src="images/hero-sky.webp" decoding="async"
+       alt="돌담과 억새밭 사이로 빈 길이 이어지고 멀리 한라산이 보이는 제주 들판 그림"></div>
+  <div class="layer" data-depth=".2"><img src="images/hero-mountain.webp" decoding="async" alt=""></div>
+  <div class="layer" data-depth=".34"><img src="images/hero-field.webp" decoding="async" alt=""></div>
+  <div class="layer" data-depth=".5"><img src="images/hero-reeds.webp" decoding="async" alt=""></div>
+</figure>
+
 <div class="wrap">
-  <figure class="hero">
-    <img src="images/hero.webp" decoding="async"
-         alt="돌담과 억새밭 사이로 빈 길이 이어지고 멀리 한라산이 보이는 제주 들판 그림">
-  </figure>
 
   <header>
     <div class="top-row">
@@ -174,6 +233,12 @@ try{ var t=localStorage.getItem("qt-theme"); if(t) document.documentElement.data
   </section>
 
   <section>
+    <div class="sec-head"><h2>조용한 코스</h2><span id="planLabel"></span></div>
+    <div class="chips" id="planLen" role="group" aria-label="코스 길이"></div>
+    <ol class="plan" id="plan"></ol>
+  </section>
+
+  <section>
     <div class="sec-head"><h2>지금 조용한 곳</h2><span id="countLabel"></span></div>
     <div class="chips" id="themes" role="group" aria-label="테마"></div>
     <figure class="band" id="themeBand" hidden></figure>
@@ -187,37 +252,37 @@ try{ var t=localStorage.getItem("qt-theme"); if(t) document.documentElement.data
 <script>
 // ---------- 장소 데이터 ----------
 const PLACES = [
-  {id:"samdasu", name:"삼다수숲길", area:"제주시 조천읍 교래리", theme:"숲길", prof:"forest", pop:.28,
+  {id:"samdasu", lat:33.4181, lng:126.6535, name:"삼다수숲길", area:"제주시 조천읍 교래리", theme:"숲길", prof:"forest", pop:.28,
    desc:"삼나무와 편백 사이로 길게 이어지는 숲길. 찾는 사람이 적어 숲 소리가 또렷하게 들려요."},
-  {id:"mechewat", name:"머체왓숲길", area:"서귀포시 남원읍 한남리", theme:"숲길", prof:"forest", pop:.30,
+  {id:"mechewat", lat:33.3302, lng:126.679, name:"머체왓숲길", area:"서귀포시 남원읍 한남리", theme:"숲길", prof:"forest", pop:.30,
    desc:"돌무더기(머체)와 계곡을 따라 걷는 숲길. 사려니숲길보다 한결 한산해요."},
-  {id:"healing", name:"서귀포 치유의숲", area:"서귀포시 호근동", theme:"숲길", prof:"forest", pop:.36,
+  {id:"healing", lat:33.292, lng:126.5294, name:"서귀포 치유의숲", area:"서귀포시 호근동", theme:"숲길", prof:"forest", pop:.36,
    desc:"난대림 속 산책로. 사전 예약으로 입장 인원을 나눠 받아 붐비지 않아요."},
-  {id:"ttarabi", name:"따라비오름", area:"서귀포시 표선면 가시리", theme:"오름", prof:"oreum", pop:.34,
+  {id:"ttarabi", lat:33.3892, lng:126.7533, name:"따라비오름", area:"서귀포시 표선면 가시리", theme:"오름", prof:"oreum", pop:.34,
    desc:"굼부리 세 개가 겹친 부드러운 오름. 억새 철 주말만 피하면 한적해요."},
-  {id:"andol", name:"안돌오름", area:"제주시 구좌읍 송당리", theme:"오름", prof:"oreum", pop:.22,
+  {id:"andol", lat:33.4571, lng:126.7564, name:"안돌오름", area:"제주시 구좌읍 송당리", theme:"오름", prof:"oreum", pop:.22,
    desc:"송당 오름 무리 안쪽의 낮은 오름. 삼나무 숲을 지나 금방 정상에 닿아요."},
-  {id:"jeoji", name:"저지오름", area:"제주시 한경면 저지리", theme:"오름", prof:"oreum", pop:.30,
+  {id:"jeoji", lat:33.333, lng:126.251, name:"저지오름", area:"제주시 한경면 저지리", theme:"오름", prof:"oreum", pop:.30,
    desc:"숲이 정상까지 덮인 오름. 둘레길과 분화구 길을 함께 걸을 수 있어요."},
-  {id:"pyeongdae", name:"평대리 해변", area:"제주시 구좌읍 평대리", theme:"바다", prof:"beach", pop:.30,
+  {id:"pyeongdae", lat:33.5332, lng:126.8407, name:"평대리 해변", area:"제주시 구좌읍 평대리", theme:"바다", prof:"beach", pop:.30,
    desc:"월정리와 세화 사이의 얕은 바다. 해변이 비어 있는 시간이 많아요."},
-  {id:"panpo", name:"판포포구", area:"제주시 한경면 판포리", theme:"바다", prof:"beach", pop:.32,
+  {id:"panpo", lat:33.3654, lng:126.1997, name:"판포포구", area:"제주시 한경면 판포리", theme:"바다", prof:"beach", pop:.32,
    desc:"물빛이 맑은 작은 포구. 협재보다 사람이 훨씬 적어요. 한여름 오후는 조금 붐벼요."},
-  {id:"sinchang", name:"신창풍차해안", area:"제주시 한경면 신창리", theme:"바다", prof:"coast", pop:.32,
+  {id:"sinchang", lat:33.343, lng:126.1722, name:"신창풍차해안", area:"제주시 한경면 신창리", theme:"바다", prof:"coast", pop:.32,
    desc:"바다 위 풍력발전기를 따라 걷는 해안 길. 해 질 무렵 말고는 조용해요."},
-  {id:"ojori", name:"오조리 식산봉", area:"서귀포시 성산읍 오조리", theme:"바다", prof:"coast", pop:.24,
+  {id:"ojori", lat:33.4628, lng:126.9211, name:"오조리 식산봉", area:"서귀포시 성산읍 오조리", theme:"바다", prof:"coast", pop:.24,
    desc:"성산일출봉을 마주 보는 잔잔한 내수면과 낮은 봉우리. 일출봉을 멀리서 조용히 볼 수 있어요."},
-  {id:"suwolbong", name:"수월봉 해안", area:"제주시 한경면 고산리", theme:"바다", prof:"coast", pop:.30,
+  {id:"suwolbong", lat:33.2948, lng:126.1635, name:"수월봉 해안", area:"제주시 한경면 고산리", theme:"바다", prof:"coast", pop:.30,
    desc:"화산재 지층이 드러난 해안 절벽 길. 차귀도가 가까이 보여요."},
-  {id:"daepyeong", name:"대평리 박수기정", area:"서귀포시 안덕면 대평리", theme:"바다", prof:"coast", pop:.30,
+  {id:"daepyeong", lat:33.2372, lng:126.3587, name:"대평리 박수기정", area:"서귀포시 안덕면 대평리", theme:"바다", prof:"coast", pop:.30,
    desc:"바다로 떨어지는 절벽 아래 작은 포구 마을."},
-  {id:"hado", name:"하도 철새도래지", area:"제주시 구좌읍 하도리", theme:"바다", prof:"coast", pop:.20,
+  {id:"hado", lat:33.5102, lng:126.8963, name:"하도 철새도래지", area:"제주시 구좌읍 하도리", theme:"바다", prof:"coast", pop:.20,
    desc:"철새가 쉬어 가는 해안 습지. 겨울 아침이 가장 고요해요."},
-  {id:"jongdal", name:"종달리 마을", area:"제주시 구좌읍 종달리", theme:"마을", prof:"village", pop:.32,
+  {id:"jongdal", lat:33.509, lng:126.9093, name:"종달리 마을", area:"제주시 구좌읍 종달리", theme:"마을", prof:"village", pop:.32,
    desc:"돌담 골목과 작은 책방이 있는 동쪽 끝 마을. 우도 가는 배도 이곳에서 탈 수 있어요."},
-  {id:"gasi", name:"가시리 마을", area:"서귀포시 표선면 가시리", theme:"마을", prof:"village", pop:.24,
+  {id:"gasi", lat:33.3982, lng:126.7199, name:"가시리 마을", area:"서귀포시 표선면 가시리", theme:"마을", prof:"village", pop:.24,
    desc:"중산간의 조용한 마을. 녹산로와 따라비오름이 가까워요."},
-  {id:"wimi", name:"위미리 마을", area:"서귀포시 남원읍 위미리", theme:"마을", prof:"village", pop:.30,
+  {id:"wimi", lat:33.2749, lng:126.6695, name:"위미리 마을", area:"서귀포시 남원읍 위미리", theme:"마을", prof:"village", pop:.30,
    desc:"돌담과 감귤밭 사이의 바닷가 마을. 겨울에는 동백이 피어요."},
 ];
 // 관광공사 예측 API의 관광지명 (마을 단위 3곳은 예측 대상이 아니어서 패턴 추정)
@@ -230,21 +295,22 @@ const API_NAME = {
 PLACES.forEach(p => p.api = API_NAME[p.id] || null);
 // 유명 관광지 → 대신 갈 곳
 const SWAPS = [
-  {famous:"성산일출봉", api:"성산일출봉 [유네스코 세계자연유산]", prof:"oreum", alt:"ojori"},
-  {famous:"우도", api:"우도(해양도립공원)", prof:"beach", alt:"jongdal"},
-  {famous:"협재해수욕장", api:"협재해수욕장", prof:"beach", alt:"panpo"},
-  {famous:"비자림", api:"비자림", prof:"forest", alt:"samdasu"},
-  {famous:"월정리해변", api:"월정리해변(월정리해수욕장)", prof:"beach", alt:"pyeongdae"},
-  {famous:"한담해변", api:"한담해변", prof:"coast", alt:"sinchang"},
-  {famous:"새별오름", api:"새별오름", prof:"oreum", alt:"ttarabi"},
-  {famous:"쇠소깍", api:"쇠소깍", prof:"coast", alt:"wimi"},
-  {famous:"섭지코지", api:"섭지코지", prof:"coast", alt:"hado"},
+  {famous:"성산일출봉", api:"성산일출봉 [유네스코 세계자연유산]", alt:"ojori"},
+  {famous:"우도", api:"우도(해양도립공원)", alt:"jongdal"},
+  {famous:"협재해수욕장", api:"협재해수욕장", alt:"panpo"},
+  {famous:"비자림", api:"비자림", alt:"samdasu"},
+  {famous:"월정리해변", api:"월정리해변(월정리해수욕장)", alt:"pyeongdae"},
+  {famous:"한담해변", api:"한담해변", alt:"sinchang"},
+  {famous:"새별오름", api:"새별오름", alt:"ttarabi"},
+  {famous:"쇠소깍", api:"쇠소깍", alt:"wimi"},
+  {famous:"섭지코지", api:"섭지코지", alt:"hado"},
 ];
 const THEMES = ["전체","숲길","오름","바다","마을","저장"];
 
-// 테마별 분위기 그림. 유형을 나타낸 일러스트이며 개별 장소 사진이 아니다.
-const PHOTO = new Set(["andol", "daepyeong", "hado", "healing", "jeoji", "jongdal", "mechewat", "panpo", "pyeongdae", "samdasu", "sinchang", "suwolbong", "ttarabi", "wimi"]);
+// 목록 행 배경에 깔 실제 사진이 있는 장소 (images/places/<id>.webp, 한국관광공사 TourAPI)
+const PHOTO = new Set(["andol", "daepyeong", "gasi", "hado", "healing", "jeoji", "jongdal", "mechewat", "ojori", "panpo", "pyeongdae", "samdasu", "sinchang", "suwolbong", "ttarabi", "wimi"]);
 
+// 테마별 분위기 그림. 유형을 나타낸 일러스트이며 개별 장소 사진이 아니다.
 const THEME_IMG = {
   "숲길":["forest","삼나무와 편백이 늘어선 숲길 그림"],
   "오름":["oreum","억새가 덮인 둥근 오름과 분화구 그림"],
@@ -261,30 +327,16 @@ const RAW = {
   coast:  h => .55*g(h,13,3) + g(h,18,1.3),
   village:h => g(h,14,3),
 };
-// 제주데이터허브 시간대별 카드 결제 비율(내국인 관광객·주요 관광지)로 유형별 곡선을 보정한다.
-// 시간대 경계는 데이터에 정의가 없어 일반적인 구분으로 가정: 오전 6–11, 점심 11–14, 오후 14–17, 저녁 17–21, 밤 21–
-const SLOT_OF = h => h<11?"오전" : h<14?"점심" : h<17?"오후" : h<21?"저녁" : "밤";
-const SLOT_HOURS = {"오전":5,"점심":3,"오후":3,"저녁":4,"밤":3};
-let CARD = null;   // {share:{오전:..}, period:[..]}
+// 유형별 하루 곡선. 가장 붐비는 시간이 1 이 되도록 맞춘다.
 const PROF = {};
-function buildProfiles(){
-  let cw = null;
-  if(CARD && CARD.share){
-    const per = h => (CARD.share[SLOT_OF(h)]||0)/SLOT_HOURS[SLOT_OF(h)];
-    let m=0; for(let h=6;h<=20;h++) m=Math.max(m,per(h));
-    if(m>0) cw = h => per(h)/m;
-  }
-  for (const k in RAW){
-    const f = cw ? (h => .65*RAW[k](h) + .35*cw(h)) : RAW[k];
-    let m=0; for(let h=6;h<=20;h++) m=Math.max(m,f(h));
-    PROF[k]=h=>f(h)/m;
-  }
-}
-buildProfiles();
+for(const k in RAW){ let m=0; for(let h=6;h<=20;h++) m=Math.max(m,RAW[k](h)); PROF[k]=h=>RAW[k](h)/m; }
 
 // ---------- 상태 ----------
-const state = { forecast:null, dates:[], date:null, hour:10, theme:"전체", saved:loadSaved(), open:null,
-  sheetHour:10 };   // sheetHour: 상세 시트 안에서만 보는 시간. 바깥 목록은 건드리지 않는다.
+const state = { forecast:null, overall:1, dates:[], date:null, hour:10, theme:"전체", saved:loadSaved(),
+  open:null,        // 열려 있는 상세 시트의 장소 id
+  openFrom:null,    // '○○ 대신' 카드에서 열었으면 그 유명한 곳 이름
+  sheetHour:10,     // 상세 시트 안에서만 보는 시간. 바깥 목록은 건드리지 않는다.
+  planLen:3 };      // 조용한 코스: 반나절 3곳 / 하루 5곳
 function loadSaved(){ try{ return new Set(JSON.parse(localStorage.getItem("qt-saved")||"[]")); }catch(e){ return new Set(); } }
 function storeSaved(){ try{ localStorage.setItem("qt-saved", JSON.stringify([...state.saved])); }catch(e){} }
 
@@ -300,7 +352,7 @@ function sampleForecast(){
     const wk=(d.getDay()===0||d.getDay()===6)?1.18:1;
     for(const n in base) items.push({date:ymd(d),name:n,rate:Math.round(Math.max(5,Math.min(100,base[n]*wk+(rnd()*18-9)))*10)/10});
   }
-  return {sample:true, fallback:true, fetchedAt:null, items};
+  return {sample:true, fetchedAt:null, items};
 }
 function ymd(d){ return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0"); }
 function parseYmd(s){ return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8)); }
@@ -358,12 +410,10 @@ function vsUsual(rate, avg){
 function quietWord(q){
   return q>=65 ? "한산해요" : q>=45 ? "적당해요" : "붐벼요";
 }
+// 색과 물결 칸 수(1~5). 말은 quietWord 한 가지로만 쓴다.
 function level(quiet){
-  if(quiet>=80) return {t:"고요", c:"c-calm", n:5};
-  if(quiet>=65) return {t:"한적", c:"c-calm", n:4};
-  if(quiet>=45) return {t:"보통", c:"c-mid", n:3};
-  if(quiet>=25) return {t:"붐빔", c:"c-busy", n:2};
-  return {t:"북적", c:"c-busy", n:1};
+  return quiet>=80 ? {c:"c-calm", n:5} : quiet>=65 ? {c:"c-calm", n:4}
+       : quiet>=45 ? {c:"c-mid", n:3}  : quiet>=25 ? {c:"c-busy", n:2} : {c:"c-busy", n:1};
 }
 function ripple(n){ return '<span class="ripple" aria-hidden="true">'+[1,2,3,4,5].map(i=>`<u class="${i<=n?"on":""}" style="height:${6+i*2}px"></u>`).join("")+'</span>'; }
 // 제주 대략의 일출·일몰 시각(월별). 어두운 시간은 추천하지 않는다.
@@ -377,24 +427,81 @@ function bestWindow(p, date){
 }
 const WD="일월화수목금토";
 
+// ---------- 조용한 코스 ----------
+// 머무는 시간(시간 단위)과 이동 시간 어림. 직선거리에 1.4배(길이 돌아가는 몫), 시속 35km.
+// (카카오맵 실제 경로와 견줘 맞춘 값: 하도→오조리 직선 5.5km, 카카오 15분 / 어림 15분)
+const STAY = {"숲길":1.5, "오름":1, "바다":.67, "마을":1};
+function km(a,b){
+  const R=6371, r=Math.PI/180, dLa=(b.lat-a.lat)*r, dLo=(b.lng-a.lng)*r;
+  const x=Math.sin(dLa/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function driveMin(a,b){ return Math.max(10, Math.round(km(a,b)*1.4/35*60/5)*5); }
+// 머무는 동안의 한산함: 도착할 때와 머무는 중간의 평균
+function quietStay(p,t,date){ return 100-(crowdAt(p,t,date)+crowdAt(p,t+STAY[p.theme]/2,date))/2; }
+// 가능한 순서를 다 따지면 5곳일 때 50만 가지라 슬라이더를 끌 때 버벅인다.
+// 한 곳씩 늘려 가며 점수 좋은 300개 경로만 남기는 방식(빔 탐색)으로 충분히 좋은 코스를 고른다.
+// 점수: 머무는 동안의 한산함 합 − 이동 시간(분)×0.5 + 테마 하나 늘 때마다 8. 붐비는 곳(45 미만)은 크게 깎는다.
+function makePlan(date, start, n){
+  const end = SUN_DOWN[parseYmd(date).getMonth()];          // 머무는 시간까지 해 지기 전에 끝나야 한다
+  const stopScore = q => q - (q<45 ? 30 : 0);
+  let beam = PLACES.filter(p=>start+STAY[p.theme]<=end).map(p=>{
+    const q=quietStay(p,start,date);
+    return {stops:[{p,t:start,q,drive:0}], t:start+STAY[p.theme], score:stopScore(q)+8, themes:new Set([p.theme])};
+  });
+  let best = beam;
+  for(let k=1;k<n;k++){
+    const next=[];
+    for(const path of beam){
+      const last=path.stops[path.stops.length-1].p;
+      for(const p of PLACES){
+        if(path.stops.some(s=>s.p===p)) continue;
+        const d=driveMin(last,p), t=path.t+d/60;
+        if(t+STAY[p.theme]>end) continue;
+        const q=quietStay(p,t,date), nt=!path.themes.has(p.theme);
+        next.push({stops:[...path.stops,{p,t,q,drive:d}], t:t+STAY[p.theme],
+          score:path.score+stopScore(q)-d*.5+(nt?8:0), themes:nt?new Set([...path.themes,p.theme]):path.themes});
+      }
+    }
+    if(!next.length) break;
+    next.sort((a,b)=>b.score-a.score);
+    beam=next.slice(0,300); best=beam;
+  }
+  return best.length ? best.sort((a,b)=>b.score-a.score)[0] : null;
+}
+function dur(min){ const h=Math.floor(min/60), m=min%60; return h ? `${h}시간${m?` ${m}분`:""}` : `${m}분`; }
+function clock(h){ const m=Math.round(h*60/5)*5; return `${Math.floor(m/60)}:${String(m%60).padStart(2,"0")}`; }
+function kakaoRoute(a,b){
+  const pt=p=>`${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
+  return `https://map.kakao.com/link/from/${pt(a)}/to/${pt(b)}`;
+}
+
 // ---------- 그리기 ----------
 const $ = id => document.getElementById(id);
+// 그날 제주 전체가 어떤 날인지. 날짜 점, 읽어 주는 말, 오늘 카드가 같은 기준을 쓴다.
+function dayState(f){ return f>1.08 ? "busy" : f<.95 ? "calm" : "mid"; }
+const DAY_WORD = {busy:"붐비는 날", mid:"평소 같은 날", calm:"한산한 날"};
+const DAY_MSG = {
+  busy:["평소보다 붐비는 날이에요", "이른 아침이나 중산간을 추천해요."],
+  mid: ["평소와 비슷한 날이에요", "유명한 곳은 오전 일찍 다녀오세요."],
+  calm:["평소보다 한산한 날이에요", "조용한 여행에 좋은 날입니다."],
+};
 function renderDates(){
   $("dates").innerHTML = state.dates.map(d=>{
-    const dt=parseYmd(d), f=dayFactor(d);
-    const cls = f>1.08?"busy":f>.97?"mid":"";
-    return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일">
-      <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b><i class="${cls}"></i></button>`;
+    const dt=parseYmd(d), st=dayState(dayFactor(d));
+    return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일, ${DAY_WORD[st]}">
+      <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b><i class="${st==="calm"?"":st}"></i></button>`;
   }).join("");
+  dateEdges();
+}
+function dateEdges(){
+  const box=$("dates"), max=box.scrollWidth-box.clientWidth;
+  box.classList.toggle("more-l", box.scrollLeft>2);
+  box.classList.toggle("more-r", box.scrollLeft<max-2);
 }
 function renderToday(){
-  const f=dayFactor(state.date);
-  const a=dayAvg[state.date];
-  const msg = f>1.08 ? "제주 전체가 평소보다 붐비는 날이에요. 이른 아침이나 중산간을 추천해요."
-            : f<.95 ? "평소보다 한산한 날이에요. 조용한 여행에 좋은 날입니다."
-            : "평소와 비슷한 날이에요. 유명한 곳은 오전 일찍 다녀오세요.";
-  $("today").innerHTML = `<div class="big num">${a!=null?Math.round(a):"–"}<span>%</span></div>
-    <div><p>${msg}</p></div>`;
+  const st=dayState(dayFactor(state.date)), [head,tip]=DAY_MSG[st];
+  $("today").innerHTML = `<i class="${st==="calm"?"":st}" aria-hidden="true"></i><div><b>${head}</b><p>${tip}</p></div>`;
 }
 function renderSwaps(){
   // 유명한 곳은 '자기 평소 대비' 로 줄 세운다. 집중률 값을 장소끼리 비교하면 안 되기 때문.
@@ -417,14 +524,39 @@ function renderSwaps(){
       .sort((a,b)=>b.q-a.q)[0];
     r.alt = best.p; r.aq = best.q; used.add(best.p.id);
   }
-  $("swaps").innerHTML = rows.length ? rows.map(r=>{
+  // 대신 갈 곳마저 붐비면 권하지 않는다.
+  const shown = rows.filter(r=>r.aq>=45);
+  $("swaps").innerHTML = shown.length ? shown.map(r=>{
     const la=level(r.aq);
-    return `<button class="swap" data-id="${r.alt.id}">
-      <span class="ask">${r.s.famous} 대신, 여긴 어때요?${r.uf&&r.uf.c==="c-busy"?`<em class="c-busy">오늘 더 붐벼요</em>`:""}</span>
+    return `<button class="swap" data-id="${r.alt.id}" data-famous="${r.s.famous}">
+      <span class="ask">${r.s.famous} 대신, 여긴 어때요?<em class="c-busy">오늘 더 붐벼요</em></span>
       <b>${r.alt.name}</b>
       <small class="${la.c}">${quietWord(r.aq)}</small>
     </button>`;
   }).join("") : '<p class="empty">오늘은 유명한 곳도 평소 수준이에요. 가고 싶던 곳으로 다녀오세요.</p>';
+}
+function renderPlan(){
+  $("planLen").innerHTML = [[3,"반나절 · 3곳"],[5,"하루 · 5곳"]].map(([n,t])=>
+    `<button class="chip" aria-pressed="${state.planLen===n}" data-n="${n}">${t}</button>`).join("");
+  const plan = makePlan(state.date, state.hour, state.planLen);
+  if(!plan){
+    $("planLabel").textContent = "";
+    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 도착 시간을 앞당겨 보세요.</p>';
+    return;
+  }
+  const st=plan.stops, last=st[st.length-1], drive=st.reduce((a,s)=>a+s.drive,0);
+  $("planLabel").textContent = `${clock(st[0].t)} 출발 · ${clock(last.t+STAY[last.p.theme])} 끝`;
+  $("plan").innerHTML = st.map((s,i)=>{
+    const l=level(s.q), leg = i ? `<li class="leg"><span>차로 ${s.drive}분</span>
+      <a href="${kakaoRoute(st[i-1].p, s.p)}" target="_blank" rel="noopener">길찾기</a></li>` : "";
+    return `${leg}<li><button class="stop" data-id="${s.p.id}" data-h="${Math.min(20,Math.max(6,Math.round(s.t)))}">
+      <time class="num">${clock(s.t)}</time>
+      <span class="name">${s.p.name}</span>
+      <span class="lv ${l.c}">${quietWord(s.q)}</span>
+      <span class="meta">${s.p.theme} · ${Math.round(STAY[s.p.theme]*60)}분쯤 머물러요</span>
+    </button></li>`;
+  }).join("") + (st.length<state.planLen ? `<li class="note">해 지기 전까지 ${st.length}곳만 넣었어요.</li>` : "")
+    + (drive ? `<li class="note">차로 모두 ${dur(drive)}쯤이에요. 이동 시간은 거리로 어림했고, 식사 시간은 넣지 않았어요.</li>` : "");
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
@@ -443,16 +575,17 @@ function renderList(){
   $("list").innerHTML = ps.length ? ps.map(({p,q})=>{
     const l=level(q);
     return `<button class="place" data-id="${p.id}">
-      ${PHOTO.has(p.id)?`<span class="shot" style="background-image:url(images/places/${p.id}.webp)" aria-hidden="true"></span>`:""}
-      <h3>${p.name}${state.saved.has(p.id)?' <span class="c-calm" aria-label="저장됨">♡</span>':""}</h3>
-      <span class="score ${l.c}">${ripple(l.n)}<span class="lv">${l.t} <span class="num">${q}</span></span></span>
+      ${PHOTO.has(p.id)?`<img class="shot" src="images/places/${p.id}.webp" alt="" loading="lazy">`:""}
+      <span class="name">${p.name}${state.saved.has(p.id)?' <span class="c-calm" role="img" aria-label="저장됨">♡</span>':""}</span>
+      <span class="score ${l.c}">${ripple(l.n)}<span class="lv">${quietWord(q)}</span></span>
       <span class="meta">${p.theme} · ${p.area}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}</span>
     </button>`;
   }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
 }
 function renderAll(){
   $("hourLabel").textContent = state.hour+"시";
-  renderDates(); renderToday(); renderSwaps(); renderThemes(); renderList();
+  $("hour").setAttribute("aria-valuetext", state.hour+"시");
+  renderDates(); renderToday(); renderSwaps(); renderPlan(); renderThemes(); renderList();
   if(state.open) openSheet(state.open, true);
 }
 
@@ -469,32 +602,42 @@ function forecastBlock(p){
   </div>`;
 }
 let lastFocus=null;
-function openSheet(id, refresh){
+// 시트가 떠 있는 동안 뒤 화면은 누르거나 탭으로 들어갈 수 없게 하고 스크롤도 잠근다.
+function setModal(on){
+  document.querySelector(".wrap").inert = on;
+  document.documentElement.classList.toggle("sheet-open", on);
+}
+function openSheet(id, refresh, famous, opener){
   const p = PLACES.find(x=>x.id===id); if(!p) return;
-  if(!refresh){ lastFocus=document.activeElement; state.sheetHour = state.hour; }
+  if(!refresh){ lastFocus = opener || document.activeElement; state.openFrom = famous||null;
+    state.sheetHour = opener && opener.dataset.h ? +opener.dataset.h : state.hour; }   // 코스에서 열면 그 도착 시간
   state.open=id;
   const sh = state.sheetHour;
   const bw = bestWindow(p, state.date);
   const hours=[]; for(let h=6;h<=20;h++) hours.push(h);
   const peak = Math.max(50, ...hours.map(h=>crowdAt(p,h,state.date)));
-  const swap = SWAPS.find(s=>s.alt===id);
+  // 카드에서 열었으면 그 카드의 유명한 곳을, 아니면 원래 짝지어 둔 곳을 말해 준다.
+  const instead = state.openFrom || (SWAPS.find(s=>s.alt===id)||{}).famous;
   const q = 100-crowdAt(p,sh,state.date), l=level(q);
   const saved = state.saved.has(id);
-  const mapUrl = "https://map.kakao.com/?q="+encodeURIComponent(p.name);
-  $("sheet").innerHTML = `<div class="sheet-in">
+  const mapUrl = "https://map.kakao.com/?q="+encodeURIComponent("제주 "+p.name);
+  // 사진이 있는 곳은 시트 윗부분에 그곳 사진을 깔고, 아래로 갈수록 바탕색으로 녹인다.
+  const photo = PHOTO.has(id) ? `<div class="sheet-photo" aria-hidden="true"><img src="images/places/full/${id}.webp" alt=""></div>` : "";
+  $("sheet").classList.toggle("has-photo", !!photo);
+  $("sheet").innerHTML = `${photo}<div class="sheet-in">
     <div class="grab"></div>
     <div class="sheet-top">
       <div><span class="eyebrow">${p.theme} · ${p.area}</span><h2 id="sheetTitle">${p.name}</h2></div>
       <button class="icon-btn" id="closeBtn">닫기</button>
     </div>
     <p>${p.desc}</p>
-    ${swap?`<p class="note">${swap.famous} 대신 가기 좋은 곳이에요.</p>`:""}
+    ${instead?`<p class="note">${instead} 대신 가기 좋은 곳이에요.</p>`:""}
     ${forecastBlock(p)}
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
       <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv"><span class="num">${sh}시</span> ${quietWord(q)}</div></div></div>
     <div>
       <div class="bars" role="group" aria-label="시간대별 혼잡 추정. 막대를 누르면 그 시간으로 바뀌어요">
-        ${hours.map(h=>`<button type="button" class="${h>=bw&&h<bw+2?"best-h":""} ${h===sh?"now":""}" data-h="${h}" aria-pressed="${h===sh}" aria-label="${h}시 ${quietWord(100-crowdAt(p,h,state.date))}" style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></button>`).join("")}
+        ${hours.map(h=>`<button type="button" class="${h>=bw&&h<bw+2?"best-h":""} ${h===sh?"now":""}" data-h="${h}" aria-pressed="${h===sh}" aria-label="${h}시 ${quietWord(100-crowdAt(p,h,state.date))}" ><i style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></i></button>`).join("")}
       </div>
       <div class="bar-x num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
       <p class="note">막대를 눌러 시간을 바꿔 보세요. 낮을수록 조용하고, 초록은 추천 시간이에요.</p>
@@ -504,7 +647,7 @@ function openSheet(id, refresh){
       <button class="icon-btn" id="saveBtn" aria-pressed="${saved}">${saved?"♡ 저장됨":"♡ 저장"}</button>
     </div>
   </div>`;
-  $("sheet").hidden=false; $("scrim").hidden=false;
+  $("sheet").hidden=false; $("scrim").hidden=false; setModal(true);
   $("closeBtn").onclick=closeSheet;
   $("sheet").querySelectorAll(".bars button").forEach(b=>{
     b.onclick = ()=>{
@@ -517,13 +660,72 @@ function openSheet(id, refresh){
   $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); openSheet(id,true); };
   if(!refresh) $("closeBtn").focus();
 }
-function closeSheet(){ state.open=null; $("sheet").hidden=true; $("scrim").hidden=true; if(lastFocus) lastFocus.focus(); }
+function closeSheet(){
+  const id = state.open;
+  state.open=null; $("sheet").hidden=true; $("scrim").hidden=true; setModal(false);
+  // 시트를 연 버튼이 그 사이 다시 그려져 사라졌으면 같은 장소의 행으로 돌아간다.
+  const back = (lastFocus && lastFocus.isConnected) ? lastFocus : document.querySelector(`.place[data-id="${id}"]`);
+  if(back) back.focus();
+}
 
 // ---------- 이벤트 ----------
-$("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!b) return; state.date=b.dataset.d; renderAll(); });
+// 다시 그리면 눌렀던 버튼이 새 요소로 바뀌어 포커스를 잃는다. 같은 자리로 되돌려 키보드 흐름을 지킨다.
+const refocus = box => { const b=$(box).querySelector('[aria-pressed="true"]'); if(b) b.focus({preventScroll:true}); };
+$("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!b) return; state.date=b.dataset.d; renderAll(); refocus("dates"); });
+// 대표 그림: 네 층을 다 받은 뒤에 내려앉기 시작한다(먼저 받은 층만 떨어지는 일이 없게. 늦으면 2초 뒤 그냥 시작).
+// 스크롤하면 층마다 data-depth 배만큼 올라간다(하늘 0.1 … 갈대 0.5). 판이 다 덮을 즈음 흐려져 사라진다.
+// 움직임 줄이기를 켠 사람에게는 내려앉기·층 이동 없이 흐려지기만 한다.
+(()=>{
+  const fig=document.querySelector("figure.hero");
+  const layers=[...fig.querySelectorAll(".layer")];
+  const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const go=()=>fig.classList.add("go");
+  Promise.all([...fig.querySelectorAll("img")].map(i=>i.complete?0:new Promise(r=>{ i.onload=i.onerror=r; }))).then(go);
+  setTimeout(go,2000);
+  let queued=false;
+  const paint=()=>{
+    queued=false;
+    const y=Math.max(0,scrollY), h=fig.offsetHeight;
+    fig.style.opacity=String(Math.max(0,1-y/(h*.85)));
+    if(!still) for(const l of layers) l.style.transform=`translate3d(0,${(-y*l.dataset.depth).toFixed(1)}px,0)`;
+  };
+  addEventListener("scroll",()=>{ if(!queued){ queued=true; requestAnimationFrame(paint); } },{passive:true});
+  addEventListener("resize",paint);
+  paint();
+})();
+// 날짜 띠: 휴대폰은 손가락으로 밀면 되지만 PC 마우스는 세로 휠뿐이고 스크롤바도 숨겨 둬서 넘길 방법이 없었다.
+// 휠을 가로로 돌리고, 끌어서도 넘기게 한다.
+(()=>{
+  const box=$("dates");
+  box.addEventListener("scroll", dateEdges, {passive:true});
+  addEventListener("resize", dateEdges);
+  box.addEventListener("wheel", e=>{
+    if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;            // 트랙패드 가로 밀기는 브라우저에 맡김
+    const max=box.scrollWidth-box.clientWidth, dy=e.deltaY*(e.deltaMode===1?40:1);
+    if(max<=0 || (dy<0 && box.scrollLeft<=0) || (dy>0 && box.scrollLeft>=max-1)) return;  // 끝에 닿으면 페이지가 내려가게
+    e.preventDefault(); box.scrollLeft+=dy;
+  }, {passive:false});
+  let drag=null, moved=false;
+  box.addEventListener("pointerdown", e=>{
+    moved=false;
+    if(e.pointerType==="mouse" && e.button===0) drag={x:e.clientX, left:box.scrollLeft, id:e.pointerId};
+  });
+  box.addEventListener("pointermove", e=>{
+    if(!drag || e.pointerId!==drag.id) return;
+    const dx=e.clientX-drag.x;
+    if(!moved && Math.abs(dx)<6) return;                          // 살짝 흔들린 클릭은 그냥 클릭
+    if(!moved){ moved=true; box.setPointerCapture(e.pointerId); box.classList.add("dragging"); }
+    box.scrollLeft=drag.left-dx;
+  });
+  const stop=()=>{ drag=null; box.classList.remove("dragging"); };
+  box.addEventListener("pointerup", stop); box.addEventListener("pointercancel", stop);
+  // 끌고 난 뒤 따라오는 클릭이 날짜를 바꾸지 않게 막는다.
+  box.addEventListener("click", e=>{ if(moved){ moved=false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+})();
 $("hour").addEventListener("input", e=>{ state.hour=+e.target.value; state.sheetHour=state.hour; renderAll(); });
-$("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.theme=b.dataset.t; renderThemes(); renderList(); });
-document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap"); if(b) openSheet(b.dataset.id); });
+$("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.theme=b.dataset.t; renderThemes(); renderList(); refocus("themes"); });
+document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap,.stop"); if(b) openSheet(b.dataset.id, false, b.dataset.famous, b); });
+$("planLen").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.planLen=+b.dataset.n; renderPlan(); refocus("planLen"); });
 $("scrim").addEventListener("click", closeSheet);
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.open) closeSheet(); });
 
@@ -555,11 +757,6 @@ paintThemeBtn();
   const now=new Date().getHours();
   state.hour = Math.min(20, Math.max(6, now));
   $("hour").value = state.hour;
-  try{
-    const r = await fetch("timeofday.json",{cache:"no-store"});
-    if(r.ok){
-      CARD = await r.json(); buildProfiles();    }
-  }catch(e){}
   state.forecast = await loadForecast();
   computeDayStats();
   renderAll();
