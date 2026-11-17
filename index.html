@@ -654,21 +654,6 @@ function kakaoRoute(a,b){
   const pt=p=>`${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
   return `https://map.kakao.com/link/from/${pt(a)}/to/${pt(b)}`;
 }
-// 카카오맵 앱 길찾기 스킴: 출발(sp, 없으면 현재 위치) · 경유지 최대 2곳(vp, vp2 / 이름 vn, vn2) · 도착(ep)
-// 경유지가 2곳까지라 코스를 3곳씩 구간으로 나눈다. 첫 구간은 현재 위치에서, 다음 구간은 앞 구간의 도착지에서 출발.
-function kakaoAppLegs(stops){
-  const legs=[]; let from=null, i=0;
-  while(i<stops.length){
-    const seg=stops.slice(i, i+3), end=seg[seg.length-1], via=seg.slice(0,-1);
-    const q=[];
-    if(from) q.push(`sp=${from.lat},${from.lng}`);
-    via.forEach((p,k)=>{ const n=k?"2":""; q.push(`vp${n}=${p.lat},${p.lng}`, `vn${n}=${encodeURIComponent(p.name)}`); });
-    q.push(`ep=${end.lat},${end.lng}`, "by=car");
-    legs.push({from, stops:seg, href:"kakaomap://route?"+q.join("&")});
-    from=end; i+=3;
-  }
-  return legs;
-}
 
 // ---------- 그리기 ----------
 const $ = id => document.getElementById(id);
@@ -768,15 +753,18 @@ function navLinks(p){
   return `<span class="eyebrow nav-cap">내 위치에서 길안내</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
     <a class="nav-btn naver" href="${naverRoute([p])}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도</span></a></div>`;
 }
+// 카카오맵 웹 길찾기: /link/by/car/{출발}/{경유지…}/{도착}. 경유지 최대 5곳이라 코스(최대 5곳)를 한 번에 넘긴다.
+// 웹 주소는 출발지를 꼭 적어야 해서, 코스의 첫 장소에서 출발한다.
+function kakaoCourse(ps){
+  const pt = p=>`${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
+  return "https://map.kakao.com/link/by/car/" + ps.slice(0,7).map(pt).join("/");
+}
 function navBlock(ps){
-  const legs=kakaoAppLegs(ps);
-  const btns=legs.map((g,i)=>{
-    const from = g.from ? g.from.name : "내 위치";
-    const label = legs.length>1 ? `카카오맵 ${i+1}구간 길안내` : "카카오맵으로 길안내";
-    return `<a class="nav-btn kakao" href="${g.href}"><span class="lbl"><i aria-hidden="true"></i>${label}</span><small>${from} → ${g.stops.map(p=>p.name).join(" → ")}</small></a>`;
-  }).join("");
+  const kakao = ps.length>1
+    ? `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>${ps.map(p=>p.name).join(" → ")}</small></a>`
+    : `<a class="nav-btn kakao" href="${kakaoTo(ps[0])}"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps[0].name}</small></a>`;
   const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
-  return `<li class="nav">${btns}${naver}<p class="note">지도 앱이 있는 폰에서 열려요. 카카오맵은 경유지를 2곳까지만 받아${legs.length>1?" 구간을 나눴어요. 앞 구간이 끝나면 다음 구간을 누르세요.":"요."} 네이버 지도는 코스 전체를 한 번에 넘겨요. 앱이 안 열리면 각 구간의 '길찾기'를 쓰세요.</p></li>`;
+  return `<li class="nav">${kakao}${naver}<p class="note">두 버튼 모두 코스의 모든 장소를 경유지로 넣어 한 번에 길안내해요. 카카오맵은 첫 장소에서, 네이버 지도는 내 위치에서 출발해요.</p></li>`;
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
