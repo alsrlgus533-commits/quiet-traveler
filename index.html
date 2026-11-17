@@ -428,6 +428,7 @@ const FAMOUS = [
   {name:"동문재래시장", api:"동문재래시장", prof:"village", lat:33.5115, lng:126.526},  // 동문재래시장
   {name:"서귀포매일올레시장", api:"서귀포매일올레시장", prof:"village", lat:33.2502, lng:126.5632},  // 서귀포매일올레시장
   {name:"보롬왓", api:"보롬왓", prof:"village", lat:33.4135, lng:126.7525},  // 보롬왓
+  {name:"사려니숲길", api:null, prof:"forest", lat:33.3989, lng:126.6793},  // 사려니숲길 (예측 대상 아님 → 패턴 추정)
 ];
 // 유명한 곳도 조용한 곳과 같은 식으로 붐빔을 어림한다. 원래 찾는 사람이 많으니 기본 규모(pop)를 크게 둔다.
 FAMOUS.forEach((f,i)=>{ f.id="f"+i; f.pop=.5; f.famous=true; });
@@ -772,7 +773,8 @@ function renderMap(){
   $("mapLabel").textContent = `${dt.getMonth()+1}/${dt.getDate()}(${WD[dt.getDay()]}) ${state.hour}시 기준`;
   $("mapLayer").innerHTML = LAYERS.map(([k,t])=>`<button class="chip" aria-pressed="${state.mapLayer===k}" data-k="${k}">${t}</button>`).join("");
   const items = [];
-  if(state.mapLayer!=="quiet") FAMOUS.forEach(f=>{ if(rateOf(f.api,state.date)!=null) items.push(f); });
+  // 예측이 있는 곳 + 예측 대상이 아닌 곳(api 없음, 패턴 추정)
+  if(state.mapLayer!=="quiet") FAMOUS.forEach(f=>{ if(!f.api || rateOf(f.api,state.date)!=null) items.push(f); });
   if(state.mapLayer!=="famous") PLACES.forEach(p=>items.push(p));
   const pin = p=>{
     const [x,y]=mapXY(p), q=100-crowdAt(p,state.hour,state.date), r=p.famous?9:14, sel=state.mapSel===p.id;
@@ -803,6 +805,7 @@ function renderMapInfo(p){
   const usual = (r!=null && avg) ? vsUsual(r,avg) : null;
   box.innerHTML = `<div class="row"><b>${p.name}</b><span class="${l.c}">${ripple(l.n)}</span></div>
     <small><span class="${l.c}">${state.hour}시 ${quietWord(q)}</span>${usual?` · <span class="${usual.c}">${usual.t}</span>`:""} · 가장 여유로운 때 ${bw}–${bw+2}시</small>
+    ${p.api ? "" : `<small>관광공사 예측 대상이 아니라, 숲길·오름 같은 유형별 시간 흐름과 그날 제주 전체 예측으로 추정했어요.</small>`}
     <div class="acts">${p.famous ? "" : `<button class="more" type="button" data-open="${p.id}">자세히 보기</button>`}
       <a href="${kakaoPin(p)}" target="_blank" rel="noopener">카카오맵에서 보기</a></div>`;
 }

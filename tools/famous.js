@@ -36,4 +36,5 @@ const FAMOUS = [
   {name:"동문재래시장", api:"동문재래시장", prof:"village", lat:33.5115, lng:126.526},  // 동문재래시장
   {name:"서귀포매일올레시장", api:"서귀포매일올레시장", prof:"village", lat:33.2502, lng:126.5632},  // 서귀포매일올레시장
   {name:"보롬왓", api:"보롬왓", prof:"village", lat:33.4135, lng:126.7525},  // 보롬왓
+  {name:"사려니숲길", api:null, prof:"forest", lat:33.3989, lng:126.6793},  // 사려니숲길
 ];

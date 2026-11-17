@@ -54,6 +54,8 @@ FAMOUS = [
     ("동문재래시장", "동문재래시장", "동문재래시장", "village"),
     ("서귀포매일올레시장", "서귀포매일올레시장", "서귀포매일올레시장", "village"),
     ("보롬왓", "보롬왓", "보롬왓", "village"),
+    # 관광공사 예측 대상이 아닌 곳: api=None. 앱에서 유형별 패턴 + 그날 제주 전체 예측으로 추정한다.
+    ("사려니숲길", None, "사려니숲길", "forest"),
 ]
 
 
@@ -98,7 +100,8 @@ def main():
     lines = ["// 유명 관광지(관광공사 예측 대상). 좌표는 TourAPI searchKeyword2, tools/build_famous.py 로 생성"]
     lines.append("const FAMOUS = [")
     for r in rows:
-        lines.append(f'  {{name:"{r["name"]}", api:"{r["api"]}", prof:"{r["prof"]}", lat:{r["lat"]}, lng:{r["lng"]}}},'
+        api = f'"{r["api"]}"' if r["api"] else "null"
+        lines.append(f'  {{name:"{r["name"]}", api:{api}, prof:"{r["prof"]}", lat:{r["lat"]}, lng:{r["lng"]}}},'
                      f'  // {r["src"]}')
     lines.append("];")
     open(OUT, "w", encoding="utf-8").write("\n".join(lines) + "\n")
