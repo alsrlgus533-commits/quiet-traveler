@@ -944,8 +944,7 @@ function openSheet(id, refresh, famous, opener){
     ${forecastBlock(p)}
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
       <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv"><span class="num">${sh}시</span> ${quietWord(q)}</div></div></div>
-    <div class="park"><span class="eyebrow">주차 예상 · <span class="num">${sh}시</span></span><b class="${parkWord(q).c}">${parkWord(q).t}</b>
-      <p class="note">실시간 주차 정보가 아니라, 이 시간의 한산함으로 어림한 값이에요.</p></div>
+    <div class="park"><span class="eyebrow">주차 예상 · <span class="num">${sh}시</span></span><b class="${parkWord(q).c}">${parkWord(q).t}</b></div>
     <div>
       <div class="bars" role="group" aria-label="시간대별 혼잡 추정. 막대를 누르면 그 시간으로 바뀌어요">
         ${hours.map(h=>`<button type="button" class="${h>=bw&&h<bw+2?"best-h":""} ${h===sh?"now":""}" data-h="${h}" aria-pressed="${h===sh}" aria-label="${h}시 ${quietWord(100-crowdAt(p,h,state.date))}" ><i style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></i></button>`).join("")}
