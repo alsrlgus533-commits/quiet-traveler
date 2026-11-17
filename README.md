@@ -55,7 +55,7 @@ python -m http.server 5173
 
 - 시작 전 `git pull`, 끝나면 `git add -A && git commit -m "..." && git push`.
 - 원래 PC에는 매일 06:43쯤 예측을 받아 아티팩트를 재게시하는 Claude 예약 작업(`quiet-traveler-daily-refresh`)이 있다. 그 작업은 원래 PC의 `E:\데이터랩 활용\quiet-traveler` 폴더를 쓴다. 다른 PC에서 수정한 내용이 게시되려면 원래 PC에서도 `git pull` 해야 한다.
-- 그 예약 작업이 `index.html` 과 `forecast.json` 만 게시하고 있다면 `images/` 폴더도 함께 게시하도록 고쳐야 한다. 안 그러면 게시본에서 그림이 전부 깨진다.
+- 그 예약 작업은 실행할 때마다 먼저 `git pull --ff-only` 로 최신본을 받고, `index.html`·`forecast.json`·`images/` 의 그림 전부를 게시한다. 그래서 다른 PC에서 push 만 해 두면 다음 날 아침 게시에 반영된다. 원래 PC 폴더에 커밋 안 한 변경이 있으면 pull 이 실패해 그날 게시를 건너뛴다.
 
 ## 조용한 코스
 
