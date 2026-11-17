@@ -114,8 +114,9 @@ figure.band img{display:block;width:100%;object-fit:cover;border-radius:var(--r)
 figure.hero{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
 figure.hero img{position:absolute;left:0;top:0;display:block;width:100%;height:auto;min-height:135lvh;
   object-fit:cover;object-position:50% 0;will-change:transform}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) figure.hero img{filter:brightness(.5) saturate(.85)}}
-:root[data-theme="dark"] figure.hero img{filter:brightness(.5) saturate(.85)}
+/* 어두운 화면은 밤 그림을 쓴다(스크립트가 바꿈). 이미 어두운 그림이라 살짝만 누른다. */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) figure.hero img{filter:brightness(.85)}}
+:root[data-theme="dark"] figure.hero img{filter:brightness(.85)}
 /* 첫 화면: 위쪽 절반에 하늘과 한라산, 그 아래에 제목과 카드가 이어진다. */
 header{margin:46vh -8px 0;padding:14px 16px;border-radius:18px;
   background:color-mix(in srgb,var(--bg) 58%,transparent);
@@ -991,6 +992,16 @@ function paintThemeBtn(){
   const dark = currentTheme()==="dark", b = $("themeBtn");
   b.textContent = dark ? "☀ 밝게" : "☾ 어둡게";
   b.setAttribute("aria-label", dark ? "밝은 화면으로 바꾸기" : "어두운 화면으로 바꾸기");
+  paintHero(dark);
+}
+// 어두운 화면에서는 밤 그림(별·초승달·한라산, 귤밭 돌담 벤치)으로 바꾼다. 두 그림은 같은 크기(928×1664)라 스크롤 맞춤이 그대로 맞는다.
+const HERO = {
+  light:["images/hero-tall.webp","위로는 하늘과 한라산, 아래로는 억새밭과 돌담 사이로 빈 길이 이어지는 제주 들판 그림"],
+  dark: ["images/hero-night.webp","별과 초승달 아래 한라산과 귤밭이 보이고, 돌담 옆 벤치에 한 사람이 앉아 밤하늘을 올려다보는 그림"],
+};
+function paintHero(dark){
+  const img=document.querySelector("figure.hero img"), [src,alt]=HERO[dark?"dark":"light"];
+  if(img.getAttribute("src")!==src){ img.src=src; img.alt=alt; }
 }
 $("themeBtn").addEventListener("click", ()=>{
   const next = currentTheme()==="dark" ? "light" : "dark";
