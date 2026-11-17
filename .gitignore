@@ -12,3 +12,6 @@ Thumbs.db
 
 # 제출용 ZIP
 dist/
+
+# 대회 제공 자료 (외부 공개·배포 금지)
+*.xlsx
