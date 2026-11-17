@@ -9,3 +9,6 @@ forecast.json
 __pycache__/
 .DS_Store
 Thumbs.db
+
+# 제출용 ZIP
+dist/

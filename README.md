@@ -1,90 +1,90 @@
-# 조용한 여행자
+# 조용한 여행자 — 제주 혼잡 회피 여행·관광 분석 AI Agent
 
-덜 붐비고 조용한 제주를 찾는 사람을 위한 모바일웹. 날짜와 도착 시간을 고르면 숲길·오름·바다·마을 16곳을 한산한 순서로 보여 주고, 그날 유난히 붐비는 유명 관광지 대신 갈 곳을 추천한다.
+"이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?", "다음 주 평소보다 붐빌 관광지 순위 알려줘"처럼 **일상 언어로 물으면**, 에이전트가 제주데이터허브·관광공사·기상청 데이터를 골라 조회하고 계산해 **근거가 붙은 답**(장소, 시간, 코스, 순위, 길안내 링크)을 돌려준다.
 
-- 게시 주소(비공개 아티팩트): https://claude.ai/artifact/LuzrfCCKbaxkDN31eMbfYg
+- 출품: 제주 AI·빅데이터 활용 AI Agent 개발 챌린지 (제주빅데이터센터)
+- 필수 데이터: **제주데이터허브 「관광지·상업지구 시간대별 카드 데이터」** (자세한 내용: [docs/데이터_활용_명세.md](docs/데이터_활용_명세.md))
+- AI: **업스테이지 Solar Pro 4** (`solar-pro4`, OpenAI 호환 Chat Completions + 함수 호출)
 
-## 파일
+## 빠른 실행 (3단계)
+
+필요한 것: **Python 3.10 이상**, 인터넷 연결, 업스테이지 API 키.
+
+```bash
+pip install -r requirements.txt
+copy .env.example .env          # macOS/Linux: cp .env.example .env  → .env 에 UPSTAGE_API_KEY 입력
+python -m agent.server
+```
+
+브라우저에서 **http://localhost:8000** 을 열고 "물어보세요" 칸에 질문한다.
+화면 사용법은 [docs/사용자_매뉴얼.md](docs/사용자_매뉴얼.md).
+
+- 제출본에는 관광공사 예측·날씨(`forecast.json`)와 제주데이터허브 카드 데이터 저장본이 들어 있어 **업스테이지 키 하나만으로 바로 실행**된다.
+- 최신 예측·날씨로 바꾸려면 `.env` 에 `TOUR_API_KEY`(공공데이터포털)·`KMA_API_KEY`(기상청 API허브)를 넣고 `python fetch_forecast.py` 를 돌린다.
+- 질문 한 번만 시험할 때: `python -m agent.agent "이번 주말 덜 붐비는 바다 추천해 줘"`
+
+## 구조
+
+```
+질문 (화면 대화창 또는 명령줄)
+  └→ agent/agent.py   업스테이지 Solar 가 도구를 고르고 결과를 받아 답을 쓴다 (최대 6회 도구 호출)
+        └→ agent/tools.py   도구 6개 — 숫자는 모두 여기서 계산 (AI 가 숫자를 지어내지 않게)
+              ├ find_quiet_places     날짜·시간·테마로 한산한 곳 찾기
+              ├ place_forecast        한 장소의 시간대별·14일 예측, 가장 한산한 날
+              ├ get_weather           기상청 단기·중기예보 (없는 날 Open-Meteo)
+              ├ plan_course           한산한 곳을 이어 코스 (이동·머무는 시간, 해 지는 시각, 비 예보 반영)
+              ├ rank_spots            제주 관광지 448곳의 '평소 대비' 붐빔 순위 (분석 질문)
+              └ jeju_card_time_pattern 제주데이터허브 카드 데이터로 지구별 시간대 결제 비율
+                    └→ agent/core.py   계산식 (화면 index.html 과 같은 식) · agent/datahub.py 데이터허브 연동
+```
 
 | 파일 | 내용 |
 |---|---|
-| `index.html` | 앱 전체(HTML·CSS·JS 한 파일). 장소 목록 `PLACES`, 대신 가기 `SWAPS`, 예측 API 관광지명 `API_NAME`, 사진이 있는 장소 `PHOTO` 가 맨 위 스크립트에 있음 |
-| `forecast.json` | 한국관광공사 관광지 집중률 30일 예측(제주 448곳). git 에 올리지 않음 — 각 PC에서 `fetch_forecast.py` 로 생성 |
-| `fetch_forecast.py` | 관광공사 예측 받기 (`--sample` 이면 키 없이 샘플 생성) |
-| `images/hero-tall.webp` | 페이지 전체 배경. 세로로 긴 그림(위: 하늘·한라산, 아래: 돌담길). 페이지를 내린 만큼 위에서 아래로 넘어간다. AI 일러스트(ComfyUI + Qwen-Image 2512) |
-| `images/*.webp` | 테마 그림 `forest`·`oreum`·`sea`·`village`. AI 일러스트 |
-| `images/places/*.webp` | 목록 행 배경에 까는 장소별 실제 사진 16장(TourAPI 14장, 비짓제주 2장). 출처는 `images/places/README.md` |
-| `images/places/full/*.webp` | 같은 사진의 큰 판(폭 940px, 자르지 않음). 장소를 눌렀을 때 상세 시트 윗부분 배경. 시트를 열 때만 받는다 |
-| `.env.example` | API 키 자리. 복사해서 `.env` 로 만들어 씀 |
-| `tools/build_famous.py` | 유명 관광지 36곳(`FAMOUS`)의 좌표를 TourAPI 에서 받아 `tools/famous.js` 로 만든다. 결과는 `index.html` 에 붙여 넣어 두었으므로 다시 돌릴 필요 없음 |
+| `agent/agent.py` | 에이전트 실행 루프, 시스템 프롬프트(`SYSTEM`) |
+| `agent/tools.py` | 도구 함수와 도구 설명(함수 호출 스키마 `TOOLS`) |
+| `agent/core.py` | 한산함 점수·코스·날씨 판단 계산 |
+| `agent/datahub.py` | 제주데이터허브 API 호출과 저장본 (`python -m agent.datahub` 로 갱신) |
+| `agent/server.py` | 화면과 `/api/chat` 을 함께 띄우는 로컬 서버 (표준 라이브러리) |
+| `agent/data/places.json` | 장소 53곳(조용한 곳 16, 유명한 곳 37) — `node tools/export_places.mjs` 로 화면에서 뽑음 |
+| `agent/data/datahub_card_time.json` | 제주데이터허브 카드 데이터 저장본 |
+| `index.html` | 모바일 웹 화면(날짜·시간 선택, 지도, 코스, 대화창) |
+| `fetch_forecast.py` | 관광공사 예측 + 날씨 수집 → `forecast.json` |
+| `docs/` | 사용자 매뉴얼, 데이터 활용 명세, 개발 메모 |
 
-### 지도·명소·기준 설명
+## 사용 모델·라이브러리·외부 서비스
 
-- **지도로 보기**: `JEJU.path` 는 통계청 2013 시도 경계(southkorea/southkorea-maps)에서 제주만 뽑아 줄인 해안선이다. 게시 환경이 바깥 지도 타일을 막아서 지도 API 대신 SVG 로 그린다. 점 색은 선택한 날짜·시간의 한산함(조용한 곳 16곳은 큰 점, 유명한 곳 36곳은 작은 점).
-- **오늘은 한산한 명소**: `FAMOUS` 중 그날 예측 집중률이 자기 30일 평균의 90% 미만인 곳을 평소 대비가 낮은 순으로 4곳까지.
-- **기준 설명**: 오늘 카드 아래 접이식 상자. 한산해요(65 이상)·적당해요(45~64)·붐벼요(45 미만)와 점수를 만드는 세 요소(장소 규모 × 그날 예측 × 시간대)를 적었다.
+| 구분 | 이름 | 용도 |
+|---|---|---|
+| AI 모델 | 업스테이지 Solar Pro 4 (`solar-pro4`) | 질문 해석, 도구 선택, 답 작성 |
+| 라이브러리 | `openai` (Python) | 업스테이지 OpenAI 호환 API 호출 (`base_url=https://api.upstage.ai/v1`) |
+| 라이브러리 | Python 표준 라이브러리 | 서버, 데이터 수집, 계산 |
+| 외부 API | 제주데이터허브 OpenAPI | 필수 데이터 (카드 시간대별) |
+| 외부 API | 공공데이터포털 한국관광공사 집중률 예측, TourAPI | 관광지 30일 예측, 좌표·사진 |
+| 외부 API | 기상청 API허브 단기·중기예보, Open-Meteo | 날씨 |
+| 외부 API | 비짓제주 OPEN API | 일부 장소 좌표·사진 |
+| 웹 폰트 | Google Fonts (Gowun Batang, IBM Plex Sans KR) | 화면 글꼴 |
 
-`index.html` 은 아티팩트 게시 형식에 맞춰 `<!doctype>`·`<html>`·`<head>` 없이 시작한다(게시할 때 뼈대가 씌워진다). 그래서 로컬에서 그대로 열면 브라우저가 호환(quirks) 모드로 그린다. 게시본과 줄 간격 등이 조금 다르게 보일 수 있다.
+**AI 활용 범위:** 서비스 안에서는 업스테이지 Solar 가 질문 해석·도구 선택·설명을 맡고, 모든 수치는 도구가 데이터로 계산한다. 개발 과정에서는 코드 작성 보조에 Anthropic Claude(Claude Code)를, 배경·테마 일러스트 생성에 ComfyUI(Qwen-Image)를 사용했다. 특정 장소 사진은 AI 생성 이미지를 쓰지 않고 관광공사·비짓제주 사진을 썼다.
 
-## 다른 PC에서 시작하기
+## 환경변수 (`.env`)
 
-필요한 것: Git, Python 3.10 이상(추가 패키지 없음), GitHub 로그인.
+| 이름 | 필수 | 발급 |
+|---|---|---|
+| `UPSTAGE_API_KEY` | **필수** | console.upstage.ai → API Keys |
+| `UPSTAGE_MODEL` | 선택 | 기본 `solar-pro4` |
+| `JEJU_DATAHUB_KEY` | 선택 | jejudatahub.net 로그인 → 마이페이지 → 프로젝트 키 (저장본 갱신 시) |
+| `TOUR_API_KEY` | 선택 | data.go.kr 일반 인증키 + 관광지 집중률 예측(15128555)·TourAPI·기상청 단기/중기예보 활용신청 |
+| `KMA_API_KEY` | 선택 | apihub.kma.go.kr 인증키 + 단기예보·중기예보(육상·기온) 활용신청 |
+| `PORT` | 선택 | 서버 포트, 기본 8000 |
 
-```bash
-git clone https://github.com/alsrlgus533-commits/quiet-traveler.git
-cd quiet-traveler
-copy .env.example .env      # macOS/Linux 는 cp
-```
+실제 API 키는 제출물에 넣지 않는다. 평가용 업스테이지 키는 사용 한도를 걸어 별도로 전달하고, 평가 후 폐기한다.
 
-`.env` 에 키를 채운다. 키는 git 에 올라가 있지 않으므로 원래 PC의 `.env` 에서 옮기거나 공공데이터포털 마이페이지에서 다시 확인한다.
+## 오류와 제약
 
-예측 파일(`forecast.json`)도 git 에 없으므로 처음 한 번 받는다:
-
-```bash
-python fetch_forecast.py
-```
-
-로컬에서 보기:
-
-```bash
-python -m http.server 5173
-```
-
-브라우저에서 http://localhost:5173 을 연다. `forecast.json` 이 없거나 `index.html` 을 더블클릭해 열면 **앱이 만든 샘플 예측**으로 보인다. 화면에 샘플이라는 표시가 없으니 숫자를 믿기 전에 `forecast.json` 이 있는지 확인할 것.
-
-고친 내용이 새로고침해도 안 보이면 브라우저 캐시다. Ctrl+Shift+R 로 강제 새로고침한다.
-
-### 로컬 전송이 64KB 에서 멎을 때
-
-설치형 AdGuard 같은 네트워크 필터가 로컬호스트 트래픽까지 검사하면 큰 파일(`forecast.json`, 그림)이 중간에 끊겨 앱이 샘플로 떨어지거나 그림이 깨진다. AdGuard 설정의 필터링 예외에 `python.exe` 를 넣으면 풀린다.
-
-## 작업을 옮길 때
-
-- 시작 전 `git pull`, 끝나면 `git add -A && git commit -m "..." && git push`.
-- 원래 PC에는 매일 06:43쯤 예측을 받아 아티팩트를 재게시하는 Claude 예약 작업(`quiet-traveler-daily-refresh`)이 있다. 그 작업은 원래 PC의 `E:\데이터랩 활용\quiet-traveler` 폴더를 쓴다. 다른 PC에서 수정한 내용이 게시되려면 원래 PC에서도 `git pull` 해야 한다.
-- 그 예약 작업은 실행할 때마다 먼저 `git pull --ff-only` 로 최신본을 받고, `index.html`·`forecast.json`·`images/` 의 그림 전부를 게시한다. 그래서 다른 PC에서 push 만 해 두면 다음 날 아침 게시에 반영된다. 원래 PC 폴더에 커밋 안 한 변경이 있으면 pull 이 실패해 그날 게시를 건너뛴다.
-
-## 조용한 코스
-
-날짜와 출발 시간(위의 슬라이더)에 맞춰 16곳 중 3곳(반나절) 또는 5곳(하루)을 고른다.
-
-- 머무는 시간: 숲길 1시간 30분, 오름 1시간, 바다 40분, 마을 1시간 (`STAY`)
-- 이동 시간: 좌표 사이 직선거리 × 1.4 ÷ 시속 35km, 5분 단위 (`driveMin`). 실제 교통이 아닌 어림값
-- 점수: 머무는 동안의 한산함 합 − 이동 분×0.5 + 테마가 하나 늘 때마다 8, 붐비는 곳은 크게 감점
-- 모든 순서를 따지면 5곳일 때 50만 가지라, 한 곳씩 늘리며 좋은 경로 300개만 남기는 빔 탐색을 쓴다 (`makePlan`)
-- 머무는 시간까지 해 지기 전에 끝나야 넣는다. 식사 시간은 넣지 않는다
-- 좌표(`PLACES` 의 `lat`·`lng`)는 비짓제주 관광정보 API 의 위경도. 가시리 마을은 녹산로 유채꽃길, 위미리 마을은 위미2리 포구, 오조리 식산봉은 오조포구 좌표
-
-## 그림과 사진
-
-- 테마 그림 5장은 AI 일러스트다. 유형(숲길·오름·바다·마을)을 나타낼 뿐 특정 장소를 그린 것이 아니다. **특정 장소 자리에는 AI 그림을 쓰지 않는다.**
-- 장소별 사진 16장은 실제 사진을 760×230 으로 잘라 WebP 로 줄인 것이다. 14장은 한국관광공사 TourAPI(`KorService2/searchKeyword2`), TourAPI 에 없던 오조리 식산봉·가시리 마을 2장은 비짓제주 OPEN API(`api.visitjeju.net/vsjApi/contents/searchList`, 키 `VISITJEJU_API_KEY`)에서 받았다. 비짓제주 API 는 검색어를 받지 않아 전체(약 5,900건)를 받아 제목·주소로 찾는다.
-- 새 장소에 사진을 붙이려면 `images/places/<id>.webp` 를 넣고 `index.html` 의 `PHOTO` 에 id 를 더한다.
-- TourAPI 는 `areaCode` 로 지역을 걸러 주지 않는다. 주소(`addr1`)에 "제주"가 있는지와 제목이 맞는지를 직접 확인해야 다른 지역의 같은 이름이 섞이지 않는다.
-- 공공기관 출품작이라 사적 이용이 아니며, 사진 라이선스는 따로 다루지 않기로 했다.
-
-## 데이터 출처
-
-- 한국관광공사 관광지 집중률 방문자 추이 예측 정보 (data.go.kr 15128555) — 이동통신 방문자 데이터 기반 30일 예측. 집중률은 각 관광지의 자기 평소 대비 값이라 **장소끼리 사람 수 비교에는 쓰지 않는다.** 앱은 장소마다 자기 30일 평균 대비 배율로만 쓴다.
-- 하루 안의 시간대 곡선은 유형별로 손으로 잡은 값이다(`index.html` 의 `RAW`). 실측이 아니다.
-- 예전에는 제주데이터허브 시간대별 카드 결제 비율(2017년)로 이 곡선을 35% 보정했는데 뺐다. 9년 전 자료이고, 결제가 일어나지 않는 숲길·오름에 결제 시간대를 입히는 셈이었으며, 한 곡선을 모든 유형에 섞어 유형 간 차이를 뭉갰다.
+- **"AI 키가 없어 대화가 꺼져 있어요"**: `.env` 의 `UPSTAGE_API_KEY` 를 확인한다. 키가 없어도 화면의 추천·지도·코스는 동작한다.
+- **포트 사용 중**: `python -m agent.server --port 9000`
+- **한산함·주차는 실시간 측정이 아니라 추정**이다. 관광공사 30일 예측(장소별 평소 대비) × 장소 규모 × 유형별 시간대 곡선으로 만든다.
+- 관광공사 예측이 없는 장소(일부 마을, 사려니숲길)는 제주 전체 예측과 유형별 패턴으로 추정한다.
+- 제주데이터허브 카드 데이터는 API 로 실제 응답이 오는 기간이 짧아(현재 2017년 11월분) **시간대 비율 근거로만** 쓴다.
+- 길안내 링크는 카카오맵·네이버 지도 웹 주소다. 휴대폰에서는 앱으로 이어서 열 수 있다.
+- 답은 AI 가 쓰므로 표현이 매번 조금 다를 수 있다. 숫자는 도구 결과에서만 가져오도록 지시했다.

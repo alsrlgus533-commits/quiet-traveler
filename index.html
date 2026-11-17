@@ -62,6 +62,21 @@ header p{margin:0;color:var(--muted)}
 .day[aria-pressed="true"] .wx,.day[aria-pressed="true"] .wx-cell{color:inherit}
 .today-wx{display:flex;align-items:center;gap:6px;margin-top:6px !important;color:var(--ink) !important}
 .today-wx .wx{width:20px;height:20px;flex:0 0 auto}
+/* AI 대화창 */
+.ask-log{display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto}
+.ask-log:empty{display:none}
+.msg{padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6;overflow-wrap:anywhere;max-width:92%}
+.msg.user{align-self:flex-end;background:var(--accent);color:var(--bg)}
+.msg.bot{align-self:flex-start;background:color-mix(in srgb,var(--accent-soft) 70%,transparent);color:var(--ink)}
+.msg.bot a{color:var(--accent)}
+.msg.bot ul{margin:4px 0;padding-left:18px}
+.msg .steps{display:block;margin-top:6px;font-size:11.5px;color:var(--muted)}
+.msg.err{background:color-mix(in srgb,var(--busy) 12%,transparent);color:var(--busy)}
+.ask-form{display:flex;gap:8px;align-items:flex-end}
+.ask-form textarea{flex:1;min-width:0;resize:none;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.ask-form button{flex:0 0 auto;padding:10px 16px;border-radius:12px;border:0;background:var(--accent);color:var(--bg);font-weight:600;cursor:pointer}
+.ask-form button:disabled{opacity:.5;cursor:wait}
 .rain-warn{font-size:13px;color:var(--busy);border:1px solid color-mix(in srgb,var(--busy) 35%,transparent);
   border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--busy) 8%,transparent)}
 
@@ -326,6 +341,17 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
       <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="가는 시간">
       <div class="ticks num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
     </div>
+  </section>
+
+  <!-- AI Agent 대화창: 로컬 서버(python -m agent.server)로 열었을 때만 보인다 -->
+  <section id="askSec" hidden aria-label="AI에게 물어보기">
+    <div class="sec-head"><h2>물어보세요</h2><span id="askModel"></span></div>
+    <div class="ask-log" id="askLog" aria-live="polite"></div>
+    <div class="chips" id="askEx"></div>
+    <form class="ask-form" id="askForm">
+      <textarea id="askInput" rows="2" placeholder="예: 이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?" aria-label="질문"></textarea>
+      <button type="submit" id="askBtn">보내기</button>
+    </form>
   </section>
 
   <div class="today" id="today"></div>
@@ -1133,6 +1159,60 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
   if(!document.documentElement.dataset.theme) paintThemeBtn();
 });
 paintThemeBtn();
+
+// ---------- AI Agent 대화 ----------
+// 로컬 서버가 /api/health 에 답할 때만 대화창을 켠다 (claude.ai 게시본 등에서는 숨김).
+const TOOL_WORD = {find_quiet_places:"조용한 곳 찾기", place_forecast:"장소 예측", get_weather:"날씨",
+  plan_course:"코스 짜기", rank_spots:"붐빔 순위", jeju_card_time_pattern:"제주데이터허브 카드 패턴"};
+const ASK_EX = ["이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?", "성산 쪽에서 10시부터 반나절 코스 짜줘", "다음 주 평소보다 붐빌 관광지 순위 알려줘"];
+const askHist = [];
+function esc(s){ return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]); }
+// 답의 간단한 마크다운(굵게, 목록, 링크, 줄바꿈)만 그린다. 그 밖의 HTML 은 모두 글자로 보인다.
+function mdLite(t){
+  const lines = esc(t).split(/\n/); let out="", inList=false;
+  for(const raw of lines){
+    let l = raw.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g,'$1<a href="$2" target="_blank" rel="noopener">링크</a>');
+    const m = /^\s*[-*•]\s+(.*)/.exec(l);
+    if(m){ if(!inList){ out+="<ul>"; inList=true; } out+=`<li>${m[1]}</li>`; continue; }
+    if(inList){ out+="</ul>"; inList=false; }
+    out += l.trim() ? `${l}<br>` : "<br>";
+  }
+  if(inList) out+="</ul>";
+  return out.replace(/(<br>)+$/,"");
+}
+function addMsg(role, html, steps){
+  const d=document.createElement("div"); d.className="msg "+role; d.innerHTML=html;
+  if(steps && steps.length){ const s=document.createElement("span"); s.className="steps";
+    s.textContent="조회한 데이터: "+[...new Set(steps.map(x=>TOOL_WORD[x.tool]||x.tool))].join(" · "); d.appendChild(s); }
+  $("askLog").appendChild(d); $("askLog").scrollTop=$("askLog").scrollHeight; return d;
+}
+async function ask(q){
+  q=q.trim(); if(!q) return;
+  askHist.push({role:"user", content:q}); addMsg("user", esc(q));
+  const wait=addMsg("bot","데이터를 찾고 있어요…"); $("askBtn").disabled=true; $("askInput").value="";
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:askHist})});
+    const j=await r.json(); wait.remove();
+    if(!r.ok) { addMsg("bot err", esc(j.error||"오류가 났어요.")); askHist.pop(); return; }
+    askHist.push({role:"assistant", content:j.reply}); addMsg("bot", mdLite(j.reply||""), j.steps);
+  }catch(e){ wait.remove(); addMsg("bot err","서버에 연결하지 못했어요. 'python -m agent.server' 로 실행했는지 확인해 주세요."); askHist.pop(); }
+  finally{ $("askBtn").disabled=false; $("askInput").focus(); }
+}
+(async()=>{
+  try{
+    const r=await fetch("/api/health",{cache:"no-store"}); if(!r.ok) return;
+    const j=await r.json(); if(!j.ok) return;
+    $("askSec").hidden=false;
+    $("askModel").textContent = j.agent ? "업스테이지 Solar" : "AI 키가 없어 대화가 꺼져 있어요";
+    $("askEx").innerHTML = ASK_EX.map(q=>`<button class="chip" type="button">${esc(q)}</button>`).join("");
+    $("askEx").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(b) ask(b.textContent); });
+    $("askForm").addEventListener("submit", e=>{ e.preventDefault(); ask($("askInput").value); });
+    $("askInput").addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); ask($("askInput").value); } });
+    if(!j.agent){ $("askInput").disabled=true; $("askBtn").disabled=true; }
+  }catch(e){}
+})();
 
 // ---------- 시작 ----------
 (async()=>{
