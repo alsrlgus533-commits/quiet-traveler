@@ -267,6 +267,8 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .map-info .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .map-info small{font-size:12px;color:var(--muted)}
 .map-info .acts{display:flex;gap:12px;flex-wrap:wrap;padding-top:4px}
+.map-info .acts{align-items:center}
+.map-info .map-save{order:2;margin-left:auto}
 .map-info .acts a,.map-info button.more{color:var(--accent);font-size:13px;background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline}
 
 /* 오늘 한산한 명소 */
@@ -805,17 +807,23 @@ function renderThemeBand(){
   el.hidden = false;
   el.innerHTML = `<img src="images/${m[0]}.webp" loading="lazy" decoding="async" alt="${m[1]}">`;
 }
+const PROF_WORD = {forest:"숲길", oreum:"오름", beach:"바다", coast:"바다", village:"마을"};
 function renderList(){
-  let ps = PLACES.filter(p => state.theme==="전체" || (state.theme==="저장" ? state.saved.has(p.id) : p.theme===state.theme));
+  // '저장'은 조용한 곳과 유명한 곳(지도·명소에서 저장) 모두 보여 준다.
+  let ps = state.theme==="저장"
+    ? [...PLACES, ...FAMOUS].filter(p => state.saved.has(p.id))
+    : PLACES.filter(p => state.theme==="전체" || p.theme===state.theme);
   ps = ps.map(p=>({p, q:100-crowdAt(p,state.hour,state.date)})).sort((a,b)=>b.q-a.q);
   $("countLabel").textContent = `${state.hour}시 기준 · ${ps.length}곳`;
   $("list").innerHTML = ps.length ? ps.map(({p,q})=>{
     const l=level(q);
+    const img = p.famous ? (FAMOUS_PHOTO[p.name] ? `images/famous/${FAMOUS_PHOTO[p.name]}` : "") : (PHOTO.has(p.id) ? `images/places/${p.id}.webp` : "");
+    const meta = p.famous ? `유명한 곳 · ${PROF_WORD[p.prof]||""}` : `${p.theme} · ${p.area}`;
     return `<button class="place" data-id="${p.id}">
-      ${PHOTO.has(p.id)?`<img class="shot" src="images/places/${p.id}.webp" alt="" loading="lazy">`:""}
+      ${img?`<img class="shot" src="${img}" alt="" loading="lazy">`:""}
       <span class="name">${p.name}${state.saved.has(p.id)?' <span class="c-calm" role="img" aria-label="저장됨">♡</span>':""}</span>
       ${scoreBadge(q)}
-      <span class="meta">${p.theme} · ${p.area}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}</span>
+      <span class="meta">${meta}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}</span>
     </button>`;
   }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
 }
@@ -889,6 +897,7 @@ function renderMapInfo(p){
     ${p.api ? "" : `<small>관광공사 예측 대상이 아니라, 숲길·오름 같은 유형별 시간 흐름과 그날 제주 전체 예측으로 추정했어요.</small>`}
     ${navLinks(p)}
     <div class="acts"><button class="more" type="button" data-open="${p.id}">자세히 보기</button>
+      <button class="icon-btn map-save" type="button" data-save="${p.id}" aria-pressed="${state.saved.has(p.id)}">${state.saved.has(p.id)?"♡ 저장됨":"♡ 저장"}</button>
       <a href="${kakaoPin(p)}" target="_blank" rel="noopener">카카오맵에서 보기</a></div>`;
 }
 
@@ -936,7 +945,6 @@ function openSheet(id, refresh, famous, opener){
   const photoSrc = fam ? (FAMOUS_PHOTO[p.name] ? `images/famous/${FAMOUS_PHOTO[p.name]}` : "")
                        : (PHOTO.has(id) ? `images/places/full/${id}.webp` : "");
   const photo = photoSrc ? `<div class="sheet-photo" aria-hidden="true"><img src="${photoSrc}" alt=""></div>` : "";
-  const PROF_WORD = {forest:"숲길", oreum:"오름", beach:"바다", coast:"바다", village:"마을"};
   const eyebrow = fam ? `유명한 곳 · ${PROF_WORD[p.prof]||""}` : `${p.theme} · ${p.area}`;
   $("sheet").classList.toggle("has-photo", !!photo);
   $("sheet").innerHTML = `${photo}<div class="sheet-in">
@@ -959,9 +967,9 @@ function openSheet(id, refresh, famous, opener){
       <p class="note">막대를 눌러 시간을 바꿔 보세요. 낮을수록 조용하고, 초록은 추천 시간이에요.</p>
     </div>
     ${navLinks(p)}
-    ${fam ? "" : `<div class="sheet-actions">
+    <div class="sheet-actions">
       <button class="icon-btn" id="saveBtn" aria-pressed="${saved}">${saved?"♡ 저장됨":"♡ 저장"}</button>
-    </div>`}
+    </div>
   </div>`;
   $("sheet").hidden=false; $("scrim").hidden=false; setModal(true);
   $("closeBtn").onclick=closeSheet;
@@ -973,7 +981,7 @@ function openSheet(id, refresh, famous, opener){
       if(again) again.focus();                // 다시 그리면서 날아간 포커스를 되돌린다
     };
   });
-  if($("saveBtn")) $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); openSheet(id,true); };
+  if($("saveBtn")) $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); renderMap(); openSheet(id,true); };
   if(!refresh) $("closeBtn").focus();
 }
 function closeSheet(){
@@ -1055,7 +1063,12 @@ $("map").addEventListener("keydown", e=>{
   const g=e.target.closest(".pin"); if(!g || (e.key!=="Enter" && e.key!==" ")) return;
   e.preventDefault(); pickPin(g);
 });
-$("mapInfo").addEventListener("click", e=>{ const b=e.target.closest("[data-open]"); if(b) openSheet(b.dataset.open, false, null, b); });
+$("mapInfo").addEventListener("click", e=>{
+  const s=e.target.closest("[data-save]");
+  if(s){ const id=s.dataset.save; state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved();
+    renderMap(); renderList(); const again=$("mapInfo").querySelector("[data-save]"); if(again) again.focus(); return; }
+  const b=e.target.closest("[data-open]"); if(b) openSheet(b.dataset.open, false, null, b);
+});
 // 기준 설명의 물결 아이콘
 document.querySelectorAll("[data-ripple]").forEach(el=>el.innerHTML=ripple(+el.dataset.ripple));
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && state.open) closeSheet(); });
