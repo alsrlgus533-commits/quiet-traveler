@@ -54,6 +54,14 @@ header p{margin:0;color:var(--muted)}
 .day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .day[aria-pressed="true"] small{color:inherit;opacity:.8}
 .day[aria-pressed="true"] i{box-shadow:0 0 0 2px var(--bg)}
+/* 날씨 아이콘: 선 아이콘, 해만 노란 계열로 */
+.wx{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+.wx.sun,.wx.partly{color:var(--mid)}
+.wx.rain,.wx.shower,.wx.storm{color:var(--accent)}
+.wx-cell{display:flex;flex-direction:column;align-items:center;gap:0;font-size:11px;color:var(--muted);line-height:1.1}
+.day[aria-pressed="true"] .wx,.day[aria-pressed="true"] .wx-cell{color:inherit}
+.today-wx{display:flex;align-items:center;gap:6px;margin-top:6px !important;color:var(--ink) !important}
+.today-wx .wx{width:20px;height:20px;flex:0 0 auto}
 
 .time{display:flex;flex-direction:column;gap:6px}
 .time-row{display:flex;justify-content:space-between;align-items:baseline}
@@ -667,11 +675,32 @@ const DAY_MSG = {
   mid: ["평소와 비슷한 날이에요", "유명한 곳은 오전 일찍 다녀오세요."],
   calm:["평소보다 한산한 날이에요", "조용한 여행에 좋은 날입니다."],
 };
+// ---------- 날씨 ----------
+// forecast.json 의 weather[날짜] = {sky, word, tmax, tmin, pop}. 없으면 날씨 표시는 통째로 빠진다.
+const CLOUD = "M7 17.5h9.5a3.8 3.8 0 0 0 .4-7.6A5.6 5.6 0 0 0 6.3 10.6 3.5 3.5 0 0 0 7 17.5z";
+const WX_SVG = {
+  sun:    `<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>`,
+  partly: `<path d="M8 4.5v1.3M3.6 8.5h1.3M4.9 5.2l.9.9M11.1 5.2l-.9.9"/><path d="M5.6 10.3a3 3 0 0 1 5.3-2.6"/><path d="${CLOUD}" transform="translate(2.5 2)"/>`,
+  cloud:  `<path d="${CLOUD}"/>`,
+  fog:    `<path d="M4 9h16M3 13h18M5 17h14"/>`,
+  rain:   `<path d="${CLOUD}" transform="translate(0 -3)"/><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5"/>`,
+  shower: `<path d="${CLOUD}" transform="translate(0 -3)"/><path d="M10 17.5l-1 2.5M14.5 17.5l-1 2.5"/>`,
+  snow:   `<path d="${CLOUD}" transform="translate(0 -3)"/><path d="M8.5 18.5h.01M12 20h.01M15.5 18.5h.01" stroke-width="2.6"/>`,
+  storm:  `<path d="${CLOUD}" transform="translate(0 -3)"/><path d="M12.5 15l-2 3h3l-2 3"/>`,
+};
+function wxOf(d){ return state.forecast && state.forecast.weather ? state.forecast.weather[d] : null; }
+function wxIcon(w, cls=""){
+  if(!w || !WX_SVG[w.sky]) return "";
+  return `<svg class="wx ${w.sky} ${cls}" viewBox="0 0 24 24" aria-hidden="true">${WX_SVG[w.sky]}</svg>`;
+}
 function renderDates(){
   $("dates").innerHTML = state.dates.map(d=>{
-    const dt=parseYmd(d), st=dayState(dayFactor(d));
-    return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일, ${DAY_WORD[st]}">
-      <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b><i class="${st==="calm"?"":st}"></i></button>`;
+    const dt=parseYmd(d), st=dayState(dayFactor(d)), w=wxOf(d);
+    const wxLabel = w ? `, ${w.word}${w.tmax!=null?` 최고 ${w.tmax}도`:""}` : "";
+    return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일, ${DAY_WORD[st]}${wxLabel}">
+      <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b>
+      ${w ? `<span class="wx-cell">${wxIcon(w)}<span class="num">${w.tmax!=null?w.tmax+"°":""}</span></span>` : ""}
+      <i class="${st==="calm"?"":st}"></i></button>`;
   }).join("");
   dateEdges();
 }
@@ -682,7 +711,9 @@ function dateEdges(){
 }
 function renderToday(){
   const st=dayState(dayFactor(state.date)), [head,tip]=DAY_MSG[st];
-  $("today").innerHTML = `<i class="${st==="calm"?"":st}" aria-hidden="true"></i><div><b>${head}</b><p>${tip}</p></div>`;
+  const w = wxOf(state.date);
+  const wxLine = w ? `<p class="today-wx">${wxIcon(w)}<span>${w.word}${w.tmax!=null?` · <span class="num">${w.tmax}°/${w.tmin}°</span>`:""}${w.pop?` · 비 올 확률 <span class="num">${w.pop}%</span>`:""}</span></p>` : "";
+  $("today").innerHTML = `<i class="${st==="calm"?"":st}" aria-hidden="true"></i><div><b>${head}</b><p>${tip}</p>${wxLine}</div>`;
 }
 function renderSwaps(){
   // 유명한 곳은 '자기 평소 대비' 로 줄 세운다. 집중률 값을 장소끼리 비교하면 안 되기 때문.
