@@ -142,10 +142,15 @@ def merge_days(per):
         worst = max(v, key=lambda x: SKY_RANK.get(x["sky"], 0))
         tx = [x["tmax"] for x in v if x.get("tmax") is not None]
         tn = [x["tmin"] for x in v if x.get("tmin") is not None]
-        out[day] = {"sky": worst["sky"], "word": SKY_WORD[worst["sky"]],
+        pop = max((x.get("pop") or 0) for x in v)
+        sky = worst["sky"]
+        # 잠깐 오는 이슬비 때문에 하루 종일 '비'로 보이지 않게: 비 올 확률이 40% 미만이면 흐림으로 본다.
+        if sky in ("rain", "shower", "snow", "storm") and pop < 40:
+            sky = "cloud"
+        out[day] = {"sky": sky, "word": SKY_WORD[sky],
                     "tmax": round(sum(tx) / len(tx)) if tx else None,
                     "tmin": round(sum(tn) / len(tn)) if tn else None,
-                    "pop": max((x.get("pop") or 0) for x in v)}
+                    "pop": pop}
     return out
 
 
