@@ -149,6 +149,8 @@ figure.band img{aspect-ratio:5/2}
 .swap .score,.fq .score{grid-column:2;grid-row:2}
 .fq{color:inherit;text-decoration:none}
 .fq,.swap,.stop{position:relative;isolation:isolate;overflow:hidden}
+/* 카드 바탕을 '지금 조용한 곳' 목록처럼 섹션 바탕 그대로 둔다(흰 바탕을 깔지 않음) */
+.fq,.swap,.stop{background:transparent !important}
 .swap .shot,.stop .shot{position:absolute;inset:0;width:100%;height:100%;z-index:-1;object-fit:cover;opacity:.62;
   -webkit-mask-image:linear-gradient(90deg,transparent 40%,#000 96%);mask-image:linear-gradient(90deg,transparent 40%,#000 96%)}
 .swap .ask em{padding:1px 7px;border-radius:8px;background:var(--bg);background:color-mix(in srgb,var(--bg) 84%,transparent)}
@@ -221,6 +223,8 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 8px;vertical-align:baseline}
 .dot.calm{background:var(--calm)} .dot.mid{background:var(--mid)} .dot.busy{background:var(--busy)}
 .sec-sub{margin:-6px 0 0;font-size:13px;color:var(--muted)}
+.day-key{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;color:var(--muted)}
+.day-key .dot{margin-left:0}
 
 /* 지도 */
 .map-box{border-radius:var(--r);background:var(--accent-soft);overflow:hidden}
@@ -279,8 +283,8 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
   <section aria-label="날짜 선택">
     <div class="dates" id="dates"></div>
     <div class="time">
-      <div class="time-row"><span class="eyebrow">몇 시에 나설까요?</span><strong class="num" id="hourLabel">10시</strong></div>
-      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="나서는 시간">
+      <div class="time-row"><span class="eyebrow">몇 시에 나갈까요?</span><strong class="num" id="hourLabel">10시</strong></div>
+      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="나가는 시간">
       <div class="ticks num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
     </div>
   </section>
@@ -300,7 +304,12 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
       <li><b>그날 예측</b> 한국관광공사의 30일 방문 예측에서, 그날이 그 장소의 평소보다 몰리는 날인지</li>
       <li><b>시간대</b> 숲길은 한낮, 바다는 오후, 오름은 해 뜰 때와 질 때 붐비는 하루 흐름</li>
     </ol>
-    <p>날짜 아래 점은 제주 관광지 전체의 그날 예측이에요. <span class="dot calm"></span>한산한 날 <span class="dot mid"></span>평소 같은 날 <span class="dot busy"></span>붐비는 날</p>
+    <p>날짜 아래 점은 제주 관광지 전체의 그날 예측이에요.</p>
+    <ul class="day-key">
+      <li><span class="dot calm"></span>한산한 날</li>
+      <li><span class="dot mid"></span>평소 같은 날</li>
+      <li><span class="dot busy"></span>붐비는 날</li>
+    </ul>
   </details>
 
   <section id="mapSec">
@@ -704,7 +713,7 @@ function renderPlan(){
   const plan = makePlan(state.date, state.hour, state.planLen);
   if(!plan){
     $("planLabel").textContent = "";
-    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 나서는 시간을 앞당겨 보세요.</p>';
+    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 나가는 시간을 앞당겨 보세요.</p>';
     return;
   }
   const st=plan.stops, last=st[st.length-1], drive=st.reduce((a,s)=>a+s.drive,0);
