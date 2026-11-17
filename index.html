@@ -752,11 +752,24 @@ function naverRoute(stops){
 function kakaoTo(p){ return `https://map.kakao.com/link/to/${encodeURIComponent(p.name)},${p.lat},${p.lng}`; }
 // 앱 전용 주소(kakaomap://, nmap://)는 지도 앱이 깔린 폰에서만 열린다. PC에서 누르면 빈 창만 뜨므로 웹 주소로 바꾼다.
 const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints>1 && /Mac/.test(navigator.platform));
-// 네이버 지도 웹: 장소 검색 화면(PC용)
-function naverWeb(p){ return `https://map.naver.com/p/search/${encodeURIComponent("제주 "+p.name)}`; }
+// 네이버 지도 웹 길찾기(PC용): /p/directions/{출발}/{도착}/{경유지:경유지…}/car
+// 좌표는 경도·위도에 1천만을 곱하고 20억을 더한 수를 62진수(0-9a-zA-Z)로 적는다(네이버 지도 주소에서 확인한 형식).
+// 출발을 '-'로 비우면 네이버 지도에서 출발지(내 위치 등)를 고르게 된다.
+function nv62(v){
+  const cs="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let n=Math.round(v*1e7)+2e9, s="";
+  while(n>0){ s=cs[n%62]+s; n=Math.floor(n/62); }
+  return s;
+}
+function nvPt(p){ return `${nv62(p.lng)},${nv62(p.lat)},${encodeURIComponent(p.name)},,ADDRESS_POI`; }
+function naverWebRoute(ps){
+  const goal=ps[ps.length-1], via=ps.slice(0,-1).slice(0,5);
+  return `https://map.naver.com/p/directions/-/${nvPt(goal)}/${via.length?via.map(nvPt).join(":"):"-"}/car`;
+}
+function naverWeb(p){ return naverWebRoute([p]); }
 function navLinks(p){
   const naver = IS_MOBILE ? naverRoute([p]) : naverWeb(p);
-  return `<span class="eyebrow nav-cap">${IS_MOBILE?"내 위치에서 길안내":"지도에서 보기"}</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
+  return `<span class="eyebrow nav-cap">${IS_MOBILE?"내 위치에서 길안내":"길안내"}</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
     <a class="nav-btn naver" href="${naver}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도</span></a></div>`;
 }
 // 카카오맵 웹 길찾기: /link/by/car/{출발}/{경유지…}/{도착}. 경유지 최대 5곳이라 코스(최대 5곳)를 한 번에 넘긴다.
@@ -779,7 +792,7 @@ function navBlock(ps){
   const kakao = (IS_MOBILE && ps.length<=3)
     ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`
     : `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>${ps.map(p=>p.name).join(" → ")}</small></a>`;
-  const naver = IS_MOBILE ? `<a class="nav-btn naver" href="${naverRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>` : "";
+  const naver = `<a class="nav-btn naver" href="${IS_MOBILE ? naverRoute(ps) : naverWebRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>${IS_MOBILE?"내 위치":"출발지 선택"} → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
   return `<li class="nav">${kakao}${naver}</li>`;
 }
 function renderThemes(){
