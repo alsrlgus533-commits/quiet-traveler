@@ -99,10 +99,20 @@ section{display:flex;flex-direction:column;gap:12px}
 .nav-btn{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:var(--r);background:var(--accent);color:var(--bg);
   text-decoration:none;font-weight:600;font-size:15px}
 .nav-btn small{font-weight:400;font-size:12px;opacity:.85;overflow-wrap:anywhere}
-/* 네이버 지도 버튼은 테두리만 — 카카오 버튼과 나란히 있어도 구분되게 */
-.nav-btn.naver{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+/* 길안내 버튼: 카카오·네이버를 같은 무게로. 바탕은 앱 색 그대로 두고, 앞의 작은 점 색으로만 앱을 알린다. */
+.nav-btn{background:var(--surface) !important;color:var(--ink) !important;border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(0,0,0,.06);transition:border-color .15s,background .15s}
+.nav-btn:hover{border-color:var(--accent)}
+.nav-btn:active{background:var(--accent-soft) !important}
+.nav-btn .lbl{display:inline-flex;align-items:center;gap:8px}
+.nav-btn .lbl i{flex:0 0 auto;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line)}
+.nav-btn.kakao .lbl i{background:#F5D200}
+.nav-btn.naver .lbl i{background:#1EC15F}
+.nav-btn small{color:var(--muted);opacity:1}
 .nav-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.nav-pair .nav-btn{padding:10px 12px;font-size:14px;text-align:center;align-items:center}
+.nav-pair .nav-btn{padding:11px 12px;font-size:14px;align-items:center}
+.nav-cap{display:block;margin-bottom:-8px}
+.map-info .nav-cap{margin:6px 0 4px}
 .park{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;
   border:1px solid var(--line);border-radius:12px;padding:10px 14px}
 .park b{font-family:var(--f-display);font-size:18px}
@@ -754,17 +764,17 @@ function naverRoute(stops){
 // 한 곳까지 바로 가는 길안내 (현재 위치에서 출발)
 function kakaoTo(p){ return `kakaomap://route?ep=${p.lat},${p.lng}&by=car`; }
 function navLinks(p){
-  return `<div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}">카카오맵 길안내</a>
-    <a class="nav-btn naver" href="${naverRoute([p])}">네이버 길안내</a></div>`;
+  return `<span class="eyebrow nav-cap">내 위치에서 길안내</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
+    <a class="nav-btn naver" href="${naverRoute([p])}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도</span></a></div>`;
 }
 function navBlock(ps){
   const legs=kakaoAppLegs(ps);
   const btns=legs.map((g,i)=>{
     const from = g.from ? g.from.name : "내 위치";
     const label = legs.length>1 ? `카카오맵 ${i+1}구간 길안내` : "카카오맵으로 길안내";
-    return `<a class="nav-btn kakao" href="${g.href}">${label}<small>${from} → ${g.stops.map(p=>p.name).join(" → ")}</small></a>`;
+    return `<a class="nav-btn kakao" href="${g.href}"><span class="lbl"><i aria-hidden="true"></i>${label}</span><small>${from} → ${g.stops.map(p=>p.name).join(" → ")}</small></a>`;
   }).join("");
-  const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}">네이버 지도로 길안내<small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
+  const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
   return `<li class="nav">${btns}${naver}<p class="note">지도 앱이 있는 폰에서 열려요. 카카오맵은 경유지를 2곳까지만 받아${legs.length>1?" 구간을 나눴어요. 앞 구간이 끝나면 다음 구간을 누르세요.":"요."} 네이버 지도는 코스 전체를 한 번에 넘겨요. 앱이 안 열리면 각 구간의 '길찾기'를 쓰세요.</p></li>`;
 }
 function renderThemes(){
