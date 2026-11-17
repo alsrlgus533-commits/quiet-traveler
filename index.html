@@ -748,10 +748,11 @@ function naverRoute(stops){
   return "nmap://route/car?"+q.join("&");
 }
 // 한 곳까지 바로 가는 길안내 (현재 위치에서 출발)
-function kakaoTo(p){ return `kakaomap://route?ep=${p.lat},${p.lng}&by=car`; }
+// 카카오맵 웹 길찾기(도착지만 지정): 폰에서는 내 위치에서 출발하고, 앱이 있으면 앱으로 이어진다. PC에서도 열린다.
+function kakaoTo(p){ return `https://map.kakao.com/link/to/${encodeURIComponent(p.name)},${p.lat},${p.lng}`; }
 function navLinks(p){
-  return `<span class="eyebrow nav-cap">내 위치에서 길안내</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
-    <a class="nav-btn naver" href="${naverRoute([p])}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도</span></a></div>`;
+  return `<span class="eyebrow nav-cap">내 위치에서 길안내</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
+    <a class="nav-btn naver" href="${naverRoute([p])}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도</span></a></div>`;
 }
 // 카카오맵 웹 길찾기: /link/by/car/{출발}/{경유지…}/{도착}. 경유지 최대 5곳이라 코스(최대 5곳)를 한 번에 넘긴다.
 // 웹 주소는 출발지를 꼭 적어야 해서, 코스의 첫 장소에서 출발한다.
@@ -770,9 +771,9 @@ function kakaoFromHere(ps){
 function navBlock(ps){
   // 3곳까지는 내 위치에서 출발해 전부 경유. 그보다 많으면 카카오는 내 위치 출발로 다 담을 수 없어 첫 장소에서 출발한다.
   const kakao = ps.length<=3
-    ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`
+    ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`
     : `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>${ps.map(p=>p.name).join(" → ")}</small></a>`;
-  const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
+  const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
   return `<li class="nav">${kakao}${naver}</li>`;
 }
 function renderThemes(){
