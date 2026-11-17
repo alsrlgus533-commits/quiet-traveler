@@ -834,7 +834,6 @@ function famousStat(f){
   if(r==null || !avg) return null;
   return {ratio:r/avg, q:100-crowdAt(f, state.hour, state.date), bw:bestWindow(f, state.date)};
 }
-function kakaoPin(p){ return `https://map.kakao.com/link/map/${encodeURIComponent(p.name)},${p.lat},${p.lng}`; }
 function renderFamous(){
   const rows = FAMOUS.map(f=>({f, s:famousStat(f)})).filter(r=>r.s && r.s.ratio<.9)
     .sort((a,b)=>a.s.ratio-b.s.ratio).slice(0,4);
@@ -897,8 +896,7 @@ function renderMapInfo(p){
     ${p.api ? "" : `<small>관광공사 예측 대상이 아니라, 숲길·오름 같은 유형별 시간 흐름과 그날 제주 전체 예측으로 추정했어요.</small>`}
     ${navLinks(p)}
     <div class="acts"><button class="more" type="button" data-open="${p.id}">자세히 보기</button>
-      <button class="icon-btn map-save" type="button" data-save="${p.id}" aria-pressed="${state.saved.has(p.id)}">${state.saved.has(p.id)?"♡ 저장됨":"♡ 저장"}</button>
-      <a href="${kakaoPin(p)}" target="_blank" rel="noopener">카카오맵에서 보기</a></div>`;
+      <button class="icon-btn map-save" type="button" data-save="${p.id}" aria-pressed="${state.saved.has(p.id)}">${state.saved.has(p.id)?"♡ 저장됨":"♡ 저장"}</button></div>`;
 }
 
 function renderAll(){
