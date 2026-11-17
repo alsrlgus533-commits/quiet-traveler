@@ -154,10 +154,20 @@ def merge_days(per):
     return out
 
 
-def kma_get(key, url, params):
-    q = urllib.parse.urlencode({"serviceKey": key, "pageNo": 1, "dataType": "JSON", **params})
-    with urllib.request.urlopen(url + "?" + q, timeout=30) as r:
-        body = json.loads(r.read().decode("utf-8"))["response"]["body"]
+DATA_GO = "https://apis.data.go.kr/1360000/"
+
+
+def kma_get(cred, url, params):
+    """cred = (기본 주소, 키 이름, 키). 공공데이터포털은 serviceKey, 기상청 API허브는 authKey 를 쓴다.
+    url 은 공공데이터포털 주소로 적고, API허브면 앞부분만 바꿔 부른다(뒤 경로와 요청 변수는 같다)."""
+    base, kname, key = cred
+    q = urllib.parse.urlencode({kname: key, "pageNo": 1, "dataType": "JSON", **params})
+    with urllib.request.urlopen(url.replace(DATA_GO, base) + "?" + q, timeout=30) as r:
+        res = json.loads(r.read().decode("utf-8"))["response"]
+    code = (res.get("header") or {}).get("resultCode")
+    if code not in (None, "00"):
+        raise RuntimeError(f"{code} {(res.get('header') or {}).get('resultMsg')}")
+    body = res["body"]
     items = (body.get("items") or {}).get("item") or []
     return [items] if isinstance(items, dict) else items
 
@@ -173,7 +183,7 @@ def kma_word_sky(w):
     return "sun"
 
 
-def fetch_kma(key):
+def fetch_kma(cred):
     """기상청 단기예보(오늘~3일) + 중기예보(4~10일). 공공데이터포털에서 두 서비스 활용신청이 필요하다."""
     now = dt.datetime.now()
     per = {}
@@ -183,7 +193,7 @@ def fetch_kma(key):
     else:
         bd, bt = (now - dt.timedelta(days=1)).strftime("%Y%m%d"), "2300"
     for nx, ny in [(53, 38), (52, 33)]:                     # 제주시, 서귀포시 격자
-        items = kma_get(key, "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst",
+        items = kma_get(cred, "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst",
                         {"base_date": bd, "base_time": bt, "nx": nx, "ny": ny, "numOfRows": 1500})
         days = {}
         for it in items:
@@ -209,8 +219,8 @@ def fetch_kma(key):
     if now.hour < 6:
         tmfc = (now - dt.timedelta(days=1)).strftime("%Y%m%d") + "1800"
     base = dt.datetime.strptime(tmfc[:8], "%Y%m%d").date()
-    land = kma_get(key, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst", {"regId": "11G00000", "tmFc": tmfc, "numOfRows": 10})
-    ta = kma_get(key, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa", {"regId": "11G00201", "tmFc": tmfc, "numOfRows": 10})
+    land = kma_get(cred, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst", {"regId": "11G00000", "tmFc": tmfc, "numOfRows": 10})
+    ta = kma_get(cred, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa", {"regId": "11G00201", "tmFc": tmfc, "numOfRows": 10})
     land, ta = (land[0] if land else {}), (ta[0] if ta else {})
     for n in range(3, 11):
         day = (base + dt.timedelta(days=n)).strftime("%Y%m%d")
@@ -252,9 +262,29 @@ def fetch_open_meteo():
     return merge_days(per)
 
 
+def env_value(name):
+    v = os.environ.get(name)
+    env = os.path.join(HERE, ".env")
+    if not v and os.path.exists(env):
+        for line in open(env, encoding="utf-8"):
+            if line.strip().startswith(name + "="):
+                v = line.split("=", 1)[1].strip()
+    return v or None
+
+
 def fetch_weather(key):
-    """기상청 → Open-Meteo 순서로 시도. 둘 다 실패하면 None (예측 저장은 막지 않는다)."""
-    for name, fn in [("기상청 단기·중기예보", lambda: fetch_kma(key)), ("Open-Meteo", fetch_open_meteo)]:
+    """기상청 → Open-Meteo 순서로 시도. 모두 실패하면 None (예측 저장은 막지 않는다).
+    .env 에 KMA_API_KEY(따로 쓰는 기상청 키)가 있으면 그걸 먼저 쓴다. 기상청 API허브 키(authKey)와
+    공공데이터포털 키(serviceKey) 둘 다 시도한다. 없거나 안 되면 TOUR_API_KEY 로 공공데이터포털을 부른다."""
+    tries = []
+    kma = env_value("KMA_API_KEY")
+    if kma:
+        tries += [("기상청 API허브", ("https://apihub.kma.go.kr/api/typ02/openApi/", "authKey", kma)),
+                  ("기상청(공공데이터포털, KMA_API_KEY)", (DATA_GO, "serviceKey", kma))]
+    if key:
+        tries.append(("기상청(공공데이터포털)", (DATA_GO, "serviceKey", key)))
+    fns = [(n, (lambda c=c: fetch_kma(c))) for n, c in tries] + [("Open-Meteo", fetch_open_meteo)]
+    for name, fn in fns:
         try:
             w = fn()
             if w:
