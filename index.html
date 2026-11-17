@@ -783,19 +783,9 @@ function renderPlan(){
     + (drive ? `<li class="note">차로 모두 ${dur(drive)}쯤이에요. 이동 시간은 거리로 어림했고, 식사 시간은 넣지 않았어요.</li>` : "")
     + navBlock(st.map(s=>s.p));
 }
-// 네이버 지도 앱 길찾기 스킴: 출발(slat/slng, 없으면 현재 위치) · 경유지 최대 5곳(v1~v5) · 도착(dlat/dlng). appname 필수.
-function naverRoute(stops){
-  const end=stops[stops.length-1], via=stops.slice(0,-1).slice(0,5);
-  const q=[`dlat=${end.lat}`,`dlng=${end.lng}`,`dname=${encodeURIComponent(end.name)}`];
-  via.forEach((p,i)=>q.push(`v${i+1}lat=${p.lat}`,`v${i+1}lng=${p.lng}`,`v${i+1}name=${encodeURIComponent(p.name)}`));
-  q.push("appname="+encodeURIComponent("https://claude.ai"));
-  return "nmap://route/car?"+q.join("&");
-}
 // 한 곳까지 바로 가는 길안내 (현재 위치에서 출발)
 // 카카오맵 웹 길찾기(도착지만 지정): 폰에서는 내 위치에서 출발하고, 앱이 있으면 앱으로 이어진다. PC에서도 열린다.
 function kakaoTo(p){ return `https://map.kakao.com/link/to/${encodeURIComponent(p.name)},${p.lat},${p.lng}`; }
-// 앱 전용 주소(kakaomap://, nmap://)는 지도 앱이 깔린 폰에서만 열린다. PC에서 누르면 빈 창만 뜨므로 웹 주소로 바꾼다.
-const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints>1 && /Mac/.test(navigator.platform));
 // 네이버 지도 웹 길찾기(PC용): /p/directions/{출발}/{도착}/{경유지:경유지…}/car
 // 좌표는 경도·위도에 1천만을 곱하고 20억을 더한 수를 62진수(0-9a-zA-Z)로 적는다(네이버 지도 주소에서 확인한 형식).
 // 출발을 '-'로 비우면 네이버 지도에서 출발지(내 위치 등)를 고르게 된다.
@@ -811,9 +801,11 @@ function naverWebRoute(ps){
   return `https://map.naver.com/p/directions/-/${nvPt(goal)}/${via.length?via.map(nvPt).join(":"):"-"}/car`;
 }
 function naverWeb(p){ return naverWebRoute([p]); }
+// 게시 화면은 지도 앱 주소(kakaomap://, nmap://)로 넘어가는 걸 막아서 폰에서도 아무 반응이 없다.
+// 그래서 PC·폰 모두 웹 주소를 쓴다. 폰에서는 웹 지도가 열리고, 앱이 있으면 그 화면에서 앱으로 이어 갈 수 있다.
 function navLinks(p){
-  const naver = IS_MOBILE ? naverRoute([p]) : naverWeb(p);
-  return `<span class="eyebrow nav-cap">${IS_MOBILE?"내 위치에서 길안내":"길안내"}</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
+  const naver = naverWeb(p);
+  return `<span class="eyebrow nav-cap">길안내</span><div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵</span></a>
     <a class="nav-btn naver" href="${naver}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도</span></a></div>`;
 }
 // 카카오맵 웹 길찾기: /link/by/car/{출발}/{경유지…}/{도착}. 경유지 최대 5곳이라 코스(최대 5곳)를 한 번에 넘긴다.
@@ -822,21 +814,11 @@ function kakaoCourse(ps){
   const pt = p=>`${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
   return "https://map.kakao.com/link/by/car/" + ps.slice(0,7).map(pt).join("/");
 }
-// 카카오맵 앱 스킴: 출발(sp)을 비우면 내 위치에서 출발. 경유지는 vp·vp2 두 곳까지.
-function kakaoFromHere(ps){
-  const end=ps[ps.length-1], via=ps.slice(0,-1);
-  const q=[];
-  via.forEach((p,k)=>{ const n=k?"2":""; q.push(`vp${n}=${p.lat},${p.lng}`, `vn${n}=${encodeURIComponent(p.name)}`); });
-  q.push(`ep=${end.lat},${end.lng}`, "by=car");
-  return "kakaomap://route?"+q.join("&");
-}
 function navBlock(ps){
-  // 3곳까지는 내 위치에서 출발해 전부 경유. 그보다 많으면 카카오는 내 위치 출발로 다 담을 수 없어 첫 장소에서 출발한다.
-  // PC는 앱 주소가 열리지 않아 카카오맵 웹 길찾기(첫 장소 출발)만 보여 준다.
-  const kakao = (IS_MOBILE && ps.length<=3)
-    ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span></a>`
-    : `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span></a>`;
-  const naver = `<a class="nav-btn naver" href="${IS_MOBILE ? naverRoute(ps) : naverWebRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span></a>`;
+  // 웹 주소만 쓴다(navLinks 설명 참고). 카카오 웹 길찾기는 출발지를 꼭 적어야 해서 첫 장소에서 출발하고,
+  // 네이버는 출발지를 비워 두어 지도에서 '내 위치'를 고르게 한다.
+  const kakao = `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span></a>`;
+  const naver = `<a class="nav-btn naver" href="${naverWebRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span></a>`;
   return `<li class="nav">${kakao}${naver}</li>`;
 }
 function renderThemes(){
