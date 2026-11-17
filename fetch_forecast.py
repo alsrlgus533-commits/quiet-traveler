@@ -219,8 +219,13 @@ def fetch_kma(cred):
     if now.hour < 6:
         tmfc = (now - dt.timedelta(days=1)).strftime("%Y%m%d") + "1800"
     base = dt.datetime.strptime(tmfc[:8], "%Y%m%d").date()
-    land = kma_get(cred, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst", {"regId": "11G00000", "tmFc": tmfc, "numOfRows": 10})
-    ta = kma_get(cred, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa", {"regId": "11G00201", "tmFc": tmfc, "numOfRows": 10})
+    # 중기예보는 따로 활용신청이 필요할 수 있다. 안 되면 단기예보(3일)만 돌려주고 나머지는 다른 곳에서 채운다.
+    try:
+        land = kma_get(cred, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst", {"regId": "11G00000", "tmFc": tmfc, "numOfRows": 10})
+        ta = kma_get(cred, "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa", {"regId": "11G00201", "tmFc": tmfc, "numOfRows": 10})
+    except Exception as e:
+        print(f"[warn] 기상청 중기예보 실패({e}) — 단기예보만 씀")
+        land, ta = [], []
     land, ta = (land[0] if land else {}), (ta[0] if ta else {})
     for n in range(3, 11):
         day = (base + dt.timedelta(days=n)).strftime("%Y%m%d")
@@ -283,16 +288,28 @@ def fetch_weather(key):
                   ("기상청(공공데이터포털, KMA_API_KEY)", (DATA_GO, "serviceKey", kma))]
     if key:
         tries.append(("기상청(공공데이터포털)", (DATA_GO, "serviceKey", key)))
-    fns = [(n, (lambda c=c: fetch_kma(c))) for n, c in tries] + [("Open-Meteo", fetch_open_meteo)]
-    for name, fn in fns:
+    weather, src = {}, []
+    for name, cred in tries:                       # 기상청: 처음 되는 키 하나만 쓴다
         try:
-            w = fn()
+            w = fetch_kma(cred)
             if w:
-                print(f"[ok] 날씨 {len(w)}일 ({name})")
-                return w, name
+                weather.update(w); src.append(f"{name} {len(w)}일")
+                break
         except Exception as e:
             print(f"[warn] 날씨 {name} 실패: {e}")
-    return None, None
+    # 기상청이 못 채운 날(중기예보가 없을 때 4일째부터 등)은 Open-Meteo 로 채운다.
+    try:
+        om = fetch_open_meteo()
+        extra = {d: v for d, v in om.items() if d not in weather}
+        if extra:
+            weather.update(extra); src.append(f"Open-Meteo {len(extra)}일")
+    except Exception as e:
+        print(f"[warn] 날씨 Open-Meteo 실패: {e}")
+    if not weather:
+        return None, None
+    name = " + ".join(src)
+    print(f"[ok] 날씨 {len(weather)}일 ({name})")
+    return weather, name
 
 
 def main():

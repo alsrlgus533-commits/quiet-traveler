@@ -705,7 +705,7 @@ function dateEdges(){
 function renderToday(){
   const st=dayState(dayFactor(state.date)), [head,tip]=DAY_MSG[st];
   const w = wxOf(state.date);
-  const wxLine = w ? `<p class="today-wx">${wxIcon(w)}<span>${w.word}${w.tmax!=null?` · <span class="num">${w.tmax}°/${w.tmin}°</span>`:""}${w.pop?` · 비 올 확률 <span class="num">${w.pop}%</span>`:""}</span></p>` : "";
+  const wxLine = w ? `<p class="today-wx">${wxIcon(w)}<span>${w.word}${w.tmax!=null?` · <span class="num">${w.tmax}°${w.tmin!=null?`/${w.tmin}°`:""}</span>`:""}${w.pop?` · 비 올 확률 <span class="num">${w.pop}%</span>`:""}</span></p>` : "";
   $("today").innerHTML = `<i class="${st==="calm"?"":st}" aria-hidden="true"></i><div><b>${head}</b><p>${tip}</p>${wxLine}</div>`;
 }
 function renderSwaps(){
