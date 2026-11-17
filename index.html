@@ -759,12 +759,21 @@ function kakaoCourse(ps){
   const pt = p=>`${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
   return "https://map.kakao.com/link/by/car/" + ps.slice(0,7).map(pt).join("/");
 }
+// 카카오맵 앱 스킴: 출발(sp)을 비우면 내 위치에서 출발. 경유지는 vp·vp2 두 곳까지.
+function kakaoFromHere(ps){
+  const end=ps[ps.length-1], via=ps.slice(0,-1);
+  const q=[];
+  via.forEach((p,k)=>{ const n=k?"2":""; q.push(`vp${n}=${p.lat},${p.lng}`, `vn${n}=${encodeURIComponent(p.name)}`); });
+  q.push(`ep=${end.lat},${end.lng}`, "by=car");
+  return "kakaomap://route?"+q.join("&");
+}
 function navBlock(ps){
-  const kakao = ps.length>1
-    ? `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>${ps.map(p=>p.name).join(" → ")}</small></a>`
-    : `<a class="nav-btn kakao" href="${kakaoTo(ps[0])}"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps[0].name}</small></a>`;
+  // 3곳까지는 내 위치에서 출발해 전부 경유. 그보다 많으면 카카오는 내 위치 출발로 다 담을 수 없어 첫 장소에서 출발한다.
+  const kakao = ps.length<=3
+    ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`
+    : `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>${ps.map(p=>p.name).join(" → ")}</small></a>`;
   const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
-  return `<li class="nav">${kakao}${naver}<p class="note">두 버튼 모두 코스의 모든 장소를 경유지로 넣어 한 번에 길안내해요. 카카오맵은 첫 장소에서, 네이버 지도는 내 위치에서 출발해요.</p></li>`;
+  return `<li class="nav">${kakao}${naver}</li>`;
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
