@@ -823,9 +823,9 @@ function navBlock(ps){
   // 3곳까지는 내 위치에서 출발해 전부 경유. 그보다 많으면 카카오는 내 위치 출발로 다 담을 수 없어 첫 장소에서 출발한다.
   // PC는 앱 주소가 열리지 않아 카카오맵 웹 길찾기(첫 장소 출발)만 보여 준다.
   const kakao = (IS_MOBILE && ps.length<=3)
-    ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`
-    : `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span><small>${ps.map(p=>p.name).join(" → ")}</small></a>`;
-  const naver = `<a class="nav-btn naver" href="${IS_MOBILE ? naverRoute(ps) : naverWebRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span><small>${IS_MOBILE?"내 위치":"출발지 선택"} → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
+    ? `<a class="nav-btn kakao" href="${kakaoFromHere(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span></a>`
+    : `<a class="nav-btn kakao" href="${kakaoCourse(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>카카오맵으로 길안내</span></a>`;
+  const naver = `<a class="nav-btn naver" href="${IS_MOBILE ? naverRoute(ps) : naverWebRoute(ps)}" target="_blank" rel="noopener"><span class="lbl"><i aria-hidden="true"></i>네이버 지도로 길안내</span></a>`;
   return `<li class="nav">${kakao}${naver}</li>`;
 }
 function renderThemes(){
