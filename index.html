@@ -95,6 +95,10 @@ section{display:flex;flex-direction:column;gap:12px}
   border-left:2px dotted var(--line);margin-left:35px}
 .leg a{color:var(--accent);padding:6px 2px}
 .plan .note{font-size:12px;color:var(--muted);padding-top:8px}
+.plan .nav{display:flex;flex-direction:column;gap:8px;padding-top:14px}
+.nav-btn{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:var(--r);background:var(--accent);color:var(--bg);
+  text-decoration:none;font-weight:600;font-size:15px}
+.nav-btn small{font-weight:400;font-size:12px;opacity:.85;overflow-wrap:anywhere}
 
 /* 필터 */
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -466,6 +470,21 @@ function kakaoRoute(a,b){
   const pt=p=>`${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
   return `https://map.kakao.com/link/from/${pt(a)}/to/${pt(b)}`;
 }
+// 카카오맵 앱 길찾기 스킴: 출발(sp, 없으면 현재 위치) · 경유지 최대 2곳(vp, vp2 / 이름 vn, vn2) · 도착(ep)
+// 경유지가 2곳까지라 코스를 3곳씩 구간으로 나눈다. 첫 구간은 현재 위치에서, 다음 구간은 앞 구간의 도착지에서 출발.
+function kakaoAppLegs(stops){
+  const legs=[]; let from=null, i=0;
+  while(i<stops.length){
+    const seg=stops.slice(i, i+3), end=seg[seg.length-1], via=seg.slice(0,-1);
+    const q=[];
+    if(from) q.push(`sp=${from.lat},${from.lng}`);
+    via.forEach((p,k)=>{ const n=k?"2":""; q.push(`vp${n}=${p.lat},${p.lng}`, `vn${n}=${encodeURIComponent(p.name)}`); });
+    q.push(`ep=${end.lat},${end.lng}`, "by=car");
+    legs.push({from, stops:seg, href:"kakaomap://route?"+q.join("&")});
+    from=end; i+=3;
+  }
+  return legs;
+}
 
 // ---------- 그리기 ----------
 const $ = id => document.getElementById(id);
@@ -547,7 +566,17 @@ function renderPlan(){
       <span class="meta">${s.p.theme} · ${Math.round(STAY[s.p.theme]*60)}분쯤 머물러요</span>
     </button></li>`;
   }).join("") + (st.length<state.planLen ? `<li class="note">해 지기 전까지 ${st.length}곳만 넣었어요.</li>` : "")
-    + (drive ? `<li class="note">차로 모두 ${dur(drive)}쯤이에요. 이동 시간은 거리로 어림했고, 식사 시간은 넣지 않았어요.</li>` : "");
+    + (drive ? `<li class="note">차로 모두 ${dur(drive)}쯤이에요. 이동 시간은 거리로 어림했고, 식사 시간은 넣지 않았어요.</li>` : "")
+    + navBlock(st.map(s=>s.p));
+}
+function navBlock(ps){
+  const legs=kakaoAppLegs(ps);
+  const btns=legs.map((g,i)=>{
+    const from = g.from ? g.from.name : "내 위치";
+    const label = legs.length>1 ? `${i+1}구간 길안내` : "카카오맵으로 길안내";
+    return `<a class="nav-btn" href="${g.href}">${label}<small>${from} → ${g.stops.map(p=>p.name).join(" → ")}</small></a>`;
+  }).join("");
+  return `<li class="nav">${btns}<p class="note">카카오맵 앱이 있는 폰에서 열려요. 경유지를 2곳까지만 받을 수 있어${legs.length>1?" 구간을 나눴어요. 앞 구간이 끝나면 다음 구간을 누르세요.":"요."} 앱이 안 열리면 각 구간의 '길찾기'를 쓰세요.</p></li>`;
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
