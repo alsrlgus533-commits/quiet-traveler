@@ -850,7 +850,7 @@ function renderList(){
       ${img?`<img class="shot" src="${img}" alt="" loading="lazy">`:""}
       <span class="name">${p.name}${state.saved.has(p.id)?' <span class="c-calm" role="img" aria-label="저장됨">♡</span>':""}</span>
       ${scoreBadge(q)}
-      <span class="meta">${meta}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}${wet && isOreum(p) ? ' · <span class="c-busy">비 예보, 미끄러워요</span>' : ""}</span>
+      <span class="meta">${meta}${wet && isOreum(p) ? ' · <span class="c-busy">비 예보, 미끄러워요</span>' : ""}</span>
     </button>`;
   }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
 }
@@ -921,7 +921,6 @@ function renderMapInfo(p){
   box.innerHTML = `<div class="row"><b>${p.name}</b><span class="${l.c}">${ripple(l.n)}</span></div>
     <small><span class="${l.c}">${state.hour}시 ${quietWord(q)}</span>${usual?` · <span class="${usual.c}">${usual.t}</span>`:""} · 가장 여유로운 때 ${bw}–${bw+2}시</small>
     <small>주차 예상 <span class="${parkWord(q).c}">${parkWord(q).t}</span></small>
-    ${p.api ? "" : `<small>관광공사 예측 대상이 아니라, 숲길·오름 같은 유형별 시간 흐름과 그날 제주 전체 예측으로 추정했어요.</small>`}
     ${navLinks(p)}
     <div class="acts"><button class="more" type="button" data-open="${p.id}">자세히 보기</button>
       <button class="icon-btn map-save" type="button" data-save="${p.id}" aria-pressed="${state.saved.has(p.id)}">${state.saved.has(p.id)?"♡ 저장됨":"♡ 저장"}</button></div>`;
@@ -937,7 +936,7 @@ function renderAll(){
 // ---------- 상세 시트 ----------
 function forecastBlock(p){
   const r = p.api ? rateOf(p.api, state.date) : null;
-  if(r==null) return `<p class="note">예측 대상이 아닌 곳이라, 유형별 방문 패턴과 그날 제주 전체 예측으로 추정했어요.</p>`;
+  if(r==null) return "";
   const avg = spotAvg[p.api], u = vsUsual(r, avg);
   const quietDays = state.dates.map(d=>({d, r:rateOf(p.api,d)})).filter(x=>x.r!=null).sort((a,b)=>a.r-b.r).slice(0,3)
     .map(x=>{ const t=parseYmd(x.d); return `${t.getMonth()+1}/${t.getDate()}(${WD[t.getDay()]})`; });
