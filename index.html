@@ -671,9 +671,9 @@ const $ = id => document.getElementById(id);
 function dayState(f){ return f>1.08 ? "busy" : f<.95 ? "calm" : "mid"; }
 const DAY_WORD = {busy:"붐비는 날", mid:"평소 같은 날", calm:"한산한 날"};
 const DAY_MSG = {
-  busy:["평소보다 붐비는 날이에요", "이른 아침이나 중산간을 추천해요."],
-  mid: ["평소와 비슷한 날이에요", "유명한 곳은 오전 일찍 다녀오세요."],
-  calm:["평소보다 한산한 날이에요", "조용한 여행에 좋은 날입니다."],
+  busy:["평소보다 붐비는 날이에요", "사람이 몰리기 전, 아침 일찍 나서 보세요."],
+  mid: ["평소와 비슷한 날이에요", "유명한 곳은 오전에 다녀오면 여유로워요."],
+  calm:["평소보다 한산한 날이에요", "어디든 여유롭게 둘러보기 좋아요."],
 };
 // ---------- 날씨 ----------
 // forecast.json 의 weather[날짜] = {sky, word, tmax, tmin, pop}. 없으면 날씨 표시는 통째로 빠진다.
