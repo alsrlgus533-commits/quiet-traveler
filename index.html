@@ -334,12 +334,6 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
       <li><b>그날 예측</b> 한국관광공사의 30일 방문 예측에서, 그날이 그 장소의 평소보다 몰리는 날인지</li>
       <li><b>시간대</b> 숲길은 한낮, 바다는 오후, 오름은 해 뜰 때와 질 때 붐비는 하루 흐름</li>
     </ol>
-    <p>날짜 아래 점은 제주 관광지 전체의 그날 예측이에요.</p>
-    <ul class="day-key">
-      <li><span class="dot calm"></span>한산한 날</li>
-      <li><span class="dot mid"></span>평소 같은 날</li>
-      <li><span class="dot busy"></span>붐비는 날</li>
-    </ul>
   </details>
 
   <section id="mapSec">
@@ -699,8 +693,7 @@ function renderDates(){
     const wxLabel = w ? `, ${w.word}${w.tmax!=null?` 최고 ${w.tmax}도`:""}` : "";
     return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일, ${DAY_WORD[st]}${wxLabel}">
       <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b>
-      ${w ? `<span class="wx-cell">${wxIcon(w)}<span class="num">${w.tmax!=null?w.tmax+"°":""}</span></span>` : ""}
-      <i class="${st==="calm"?"":st}"></i></button>`;
+      ${w ? `<span class="wx-cell">${wxIcon(w)}<span class="num">${w.tmax!=null?w.tmax+"°":""}</span></span>` : ""}</button>`;
   }).join("");
   dateEdges();
 }
