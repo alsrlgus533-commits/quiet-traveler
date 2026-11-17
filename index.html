@@ -99,6 +99,14 @@ section{display:flex;flex-direction:column;gap:12px}
 .nav-btn{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:var(--r);background:var(--accent);color:var(--bg);
   text-decoration:none;font-weight:600;font-size:15px}
 .nav-btn small{font-weight:400;font-size:12px;opacity:.85;overflow-wrap:anywhere}
+/* 네이버 지도 버튼은 테두리만 — 카카오 버튼과 나란히 있어도 구분되게 */
+.nav-btn.naver{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.nav-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nav-pair .nav-btn{padding:10px 12px;font-size:14px;text-align:center;align-items:center}
+.park{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;
+  border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.park b{font-family:var(--f-display);font-size:18px}
+.park .note{flex-basis:100%}
 
 /* 필터 */
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -223,7 +231,8 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 8px;vertical-align:baseline}
 .dot.calm{background:var(--calm)} .dot.mid{background:var(--mid)} .dot.busy{background:var(--busy)}
 .sec-sub{margin:-6px 0 0;font-size:13px;color:var(--muted)}
-.day-key{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;color:var(--muted)}
+.day-key{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted)}
+.day-key li{white-space:nowrap}
 .day-key .dot{margin-left:0}
 
 /* 지도 */
@@ -247,7 +256,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .map-info .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .map-info small{font-size:12px;color:var(--muted)}
 .map-info .acts{display:flex;gap:12px;flex-wrap:wrap;padding-top:4px}
-.map-info a,.map-info button.more{color:var(--accent);font-size:13px;background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline}
+.map-info .acts a,.map-info button.more{color:var(--accent);font-size:13px;background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline}
 
 /* 오늘 한산한 명소 */
 .fq{display:flex;flex-direction:column;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
@@ -283,8 +292,8 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
   <section aria-label="날짜 선택">
     <div class="dates" id="dates"></div>
     <div class="time">
-      <div class="time-row"><span class="eyebrow">몇 시에 나갈까요?</span><strong class="num" id="hourLabel">10시</strong></div>
-      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="나가는 시간">
+      <div class="time-row"><span class="eyebrow">몇 시에 갈까요?</span><strong class="num" id="hourLabel">10시</strong></div>
+      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="가는 시간">
       <div class="ticks num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
     </div>
   </section>
@@ -568,6 +577,8 @@ function level(quiet){
   return quiet>=80 ? {c:"c-calm", n:5} : quiet>=65 ? {c:"c-calm", n:4}
        : quiet>=45 ? {c:"c-mid", n:3}  : quiet>=25 ? {c:"c-busy", n:2} : {c:"c-busy", n:1};
 }
+// 주차 예상: 실시간 주차 데이터가 아니라 그 시간의 한산함으로 어림한다.
+function parkWord(q){ return q>=65 ? {t:"여유", c:"c-calm"} : q>=45 ? {t:"보통", c:"c-mid"} : {t:"혼잡", c:"c-busy"}; }
 // 목록·카드·코스가 함께 쓰는 장소 사진 배경
 function shotImg(id){ return PHOTO.has(id) ? `<img class="shot" src="images/places/${id}.webp" alt="" loading="lazy">` : ""; }
 // 목록·카드·코스가 함께 쓰는 한산함 표시(물결 + 말)
@@ -713,7 +724,7 @@ function renderPlan(){
   const plan = makePlan(state.date, state.hour, state.planLen);
   if(!plan){
     $("planLabel").textContent = "";
-    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 나가는 시간을 앞당겨 보세요.</p>';
+    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 가는 시간을 앞당겨 보세요.</p>';
     return;
   }
   const st=plan.stops, last=st[st.length-1], drive=st.reduce((a,s)=>a+s.drive,0);
@@ -732,14 +743,29 @@ function renderPlan(){
     + (drive ? `<li class="note">차로 모두 ${dur(drive)}쯤이에요. 이동 시간은 거리로 어림했고, 식사 시간은 넣지 않았어요.</li>` : "")
     + navBlock(st.map(s=>s.p));
 }
+// 네이버 지도 앱 길찾기 스킴: 출발(slat/slng, 없으면 현재 위치) · 경유지 최대 5곳(v1~v5) · 도착(dlat/dlng). appname 필수.
+function naverRoute(stops){
+  const end=stops[stops.length-1], via=stops.slice(0,-1).slice(0,5);
+  const q=[`dlat=${end.lat}`,`dlng=${end.lng}`,`dname=${encodeURIComponent(end.name)}`];
+  via.forEach((p,i)=>q.push(`v${i+1}lat=${p.lat}`,`v${i+1}lng=${p.lng}`,`v${i+1}name=${encodeURIComponent(p.name)}`));
+  q.push("appname="+encodeURIComponent("https://claude.ai"));
+  return "nmap://route/car?"+q.join("&");
+}
+// 한 곳까지 바로 가는 길안내 (현재 위치에서 출발)
+function kakaoTo(p){ return `kakaomap://route?ep=${p.lat},${p.lng}&by=car`; }
+function navLinks(p){
+  return `<div class="nav-pair"><a class="nav-btn kakao" href="${kakaoTo(p)}">카카오맵 길안내</a>
+    <a class="nav-btn naver" href="${naverRoute([p])}">네이버 길안내</a></div>`;
+}
 function navBlock(ps){
   const legs=kakaoAppLegs(ps);
   const btns=legs.map((g,i)=>{
     const from = g.from ? g.from.name : "내 위치";
-    const label = legs.length>1 ? `${i+1}구간 길안내` : "카카오맵으로 길안내";
-    return `<a class="nav-btn" href="${g.href}">${label}<small>${from} → ${g.stops.map(p=>p.name).join(" → ")}</small></a>`;
+    const label = legs.length>1 ? `카카오맵 ${i+1}구간 길안내` : "카카오맵으로 길안내";
+    return `<a class="nav-btn kakao" href="${g.href}">${label}<small>${from} → ${g.stops.map(p=>p.name).join(" → ")}</small></a>`;
   }).join("");
-  return `<li class="nav">${btns}<p class="note">카카오맵 앱이 있는 폰에서 열려요. 경유지를 2곳까지만 받을 수 있어${legs.length>1?" 구간을 나눴어요. 앞 구간이 끝나면 다음 구간을 누르세요.":"요."} 앱이 안 열리면 각 구간의 '길찾기'를 쓰세요.</p></li>`;
+  const naver = `<a class="nav-btn naver" href="${naverRoute(ps)}">네이버 지도로 길안내<small>내 위치 → ${ps.map(p=>p.name).join(" → ")}</small></a>`;
+  return `<li class="nav">${btns}${naver}<p class="note">지도 앱이 있는 폰에서 열려요. 카카오맵은 경유지를 2곳까지만 받아${legs.length>1?" 구간을 나눴어요. 앞 구간이 끝나면 다음 구간을 누르세요.":"요."} 네이버 지도는 코스 전체를 한 번에 넘겨요. 앱이 안 열리면 각 구간의 '길찾기'를 쓰세요.</p></li>`;
 }
 function renderThemes(){
   $("themes").innerHTML = THEMES.map(t=>`<button class="chip" aria-pressed="${t===state.theme}" data-t="${t}">${t==="저장"?"♡ 저장":t}</button>`).join("");
@@ -831,7 +857,9 @@ function renderMapInfo(p){
   const usual = (r!=null && avg) ? vsUsual(r,avg) : null;
   box.innerHTML = `<div class="row"><b>${p.name}</b><span class="${l.c}">${ripple(l.n)}</span></div>
     <small><span class="${l.c}">${state.hour}시 ${quietWord(q)}</span>${usual?` · <span class="${usual.c}">${usual.t}</span>`:""} · 가장 여유로운 때 ${bw}–${bw+2}시</small>
+    <small>주차 예상 <span class="${parkWord(q).c}">${parkWord(q).t}</span></small>
     ${p.api ? "" : `<small>관광공사 예측 대상이 아니라, 숲길·오름 같은 유형별 시간 흐름과 그날 제주 전체 예측으로 추정했어요.</small>`}
+    ${navLinks(p)}
     <div class="acts">${p.famous ? "" : `<button class="more" type="button" data-open="${p.id}">자세히 보기</button>`}
       <a href="${kakaoPin(p)}" target="_blank" rel="noopener">카카오맵에서 보기</a></div>`;
 }
@@ -890,6 +918,8 @@ function openSheet(id, refresh, famous, opener){
     ${forecastBlock(p)}
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
       <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv"><span class="num">${sh}시</span> ${quietWord(q)}</div></div></div>
+    <div class="park"><span class="eyebrow">주차 예상 · <span class="num">${sh}시</span></span><b class="${parkWord(q).c}">${parkWord(q).t}</b>
+      <p class="note">실시간 주차 정보가 아니라, 이 시간의 한산함으로 어림한 값이에요.</p></div>
     <div>
       <div class="bars" role="group" aria-label="시간대별 혼잡 추정. 막대를 누르면 그 시간으로 바뀌어요">
         ${hours.map(h=>`<button type="button" class="${h>=bw&&h<bw+2?"best-h":""} ${h===sh?"now":""}" data-h="${h}" aria-pressed="${h===sh}" aria-label="${h}시 ${quietWord(100-crowdAt(p,h,state.date))}" ><i style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></i></button>`).join("")}
@@ -897,6 +927,7 @@ function openSheet(id, refresh, famous, opener){
       <div class="bar-x num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
       <p class="note">막대를 눌러 시간을 바꿔 보세요. 낮을수록 조용하고, 초록은 추천 시간이에요.</p>
     </div>
+    ${navLinks(p)}
     <div class="sheet-actions">
       <a class="link" href="${mapUrl}" target="_blank" rel="noopener">카카오맵에서 보기</a>
       <button class="icon-btn" id="saveBtn" aria-pressed="${saved}">${saved?"♡ 저장됨":"♡ 저장"}</button>
