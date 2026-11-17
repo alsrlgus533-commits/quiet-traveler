@@ -62,6 +62,8 @@ header p{margin:0;color:var(--muted)}
 .day[aria-pressed="true"] .wx,.day[aria-pressed="true"] .wx-cell{color:inherit}
 .today-wx{display:flex;align-items:center;gap:6px;margin-top:6px !important;color:var(--ink) !important}
 .today-wx .wx{width:20px;height:20px;flex:0 0 auto}
+.rain-warn{font-size:13px;color:var(--busy);border:1px solid color-mix(in srgb,var(--busy) 35%,transparent);
+  border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--busy) 8%,transparent)}
 
 .time{display:flex;flex-direction:column;gap:6px}
 .time-row{display:flex;justify-content:space-between;align-items:baseline}
@@ -631,25 +633,29 @@ function quietStay(p,t,date){ return 100-(crowdAt(p,t,date)+crowdAt(p,t+STAY[p.t
 // 가능한 순서를 다 따지면 5곳일 때 50만 가지라 슬라이더를 끌 때 버벅인다.
 // 한 곳씩 늘려 가며 점수 좋은 300개 경로만 남기는 방식(빔 탐색)으로 충분히 좋은 코스를 고른다.
 // 점수: 머무는 동안의 한산함 합 − 이동 시간(분)×0.5 + 테마 하나 늘 때마다 8. 붐비는 곳(45 미만)은 크게 깎는다.
+// 비 오는 날: 오름은 빼고(미끄럽고 바람이 세서), 숲길·마을은 더 권하고, 바다는 조금 덜 권한다.
+const RAIN_FIT = {"숲길":12, "마을":8, "바다":-25, "오름":0};
 function makePlan(date, start, n){
   const end = SUN_DOWN[parseYmd(date).getMonth()];          // 머무는 시간까지 해 지기 전에 끝나야 한다
-  const stopScore = q => q - (q<45 ? 30 : 0);
-  let beam = PLACES.filter(p=>start+STAY[p.theme]<=end).map(p=>{
+  const wet = isRainy(date);
+  const pool = wet ? PLACES.filter(p=>p.theme!=="오름") : PLACES;
+  const stopScore = (q,p) => q - (q<45 ? 30 : 0) + (wet ? RAIN_FIT[p.theme] : 0);
+  let beam = pool.filter(p=>start+STAY[p.theme]<=end).map(p=>{
     const q=quietStay(p,start,date);
-    return {stops:[{p,t:start,q,drive:0}], t:start+STAY[p.theme], score:stopScore(q)+8, themes:new Set([p.theme])};
+    return {stops:[{p,t:start,q,drive:0}], t:start+STAY[p.theme], score:stopScore(q,p)+8, themes:new Set([p.theme])};
   });
   let best = beam;
   for(let k=1;k<n;k++){
     const next=[];
     for(const path of beam){
       const last=path.stops[path.stops.length-1].p;
-      for(const p of PLACES){
+      for(const p of pool){
         if(path.stops.some(s=>s.p===p)) continue;
         const d=driveMin(last,p), t=path.t+d/60;
         if(t+STAY[p.theme]>end) continue;
         const q=quietStay(p,t,date), nt=!path.themes.has(p.theme);
         next.push({stops:[...path.stops,{p,t,q,drive:d}], t:t+STAY[p.theme],
-          score:path.score+stopScore(q)-d*.5+(nt?8:0), themes:nt?new Set([...path.themes,p.theme]):path.themes});
+          score:path.score+stopScore(q,p)-d*.5+(nt?8:0), themes:nt?new Set([...path.themes,p.theme]):path.themes});
       }
     }
     if(!next.length) break;
@@ -689,6 +695,8 @@ const WX_SVG = {
   storm:  `<path d="${CLOUD}" transform="translate(0 -3)"/><path d="M12.5 15l-2 3h3l-2 3"/>`,
 };
 function wxOf(d){ return state.forecast && state.forecast.weather ? state.forecast.weather[d] : null; }
+// 비·소나기·눈·뇌우 예보가 있는 날 (비 올 확률 40% 미만은 수집할 때 이미 '흐림'으로 바뀐다)
+function isRainy(d){ const w=wxOf(d); return !!w && ["rain","shower","snow","storm"].includes(w.sky); }
 function wxIcon(w, cls=""){
   if(!w || !WX_SVG[w.sky]) return "";
   return `<svg class="wx ${w.sky} ${cls}" viewBox="0 0 24 24" aria-hidden="true">${WX_SVG[w.sky]}</svg>`;
@@ -709,7 +717,8 @@ function dateEdges(){
   box.classList.toggle("more-r", box.scrollLeft<max-2);
 }
 function renderToday(){
-  const st=dayState(dayFactor(state.date)), [head,tip]=DAY_MSG[st];
+  const st=dayState(dayFactor(state.date)), [head,tip0]=DAY_MSG[st];
+  const tip = isRainy(state.date) ? "비 소식이 있어요. 오름보다 숲길이나 마을이 걷기 좋아요." : tip0;
   const w = wxOf(state.date);
   const wxLine = w ? `<p class="today-wx">${wxIcon(w)}<span>${w.word}${w.tmax!=null?` · <span class="num">${w.tmax}°${w.tmin!=null?`/${w.tmin}°`:""}</span>`:""}${w.pop?` · 비 올 확률 <span class="num">${w.pop}%</span>`:""}</span></p>` : "";
   $("today").innerHTML = `<i class="${st==="calm"?"":st}" aria-hidden="true"></i><div><b>${head}</b><p>${tip}</p>${wxLine}</div>`;
@@ -729,7 +738,9 @@ function renderSwaps(){
   const used = new Set();
   for(const r of rows){
     const paired = PLACES.find(p=>p.id===r.s.alt);
-    const pool = PLACES.filter(p=>p.theme===paired.theme && !used.has(p.id));
+    // 비 오는 날 오름 대신은 숲길에서 고른다.
+    const theme = (isRainy(state.date) && paired.theme==="오름") ? "숲길" : paired.theme;
+    const pool = PLACES.filter(p=>p.theme===theme && !used.has(p.id));
     const best = (pool.length?pool:[paired])
       .map(p=>({p, q:100-crowdAt(p, state.hour, state.date)}))
       .sort((a,b)=>b.q-a.q)[0];
@@ -844,7 +855,10 @@ function renderList(){
   let ps = state.theme==="저장"
     ? [...PLACES, ...FAMOUS].filter(p => state.saved.has(p.id))
     : PLACES.filter(p => state.theme==="전체" || p.theme===state.theme);
-  ps = ps.map(p=>({p, q:100-crowdAt(p,state.hour,state.date)})).sort((a,b)=>b.q-a.q);
+  // 비 오는 날 오름은 목록 맨 아래로 내리고 '비 예보' 표시를 붙인다.
+  const wet = isRainy(state.date), isOreum = p => p.famous ? p.prof==="oreum" : p.theme==="오름";
+  ps = ps.map(p=>({p, q:100-crowdAt(p,state.hour,state.date)}))
+    .sort((a,b)=> (wet ? (isOreum(a.p)-isOreum(b.p)) : 0) || b.q-a.q);
   $("countLabel").textContent = `${state.hour}시 기준 · ${ps.length}곳`;
   $("list").innerHTML = ps.length ? ps.map(({p,q})=>{
     const l=level(q);
@@ -854,7 +868,7 @@ function renderList(){
       ${img?`<img class="shot" src="${img}" alt="" loading="lazy">`:""}
       <span class="name">${p.name}${state.saved.has(p.id)?' <span class="c-calm" role="img" aria-label="저장됨">♡</span>':""}</span>
       ${scoreBadge(q)}
-      <span class="meta">${meta}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}</span>
+      <span class="meta">${meta}${p.api && rateOf(p.api,state.date)!=null ? "" : " · 패턴 추정"}${wet && isOreum(p) ? ' · <span class="c-busy">비 예보, 미끄러워요</span>' : ""}</span>
     </button>`;
   }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
 }
@@ -866,7 +880,8 @@ function famousStat(f){
   return {ratio:r/avg, q:100-crowdAt(f, state.hour, state.date), bw:bestWindow(f, state.date)};
 }
 function renderFamous(){
-  const rows = FAMOUS.map(f=>({f, s:famousStat(f)})).filter(r=>r.s && r.s.ratio<.9)
+  const wet = isRainy(state.date);
+  const rows = FAMOUS.filter(f=>!(wet && f.prof==="oreum")).map(f=>({f, s:famousStat(f)})).filter(r=>r.s && r.s.ratio<.9)
     .sort((a,b)=>a.s.ratio-b.s.ratio).slice(0,4);
   $("famousQuiet").innerHTML = rows.length ? rows.map(({f,s})=>{
     const img = FAMOUS_PHOTO[f.name];
@@ -983,6 +998,7 @@ function openSheet(id, refresh, famous, opener){
       <button class="icon-btn" id="closeBtn">닫기</button>
     </div>
     ${p.desc ? `<p>${p.desc}</p>` : ""}
+    ${isRainy(state.date) && (fam ? p.prof==="oreum" : p.theme==="오름") ? `<p class="rain-warn">이날 비 예보가 있어요. 오름은 길이 미끄럽고 바람이 세서, 맑은 날에 가는 걸 추천해요.</p>` : ""}
     ${instead?`<p class="note">${instead} 대신 가기 좋은 곳이에요.</p>`:""}
     ${forecastBlock(p)}
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
