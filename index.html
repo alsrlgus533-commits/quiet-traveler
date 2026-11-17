@@ -174,6 +174,12 @@ figure.band img{aspect-ratio:5/2}
 .swap .ask,.fq .ask{grid-column:1/-1}
 .swap b,.fq b,.fq small{grid-column:1}
 .swap .score,.fq .score{grid-column:2;grid-row:2}
+/* 대신 가기 카드: 윗줄은 붐비는 유명한 곳(이름 + 붐빔 표시), 아랫줄은 대신 갈 곳(이름 + 한산함) */
+.swap .ask{justify-content:flex-start !important;align-items:center !important;gap:8px}
+.swap .ask b.fam{font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--ink)}
+.swap .instead{grid-column:1;font-size:12px;color:var(--muted);margin-top:4px}
+.swap b.alt{grid-column:1}
+.swap .score{grid-row:2/4 !important}
 .fq{color:inherit;text-decoration:none}
 .fq,.swap,.stop{position:relative;isolation:isolate;overflow:hidden}
 /* 카드 바탕을 '지금 조용한 곳' 목록처럼 섹션 바탕 그대로 둔다(흰 바탕을 깔지 않음) */
@@ -734,8 +740,9 @@ function renderSwaps(){
   $("swaps").innerHTML = shown.length ? shown.map(r=>{
     return `<button class="swap" data-id="${r.alt.id}" data-famous="${r.s.famous}">
       ${shotImg(r.alt.id)}
-      <span class="ask">${r.s.famous} 대신, 여긴 어때요?<em class="c-busy">오늘 더 붐벼요</em></span>
-      <b>${r.alt.name}</b>
+      <span class="ask"><b class="fam">${r.s.famous}</b><em class="c-busy">평소보다 붐벼요</em></span>
+      <span class="instead">대신 여긴 어때요? ↓</span>
+      <b class="alt">${r.alt.name}</b>
       ${scoreBadge(r.aq)}
     </button>`;
   }).join("") : '<p class="empty">오늘은 유명한 곳도 평소 수준이에요. 가고 싶던 곳으로 다녀오세요.</p>';
