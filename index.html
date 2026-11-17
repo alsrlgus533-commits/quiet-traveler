@@ -147,7 +147,11 @@ figure.band img{aspect-ratio:5/2}
 .swap .ask,.fq .ask{grid-column:1/-1}
 .swap b,.fq b,.fq small{grid-column:1}
 .swap .score,.fq .score{grid-column:2;grid-row:2}
-.fq{color:inherit;text-decoration:none;position:relative;isolation:isolate;overflow:hidden}
+.fq{color:inherit;text-decoration:none}
+.fq,.swap,.stop{position:relative;isolation:isolate;overflow:hidden}
+.swap .shot,.stop .shot{position:absolute;inset:0;width:100%;height:100%;z-index:-1;object-fit:cover;opacity:.62;
+  -webkit-mask-image:linear-gradient(90deg,transparent 40%,#000 96%);mask-image:linear-gradient(90deg,transparent 40%,#000 96%)}
+.swap .ask em{padding:1px 7px;border-radius:8px;background:var(--bg);background:color-mix(in srgb,var(--bg) 84%,transparent)}
 .fq .ask em{padding:1px 7px;border-radius:8px;background:var(--bg);background:color-mix(in srgb,var(--bg) 84%,transparent)}
 /* 목록 행처럼 오른쪽으로 갈수록 관광지 사진이 드러난다 */
 .fq .shot{position:absolute;inset:0;width:100%;height:100%;z-index:-1;object-fit:cover;opacity:.62;
@@ -275,8 +279,8 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
   <section aria-label="날짜 선택">
     <div class="dates" id="dates"></div>
     <div class="time">
-      <div class="time-row"><span class="eyebrow">도착 시간</span><strong class="num" id="hourLabel">10시</strong></div>
-      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="도착 시간">
+      <div class="time-row"><span class="eyebrow">몇 시에 나설까요?</span><strong class="num" id="hourLabel">10시</strong></div>
+      <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="나서는 시간">
       <div class="ticks num"><span>6시</span><span>10시</span><span>14시</span><span>18시</span><span>20시</span></div>
     </div>
   </section>
@@ -555,6 +559,8 @@ function level(quiet){
   return quiet>=80 ? {c:"c-calm", n:5} : quiet>=65 ? {c:"c-calm", n:4}
        : quiet>=45 ? {c:"c-mid", n:3}  : quiet>=25 ? {c:"c-busy", n:2} : {c:"c-busy", n:1};
 }
+// 목록·카드·코스가 함께 쓰는 장소 사진 배경
+function shotImg(id){ return PHOTO.has(id) ? `<img class="shot" src="images/places/${id}.webp" alt="" loading="lazy">` : ""; }
 // 목록·카드·코스가 함께 쓰는 한산함 표시(물결 + 말)
 function scoreBadge(q){ const l=level(q); return `<span class="score ${l.c}">${ripple(l.n)}<span class="lv">${quietWord(q)}</span></span>`; }
 function ripple(n){ return '<span class="ripple" aria-hidden="true">'+[1,2,3,4,5].map(i=>`<u class="${i<=n?"on":""}" style="height:${6+i*2}px"></u>`).join("")+'</span>'; }
@@ -685,6 +691,7 @@ function renderSwaps(){
   const shown = rows.filter(r=>r.aq>=45);
   $("swaps").innerHTML = shown.length ? shown.map(r=>{
     return `<button class="swap" data-id="${r.alt.id}" data-famous="${r.s.famous}">
+      ${shotImg(r.alt.id)}
       <span class="ask">${r.s.famous} 대신, 여긴 어때요?<em class="c-busy">오늘 더 붐벼요</em></span>
       <b>${r.alt.name}</b>
       ${scoreBadge(r.aq)}
@@ -697,7 +704,7 @@ function renderPlan(){
   const plan = makePlan(state.date, state.hour, state.planLen);
   if(!plan){
     $("planLabel").textContent = "";
-    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 도착 시간을 앞당겨 보세요.</p>';
+    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 나서는 시간을 앞당겨 보세요.</p>';
     return;
   }
   const st=plan.stops, last=st[st.length-1], drive=st.reduce((a,s)=>a+s.drive,0);
@@ -706,6 +713,7 @@ function renderPlan(){
     const l=level(s.q), leg = i ? `<li class="leg"><span>차로 ${s.drive}분</span>
       <a href="${kakaoRoute(st[i-1].p, s.p)}" target="_blank" rel="noopener">길찾기</a></li>` : "";
     return `${leg}<li><button class="stop" data-id="${s.p.id}" data-h="${Math.min(20,Math.max(6,Math.round(s.t)))}">
+      ${shotImg(s.p.id)}
       <time class="num">${clock(s.t)}</time>
       <span class="name">${s.p.name}</span>
       ${scoreBadge(s.q)}
