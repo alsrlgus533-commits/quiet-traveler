@@ -100,12 +100,13 @@ section{display:flex;flex-direction:column;gap:12px}
   text-decoration:none;font-weight:600;font-size:15px}
 .nav-btn small{font-weight:400;font-size:12px;opacity:.85;overflow-wrap:anywhere}
 /* 길안내 버튼: 카카오·네이버를 같은 무게로. 바탕은 앱 색 그대로 두고, 앞의 작은 점 색으로만 앱을 알린다. */
-.nav-btn{background:var(--surface) !important;color:var(--ink) !important;border:1px solid var(--line);
-  box-shadow:0 1px 2px rgba(0,0,0,.06);transition:border-color .15s,background .15s}
+/* 다른 카드처럼 흰 바탕을 깔지 않고, 섹션 바탕 위에 옅은 청록을 살짝 올린다 */
+.nav-btn{background:color-mix(in srgb,var(--accent-soft) 55%,transparent) !important;color:var(--ink) !important;
+  border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));transition:border-color .15s,background .15s}
 .nav-btn:hover{border-color:var(--accent)}
 .nav-btn:active{background:var(--accent-soft) !important}
 .nav-btn .lbl{display:inline-flex;align-items:center;gap:8px}
-.nav-btn .lbl i{flex:0 0 auto;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line)}
+.nav-btn .lbl i{flex:0 0 auto;width:9px;height:9px;border-radius:50%}
 .nav-btn.kakao .lbl i{background:#F5D200}
 .nav-btn.naver .lbl i{background:#1EC15F}
 .nav-btn small{color:var(--muted);opacity:1}
