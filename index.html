@@ -742,10 +742,10 @@ function renderFamous(){
   const rows = FAMOUS.map(f=>({f, s:famousStat(f)})).filter(r=>r.s && r.s.ratio<.9)
     .sort((a,b)=>a.s.ratio-b.s.ratio).slice(0,4);
   $("famousQuiet").innerHTML = rows.length ? rows.map(({f,s})=>{
-    const l=level(s.q), pct=Math.round(s.ratio*100);
+    const l=level(s.q);
     const tip = s.q>=45 ? `${state.hour}시에 ${quietWord(s.q)}` : `${state.hour}시엔 ${quietWord(s.q)} · ${s.bw}–${s.bw+2}시가 여유로워요`;
     return `<a class="fq" href="${kakaoPin(f)}" target="_blank" rel="noopener">
-      <span class="ask">평소(30일 평균)의 ${pct}% 수준으로 예측<em class="c-calm">평소보다 한산</em></span>
+      <span class="ask"><em class="c-calm">평소보다 한산</em></span>
       <b>${f.name}</b>
       <small class="${l.c}">${tip}</small>
     </a>`;
