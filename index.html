@@ -832,13 +832,13 @@ function renderFamous(){
     .sort((a,b)=>a.s.ratio-b.s.ratio).slice(0,4);
   $("famousQuiet").innerHTML = rows.length ? rows.map(({f,s})=>{
     const img = FAMOUS_PHOTO[f.name];
-    return `<a class="fq" href="${kakaoPin(f)}" target="_blank" rel="noopener">
+    return `<button class="fq" type="button" data-id="${f.id}">
       ${img?`<img class="shot" src="images/famous/${img}" alt="" loading="lazy">`:""}
       <span class="ask">${state.hour}시 기준<em class="c-calm">평소보다 한산</em></span>
       <b>${f.name}</b>
       ${scoreBadge(s.q)}
       ${s.q<45 ? `<small>${s.bw}–${s.bw+2}시가 여유로워요</small>` : ""}
-    </a>`;
+    </button>`;
   }).join("") : '<p class="empty">이날은 평소보다 한산한 유명 관광지가 없어요. 위의 조용한 곳을 둘러보세요.</p>';
 }
 
@@ -888,7 +888,7 @@ function renderMapInfo(p){
     <small>주차 예상 <span class="${parkWord(q).c}">${parkWord(q).t}</span></small>
     ${p.api ? "" : `<small>관광공사 예측 대상이 아니라, 숲길·오름 같은 유형별 시간 흐름과 그날 제주 전체 예측으로 추정했어요.</small>`}
     ${navLinks(p)}
-    <div class="acts">${p.famous ? "" : `<button class="more" type="button" data-open="${p.id}">자세히 보기</button>`}
+    <div class="acts"><button class="more" type="button" data-open="${p.id}">자세히 보기</button>
       <a href="${kakaoPin(p)}" target="_blank" rel="noopener">카카오맵에서 보기</a></div>`;
 }
 
@@ -918,7 +918,9 @@ function setModal(on){
   document.documentElement.classList.toggle("sheet-open", on);
 }
 function openSheet(id, refresh, famous, opener){
-  const p = PLACES.find(x=>x.id===id); if(!p) return;
+  // 조용한 곳(PLACES)과 유명한 곳(FAMOUS) 모두 같은 상세 화면으로 연다.
+  const p = PLACES.find(x=>x.id===id) || FAMOUS.find(x=>x.id===id); if(!p) return;
+  const fam = !!p.famous;
   if(!refresh){ lastFocus = opener || document.activeElement; state.openFrom = famous||null;
     state.sheetHour = opener && opener.dataset.h ? +opener.dataset.h : state.hour; }   // 코스에서 열면 그 도착 시간
   state.open=id;
@@ -931,15 +933,19 @@ function openSheet(id, refresh, famous, opener){
   const q = 100-crowdAt(p,sh,state.date), l=level(q);
   const saved = state.saved.has(id);
   // 사진이 있는 곳은 시트 윗부분에 그곳 사진을 깔고, 아래로 갈수록 바탕색으로 녹인다.
-  const photo = PHOTO.has(id) ? `<div class="sheet-photo" aria-hidden="true"><img src="images/places/full/${id}.webp" alt=""></div>` : "";
+  const photoSrc = fam ? (FAMOUS_PHOTO[p.name] ? `images/famous/${FAMOUS_PHOTO[p.name]}` : "")
+                       : (PHOTO.has(id) ? `images/places/full/${id}.webp` : "");
+  const photo = photoSrc ? `<div class="sheet-photo" aria-hidden="true"><img src="${photoSrc}" alt=""></div>` : "";
+  const PROF_WORD = {forest:"숲길", oreum:"오름", beach:"바다", coast:"바다", village:"마을"};
+  const eyebrow = fam ? `유명한 곳 · ${PROF_WORD[p.prof]||""}` : `${p.theme} · ${p.area}`;
   $("sheet").classList.toggle("has-photo", !!photo);
   $("sheet").innerHTML = `${photo}<div class="sheet-in">
     <div class="grab"></div>
     <div class="sheet-top">
-      <div><span class="eyebrow">${p.theme} · ${p.area}</span><h2 id="sheetTitle">${p.name}</h2></div>
+      <div><span class="eyebrow">${eyebrow}</span><h2 id="sheetTitle">${p.name}</h2></div>
       <button class="icon-btn" id="closeBtn">닫기</button>
     </div>
-    <p>${p.desc}</p>
+    ${p.desc ? `<p>${p.desc}</p>` : ""}
     ${instead?`<p class="note">${instead} 대신 가기 좋은 곳이에요.</p>`:""}
     ${forecastBlock(p)}
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
@@ -953,9 +959,9 @@ function openSheet(id, refresh, famous, opener){
       <p class="note">막대를 눌러 시간을 바꿔 보세요. 낮을수록 조용하고, 초록은 추천 시간이에요.</p>
     </div>
     ${navLinks(p)}
-    <div class="sheet-actions">
+    ${fam ? "" : `<div class="sheet-actions">
       <button class="icon-btn" id="saveBtn" aria-pressed="${saved}">${saved?"♡ 저장됨":"♡ 저장"}</button>
-    </div>
+    </div>`}
   </div>`;
   $("sheet").hidden=false; $("scrim").hidden=false; setModal(true);
   $("closeBtn").onclick=closeSheet;
@@ -967,7 +973,7 @@ function openSheet(id, refresh, famous, opener){
       if(again) again.focus();                // 다시 그리면서 날아간 포커스를 되돌린다
     };
   });
-  $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); openSheet(id,true); };
+  if($("saveBtn")) $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); openSheet(id,true); };
   if(!refresh) $("closeBtn").focus();
 }
 function closeSheet(){
@@ -1034,7 +1040,7 @@ $("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!
 })();
 $("hour").addEventListener("input", e=>{ state.hour=+e.target.value; state.sheetHour=state.hour; renderAll(); });
 $("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.theme=b.dataset.t; renderThemes(); renderList(); refocus("themes"); });
-document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap,.stop"); if(b) openSheet(b.dataset.id, false, b.dataset.famous, b); });
+document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap,.stop,.fq"); if(b) openSheet(b.dataset.id, false, b.dataset.famous, b); });
 $("planLen").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.planLen=+b.dataset.n; renderPlan(); refocus("planLen"); });
 $("scrim").addEventListener("click", closeSheet);
 // 지도
