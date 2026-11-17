@@ -605,7 +605,8 @@ function parkWord(q){ return q>=65 ? {t:"여유", c:"c-calm"} : q>=45 ? {t:"보�
 // 목록·카드·코스가 함께 쓰는 장소 사진 배경
 function shotImg(id){ return PHOTO.has(id) ? `<img class="shot" src="images/places/${id}.webp" alt="" loading="lazy">` : ""; }
 // 목록·카드·코스가 함께 쓰는 한산함 표시(물결 + 말)
-function scoreBadge(q){ const l=level(q); return `<span class="score ${l.c}">${ripple(l.n)}<span class="lv">${quietWord(q)}</span></span>`; }
+// when 을 주면 '15시 붐벼요'처럼 어느 시간 얘기인지 붙인다.
+function scoreBadge(q, when){ const l=level(q); return `<span class="score ${l.c}">${ripple(l.n)}<span class="lv">${when?`<span class="num">${when}</span> `:""}${quietWord(q)}</span></span>`; }
 function ripple(n){ return '<span class="ripple" aria-hidden="true">'+[1,2,3,4,5].map(i=>`<u class="${i<=n?"on":""}" style="height:${6+i*2}px"></u>`).join("")+'</span>'; }
 // 제주 대략의 일출·일몰 시각(월별). 어두운 시간은 추천하지 않는다.
 const SUN_UP  =[8,7,7,6,6,6,6,6,7,7,7,8];
@@ -869,10 +870,10 @@ function renderFamous(){
     const img = FAMOUS_PHOTO[f.name];
     return `<button class="fq" type="button" data-id="${f.id}">
       ${img?`<img class="shot" src="images/famous/${img}" alt="" loading="lazy">`:""}
-      <span class="ask">${state.hour}시 기준<em class="c-calm">평소보다 한산</em></span>
+      <span class="ask"><em class="c-calm">이날은 평소보다 한산해요</em></span>
       <b>${f.name}</b>
-      ${scoreBadge(s.q)}
-      ${s.q<45 ? `<small>${s.bw}–${s.bw+2}시가 여유로워요</small>` : ""}
+      ${scoreBadge(s.q, state.hour+"시")}
+      ${s.q<45 ? `<small><span class="num">${s.bw}–${s.bw+2}시</span>에 가면 여유로워요.</small>` : ""}
     </button>`;
   }).join("") : '<p class="empty">이날은 평소보다 한산한 유명 관광지가 없어요. 위의 조용한 곳을 둘러보세요.</p>';
 }
