@@ -48,7 +48,7 @@ sudo tee /etc/systemd/system/quiet-traveler-refresh.timer >/dev/null <<'UNIT'
 Description=Quiet Traveler daily data refresh timer
 
 [Timer]
-OnCalendar=*-*-* 06:30:00
+OnCalendar=*-*-* 06:30:00 Asia/Seoul
 Persistent=true
 
 [Install]

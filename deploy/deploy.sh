@@ -8,7 +8,7 @@ HOST="${QT_VM_HOST:-ubuntu@129.225.172.177}"
 SSH=(ssh -i "$KEY" -o BatchMode=yes "$HOST")
 
 echo "== 코드 보내기"
-tmp=$(mktemp -d)
+mkdir -p dist; tmp=$(mktemp -d -p "$PWD/dist")   # 이 PC 의 TEMP 설정이 없는 폴더를 가리켜도 되게
 git archive --format=tar HEAD > "$tmp/app.tar"
 tar -rf "$tmp/app.tar" forecast.json
 "${SSH[@]}" 'sudo mkdir -p /opt/quiet-traveler && sudo chown ubuntu:ubuntu /opt/quiet-traveler && tar -xf - -C /opt/quiet-traveler' < "$tmp/app.tar"
