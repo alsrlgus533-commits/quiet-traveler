@@ -294,9 +294,22 @@ html.sheet-open .tabbar{visibility:hidden}
 .day-key .dot{margin-left:0}
 
 /* 지도 */
-.map-box{position:relative;border-radius:var(--r);background:var(--accent-soft);overflow:hidden}
-#map{display:block;width:100%;height:auto;touch-action:pan-y}
-#map.zoomed{touch-action:none;cursor:grab}
+.map-box{position:relative;margin-inline:-6px;border-radius:var(--r);background:var(--accent-soft);overflow:hidden}
+/* 지도 위에서는 브라우저 확대·스크롤 대신 지도 자체의 두 손가락 확대·끌기를 쓴다 */
+#map{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+#map.zoomed{cursor:grab}
+#map .nm{font-family:var(--f-body);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);pointer-events:none}
+#map .nm.fam{fill:var(--muted);font-weight:500}
+/* 지도 아래 장소 이름 줄: 점이 작아 누르기 어려울 때 이름으로 고른다 */
+.map-strip{display:flex;gap:6px;overflow-x:auto;margin:2px -6px 0;padding:2px 6px 4px;scrollbar-width:none;scroll-snap-type:x proximity}
+.map-strip::-webkit-scrollbar{display:none}
+.mchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);font:500 13px var(--f-body);white-space:nowrap;cursor:pointer;scroll-snap-align:start}
+.mchip i{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.mchip i.calm{background:var(--calm)} .mchip i.mid{background:var(--mid)} .mchip i.busy{background:var(--busy)}
+.mchip.fam{color:var(--muted)}
+.mchip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.map-info{scroll-margin-bottom:96px}
 #map .me{fill:#2f7cf6;stroke:#fff} #map .me-halo{fill:#2f7cf6;fill-opacity:.18}
 #map .me-t{font-weight:700;font-family:var(--f-body);fill:#2f7cf6;paint-order:stroke;stroke:var(--surface);pointer-events:none}
 .map-ctl{position:absolute;left:8px;top:8px;display:flex;gap:6px}
@@ -417,6 +430,7 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
         <button type="button" id="mapOut" aria-label="작게 보기">−</button>
       </div>
     </div>
+    <div class="map-strip" id="mapStrip" role="group" aria-label="한산한 순서로 본 장소"></div>
     <p class="map-msg" id="mapMsg" role="status"></p>
     <p class="map-key"><span class="dot calm"></span>한산해요 <span class="dot mid"></span>적당해요 <span class="dot busy"></span>붐벼요 · 큰 점 조용한 곳</p>
     <div class="map-info" id="mapInfo"></div>
@@ -1118,6 +1132,67 @@ function mapZoom(z, cx, cy){
   if(v.z===1){ v.cx=JEJU.w/2; v.cy=JEJU.h/2; }
   renderMap();
 }
+// 지도 1단위가 화면에서 몇 px 인지 (숨어 있어 폭이 0이면 폰 폭으로 어림)
+function mapScale(){ const w=$("map").getBoundingClientRect().width; return (w||330)/JEJU.w; }
+// 확대했을 때 점 옆에 이름을 붙인다. 한산한 곳부터, 이미 붙은 이름과 겹치면 건너뛴다.
+function mapNames(v, k, sel){
+  if(v.z < 1.8) return "";
+  const s=mapScale(), f=11.5/(s*v.z), [bx,by,bw,bh]=mapBox(), placed=[], out=[];
+  const cand = state.mapItems.filter(({p})=>(!p.famous || v.z>=2.6) && !(sel && sel.id===p.id))
+    .map(o=>({...o, xy:mapXY(o.p)}))
+    .filter(o=>o.xy[0]>bx && o.xy[0]<bx+bw && o.xy[1]>by && o.xy[1]<by+bh)
+    .sort((a,b)=>(a.p.famous-b.p.famous) || b.q-a.q);
+  for(const o of cand){
+    const [x,y]=o.xy, r=(o.p.famous?12:18)*k, w=o.p.name.length*f*0.98, gap=r+5/(s*v.z);
+    for(const side of [1,-1]){
+      const x0 = side>0 ? x+gap : x-gap-w, box=[x0, y-f*0.8, x0+w, y+f*0.4];
+      if(box[0]<bx || box[2]>bx+bw) continue;
+      if(placed.some(b=>!(box[2]<b[0]||box[0]>b[2]||box[3]<b[1]||box[1]>b[3]))) continue;
+      placed.push(box);
+      out.push(`<text class="nm${o.p.famous?" fam":""}" x="${(side>0?x+gap:x-gap).toFixed(1)}" y="${(y+f*0.35).toFixed(1)}" text-anchor="${side>0?"start":"end"}" style="font-size:${f.toFixed(1)}px;stroke-width:${(f*0.28).toFixed(1)}px">${o.p.name}</text>`);
+      break;
+    }
+  }
+  return out.join("");
+}
+// 지도 아래 이름 줄: 한산한 순서
+function renderMapStrip(){
+  const rows = [...state.mapItems].sort((a,b)=>b.q-a.q);
+  $("mapStrip").innerHTML = rows.map(({p,q})=>`<button class="mchip${p.famous?" fam":""}" type="button" data-pin="${p.id}" aria-pressed="${state.mapSel===p.id}"><i class="${quietCls(q)}" aria-hidden="true"></i>${p.name}</button>`).join("");
+}
+// 누른 곳에서 가장 가까운 점 (손가락 끝 크기 안, 화면 px 기준)
+function nearestPin(cx, cy){
+  const r=$("map").getBoundingClientRect(), [bx,by,bw,bh]=mapBox();
+  let best=null, bd=40;
+  for(const {p} of state.mapItems||[]){
+    const [x,y]=mapXY(p), sx=r.left+(x-bx)/bw*r.width, sy=r.top+(y-by)/bh*r.height, d=Math.hypot(sx-cx, sy-cy);
+    if(d<bd){ bd=d; best=p; }
+  }
+  return best;
+}
+// 장소 고르기. 이름 줄에서 고르면 그곳을 가운데 두고 크게 보여 준다.
+function selectPin(id, focusMap){
+  if(!focusMap && state.mapSel===id){ state.mapSel=null; renderMap(); return; }
+  state.mapSel=id;
+  if(focusMap){
+    const p=[...PLACES,...FAMOUS].find(x=>x.id===id), [x,y]=mapXY(p), v=state.mapView;
+    v.z=Math.max(v.z, 2.5); v.cx=x; v.cy=y;
+  }
+  renderMap();
+  const chip=$("mapStrip").querySelector(`[data-pin="${id}"]`);
+  if(chip) chip.parentElement.scrollTo({left: chip.offsetLeft - chip.parentElement.clientWidth/2 + chip.offsetWidth/2, behavior:"smooth"});
+  const info=$("mapInfo"), ir=info.getBoundingClientRect();
+  if(ir.bottom > innerHeight-90) info.scrollIntoView({block:"end", behavior:"smooth"});
+}
+// 화면의 한 점(cx,cy)을 그대로 둔 채로 배율을 바꾼다 (두 손가락, 두 번 누르기, Ctrl+휠)
+function zoomAt(z, cx, cy){
+  const r=$("map").getBoundingClientRect(), [bx,by,bw,bh]=mapBox(), v=state.mapView;
+  const fx=(cx-r.left)/r.width, fy=(cy-r.top)/r.height, px=bx+fx*bw, py=by+fy*bh;
+  v.z=Math.max(1, Math.min(4, z));
+  if(v.z===1){ v.cx=JEJU.w/2; v.cy=JEJU.h/2; }
+  else { v.cx=px+(.5-fx)*JEJU.w/v.z; v.cy=py+(.5-fy)*JEJU.h/v.z; }
+  renderMap();
+}
 function inJeju(p){ return p.lat>JEJU.lat0 && p.lat<JEJU.lat1 && p.lng>JEJU.lon0 && p.lng<JEJU.lon1; }
 function meMark(k){
   if(!state.me || !inJeju(state.me)) return "";
@@ -1172,6 +1247,10 @@ function renderMap(){
       <circle class="mark" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="stroke-width:${(3*k).toFixed(2)}"/></g>`;
   };
   const sel = [...PLACES,...FAMOUS].find(p=>p.id===state.mapSel);
+  // 점을 눌렀을 때 가장 가까운 점을 찾으려고, 지금 보이는 점과 한산함을 기억해 둔다
+  state.mapItems = items.map(p=>({p, q:100-crowdAt(p,state.hour,state.date)}));
+  const names = mapNames(v, k, sel);
+  renderMapStrip();
   let label = "";
   if(sel){
     const [x,y]=mapXY(sel);
@@ -1182,12 +1261,12 @@ function renderMap(){
   $("map").innerHTML = `<path class="land" d="${JEJU.path}"/>
     <path class="peak" d="M${hx-14},${hy+10} L${hx},${hy-14} L${hx+14},${hy+10}Z"/>
     <text class="peak-t" x="${hx}" y="${hy+38}" text-anchor="middle">한라산</text>
-    ${items.map(pin).join("")}${meMark(k)}${label}`;
+    ${items.map(pin).join("")}${names}${meMark(k)}${label}`;
   renderMapInfo(sel);
 }
 function renderMapInfo(p){
   const box=$("mapInfo");
-  if(!p){ box.innerHTML = `<small>점을 누르면 그곳의 한산한 정도를 볼 수 있어요.</small>`; return; }
+  if(!p){ box.innerHTML = `<small>점 근처를 누르거나 아래 이름을 고르면 자세히 볼 수 있어요. 두 번 누르거나 두 손가락으로 벌리면 크게 보여요.</small>`; return; }
   const q=100-crowdAt(p,state.hour,state.date), l=level(q), bw=bestWindow(p,state.date);
   const r = p.api ? rateOf(p.api,state.date) : null, avg = p.api ? spotAvg[p.api] : null;
   const usual = (r!=null && avg) ? vsUsual(r,avg) : null;
@@ -1337,7 +1416,18 @@ function pickPin(g){
   renderMap();
   const again=$("map").querySelector(`[data-pin="${g.dataset.pin}"]`); if(again) again.focus({preventScroll:true});
 }
-$("map").addEventListener("click", e=>{ if(mapDrag.moved) return; const g=e.target.closest(".pin"); if(g) pickPin(g); });
+$("map").addEventListener("click", e=>{
+  if(mapDrag.moved){ mapDrag.moved=false; return; }
+  const now=Date.now();
+  if(now-mapDrag.lastTap < 320){   // 두 번 누르면 그 자리를 크게 (최대에서는 처음으로)
+    mapDrag.lastTap=0; zoomAt(state.mapView.z>=3.9 ? 1 : state.mapView.z*2, e.clientX, e.clientY); return;
+  }
+  mapDrag.lastTap=now;
+  const p=nearestPin(e.clientX, e.clientY); if(p) selectPin(p.id, false);
+});
+$("mapStrip").addEventListener("click", e=>{ const b=e.target.closest("[data-pin]"); if(b) selectPin(b.dataset.pin, true); });
+// 트랙패드 두 손가락 확대(Ctrl+휠)만 지도 확대로 쓰고, 그냥 휠은 페이지 스크롤로 둔다
+$("map").addEventListener("wheel", e=>{ if(!e.ctrlKey) return; e.preventDefault(); zoomAt(state.mapView.z*Math.exp(-e.deltaY/200), e.clientX, e.clientY); }, {passive:false});
 $("mapMe").addEventListener("click", locateMe);
 // ---------- 아래 탭 ----------
 function showTab(t){
@@ -1364,22 +1454,39 @@ $("listMore").addEventListener("click", ()=>{ state.listAll=!state.listAll; rend
 $("mapIn").addEventListener("click", ()=>mapZoom(state.mapView.z*1.6));
 $("mapOut").addEventListener("click", ()=>mapZoom(state.mapView.z/1.6 < 1.15 ? 1 : state.mapView.z/1.6));
 // 확대한 지도는 끌어서 옮긴다 (손가락·마우스). 조금만 움직였으면 점 누르기로 본다.
-const mapDrag={on:false, moved:false, x:0, y:0};
+const mapDrag={moved:false, x:0, y:0, pinch:null, lastTap:0}, mapPtrs=new Map();
 $("map").addEventListener("pointerdown", e=>{
-  mapDrag.moved=false; if(state.mapView.z<=1) return;
-  mapDrag.on=true; mapDrag.x=e.clientX; mapDrag.y=e.clientY;
+  mapPtrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(mapPtrs.size===1){ mapDrag.moved=false; mapDrag.x=e.clientX; mapDrag.y=e.clientY; }
+  if(mapPtrs.size===2){
+    const [a,b]=[...mapPtrs.values()];
+    mapDrag.pinch={d:Math.hypot(a.x-b.x, a.y-b.y)||1, z:state.mapView.z}; mapDrag.moved=true;
+  }
 });
 window.addEventListener("pointermove", e=>{
-  if(!mapDrag.on) return;
+  if(!mapPtrs.has(e.pointerId)) return;
+  mapPtrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(mapDrag.pinch && mapPtrs.size>=2){          // 두 손가락: 벌린 만큼 크게, 손가락 가운데를 기준으로
+    const [a,b]=[...mapPtrs.values()];
+    zoomAt(mapDrag.pinch.z*Math.hypot(a.x-b.x, a.y-b.y)/mapDrag.pinch.d, (a.x+b.x)/2, (a.y+b.y)/2);
+    return;
+  }
+  if(state.mapView.z<=1) return;                  // 한 손가락: 확대했을 때만 끌어서 옮김
   const dx=e.clientX-mapDrag.x, dy=e.clientY-mapDrag.y;
   if(!mapDrag.moved && Math.hypot(dx,dy)<6) return;
   mapDrag.moved=true;
   const r=$("map").getBoundingClientRect(), [, , w, h]=mapBox();
   state.mapView.cx -= dx*w/r.width; state.mapView.cy -= dy*h/r.height;
   mapDrag.x=e.clientX; mapDrag.y=e.clientY;
-  $("map").setAttribute("viewBox", mapBox().join(" "));
+  renderMap();
 });
-window.addEventListener("pointerup", ()=>{ if(mapDrag.on){ mapDrag.on=false; if(mapDrag.moved) setTimeout(()=>{ mapDrag.moved=false; }, 0); } });
+const mapPtrEnd=e=>{
+  if(!mapPtrs.delete(e.pointerId)) return;
+  if(mapPtrs.size<2) mapDrag.pinch=null;
+  if(mapPtrs.size===1){ const [a]=[...mapPtrs.values()]; mapDrag.x=a.x; mapDrag.y=a.y; }
+};
+window.addEventListener("pointerup", mapPtrEnd);
+window.addEventListener("pointercancel", mapPtrEnd);
 $("map").addEventListener("keydown", e=>{
   const g=e.target.closest(".pin"); if(!g || (e.key!=="Enter" && e.key!==" ")) return;
   e.preventDefault(); pickPin(g);
