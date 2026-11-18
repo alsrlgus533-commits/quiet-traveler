@@ -20,7 +20,11 @@ from .core import fmt_date, store
 
 MAX_ROUNDS = 6           # 도구 호출을 몇 번까지 이어 갈지 (무한 반복 방지)
 
-SYSTEM = """너는 '조용한 여행자'라는 제주 여행·관광 분석 도우미야. 사람들이 덜 붐비는 제주를 고르도록 돕는다.
+SYSTEM = """당신은 '조용한 여행자'라는 제주 여행·관광 분석 도우미입니다. 사람들이 덜 붐비는 제주를 고르도록 돕습니다.
+
+말투 (가장 먼저 지킬 것)
+- 사용자에게 하는 답은 처음부터 끝까지 부드러운 존댓말 해요체로 씁니다: '~해요', '~이에요', '~예요', '~세요', '~할게요'.
+- 반말('~해', '~야', '~어', '~지', '~거든', '좋아', '붐벼')이나 딱딱한 문어체('~이다', '~한다', '~습니다')는 쓰지 않습니다. 목록 항목 끝도 '~해요'로 맞춥니다.
 
 규칙
 - 장소·시간·날씨·순위·비율 같은 숫자와 사실은 반드시 도구 결과에서만 가져온다. 도구에 없는 숫자나 장소를 지어내지 않는다.
@@ -80,8 +84,9 @@ TOOL_WORD = {
     "rank_spots": "붐빔 순위", "get_weather": "날씨 예보", "wifi_visitors": "와이파이 접속 기록",
     "area_visitors": "유동인구 기록", "jeju_card_time_pattern": "카드 결제 시간대",
 }
-# 앞으로 하겠다는 말끝 (찾아보겠습니다·찾을게·고를게·볼게요·할게 …)
-_PROMISE = re.compile(r"(겠습니다|겠어요|[을를볼할줄짤]게(?:요)?(?=[\s.!,]|$))")
+# 찾는 동작을 '앞으로 하겠다'고만 한 말 (찾아보겠습니다·찾을게요·고를게·코스를 짤게요 …).
+# '도와드릴게요'·'안내할게요' 같은 인사말은 걸리지 않게, 찾는 동작 낱말 바로 뒤의 말끝만 본다.
+_PROMISE = re.compile(r"(찾|알아보|알아볼|확인해 ?보|확인해 ?볼|조회|살펴보|살펴볼|골라 ?보|고르|고를|짜 ?보|짜 ?볼|짤)[^\s.,!?]{0,4}?(겠습니다|겠어요|게요|게)(?=[\s.!,]|$)")
 _BASIS = re.compile(r"^\s*(?:[-*•]\s*)?(?:\*\*)?\s*근거\s*(?:\*\*)?\s*[:：].*$", re.M)
 
 
@@ -142,10 +147,10 @@ def run(history: list[dict]) -> dict:
         if not calls:
             text = msg.content or ""
             # 1) "찾아보겠습니다"처럼 하겠다는 말만 하고 도구를 안 부른 채 끝내면, 한 번 더 실제로 하게 시킨다
-            if not steps and _PROMISE.search(text) and not nudged:
+            if not steps and len(text) < 400 and _PROMISE.search(text) and not nudged:
                 nudged = True
                 messages.append({"role": "assistant", "content": text})
-                messages.append({"role": "user", "content": "말한 대로 지금 도구를 불러 결과로 답해 줘."})
+                messages.append({"role": "user", "content": "말씀하신 대로 지금 도구를 불러 그 결과로 답해 주세요."})
                 continue
             # 2) 답 검사: 도구 결과에 없는 장소를 추천했으면 내보내지 않고, 도구로 찾은 뒤 다시 답하게 한다
             bad = _ungrounded(text, seen, question)
@@ -153,8 +158,8 @@ def run(history: list[dict]) -> dict:
                 grounded = True
                 messages.append({"role": "assistant", "content": text})
                 messages.append({"role": "user", "content":
-                    f"답에 도구 결과에 없는 장소({', '.join(bad[:6])})가 있어. 장소를 추천하려면 find_quiet_places 같은 도구를 "
-                    "먼저 부르고, 그 결과에 나온 장소와 값만 써서 처음부터 다시 답해 줘."})
+                    f"답에 도구 결과에 없는 장소({', '.join(bad[:6])})가 있어요. 장소를 추천하려면 find_quiet_places 같은 도구를 "
+                    "먼저 부르고, 그 결과에 나온 장소와 값만 써서 처음부터 다시 답해 주세요."})
                 continue
             return {"reply": _finish(text, links, steps), "steps": steps, "model": model,
                     "checked": {"retried_for_action": nudged, "retried_for_grounding": grounded}}
@@ -174,7 +179,7 @@ def run(history: list[dict]) -> dict:
             messages.append({"role": "tool", "tool_call_id": tc.id, "name": tc.function.name,
                              "content": json.dumps(_linkify(result, links), ensure_ascii=False)})
     # 도구를 너무 많이 부르면 지금까지의 결과로 마무리하게 한다
-    messages.append({"role": "user", "content": "지금까지 받은 도구 결과만으로 답을 마무리해 줘."})
+    messages.append({"role": "user", "content": "지금까지 받은 도구 결과만으로 답을 마무리해 주세요."})
     resp = c.chat.completions.create(model=model, messages=messages)
     return {"reply": _finish(resp.choices[0].message.content or "", links, steps), "steps": steps, "model": model}
 
