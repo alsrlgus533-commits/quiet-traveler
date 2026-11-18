@@ -161,11 +161,11 @@ figure.hero img{position:absolute;left:0;top:0;display:block;width:100%;height:a
 /* 어두운 화면은 밤 그림을 쓴다(스크립트가 바꿈). 이미 어두운 그림이라 살짝만 누른다. */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) figure.hero img{filter:brightness(.85)}}
 :root[data-theme="dark"] figure.hero img{filter:brightness(.85)}
-/* 첫 화면: 위쪽 절반에 하늘과 한라산, 그 아래에 제목과 카드가 이어진다. */
-header{margin:46vh -8px 0;padding:14px 16px;border-radius:18px;
-  background:color-mix(in srgb,var(--bg) 58%,transparent);
-  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-header h1,header p,header .eyebrow{text-shadow:0 0 14px var(--bg),0 0 4px var(--bg)}
+/* 첫 화면: 제목은 맨 위 하늘에 카드 없이 바로 얹고, 그 아래로 한라산이 보이게 비워 둔 뒤
+   날짜 카드가 화면 절반쯤(46vh)에서 시작한다. 글자 둘레에 배경색 그림자를 둘러 그림 위에서도 읽히게 한다
+   (밝게·어둡게 바꾸면 글자색과 그림자도 함께 바뀜). */
+header{margin:0 -8px;padding:4px 8px 0;min-height:calc(46vh - 46px)}
+header h1,header p,header .eyebrow{text-shadow:0 0 16px var(--bg),0 0 6px var(--bg),0 0 2px var(--bg)}
 .wrap > section,.wrap > .today{border-radius:18px;margin-inline:-8px;padding:16px;
   background:color-mix(in srgb,var(--bg) 82%,transparent);
   -webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1)}
@@ -342,7 +342,6 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
       <button class="theme-btn" id="themeBtn" type="button"></button>
     </div>
     <h1>조용한 여행자</h1>
-    <p>사람 많은 곳을 피해, 날짜와 시간에 맞춰 덜 붐비는 제주를 골라 드려요.</p>
   </header>
 
   <section aria-label="날짜 선택">
