@@ -364,7 +364,7 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
     </div>
   </header>
 
-  <section aria-label="시간 선택">
+  <section id="timeSec" aria-label="시간 선택">
     <div class="time">
       <div class="time-row"><span class="eyebrow">몇 시에 갈까요?</span><strong class="num" id="hourLabel">10시</strong></div>
       <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="가는 시간">
@@ -1343,6 +1343,8 @@ $("mapMe").addEventListener("click", locateMe);
 function showTab(t){
   state.tab = t;
   document.querySelectorAll(".wrap > [data-tab]").forEach(el=>el.classList.toggle("off", el.dataset.tab!==t));
+  // 물어보기에서는 시간 고르기가 필요 없어 숨긴다 (질문에 시간을 적으면 됨)
+  $("timeSec").classList.toggle("off", t==="ask");
   document.querySelectorAll("#tabbar [data-go]").forEach(b=>{
     if(b.dataset.go===t) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
   });
