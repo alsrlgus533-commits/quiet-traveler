@@ -154,7 +154,7 @@ class Store:
 
     def day_state(self, date):
         f = self.day_factor(date)
-        return "관광객 많은 날" if f > 1.08 else "관광객 적은 날" if f < .95 else "관광객 보통인 날"
+        return "제주 전체가 붐벼요" if f > 1.08 else "제주 전체가 한산해요" if f < .95 else "제주 전체가 적당해요"
 
     # --- 코스 (빔 탐색, index.html makePlan 과 같은 식) ---
     def plan(self, date, start, n, pool=None, origin=None):
