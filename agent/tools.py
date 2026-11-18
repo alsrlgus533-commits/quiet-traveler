@@ -84,25 +84,75 @@ def get_weather(date: str = ""):
     return {"days": [_meta(s, d) for d in s.dates[:14]], "source": s.forecast.get("weatherSource")}
 
 
-def plan_course(date: str = "", start_hour: int = 10, stops: int = 3, theme: str = "전체"):
+# 출발 지역 → 대략의 중심 좌표 (앞에 있는 이름이 먼저 맞음)
+REGIONS = [
+    ("제주공항", 33.5070, 126.4929), ("공항", 33.5070, 126.4929), ("제주시", 33.4996, 126.5312),
+    ("성산", 33.4500, 126.9100), ("서귀포", 33.2490, 126.5600), ("중문", 33.2500, 126.4120),
+    ("애월", 33.4630, 126.3300), ("협재", 33.3940, 126.2400), ("한림", 33.4140, 126.2690),
+    ("표선", 33.3260, 126.8300), ("세화", 33.5230, 126.8560), ("구좌", 33.5230, 126.8560),
+    ("월정", 33.5560, 126.7960), ("함덕", 33.5430, 126.6690), ("조천", 33.5380, 126.6340),
+    ("남원", 33.2790, 126.7190), ("모슬포", 33.2190, 126.2510), ("대정", 33.2190, 126.2510),
+    ("안덕", 33.2560, 126.3200), ("고산", 33.3000, 126.1800), ("한경", 33.3000, 126.1800),
+    ("교래", 33.4300, 126.6700),
+]
+
+
+def _origin(s, text):
+    """'성산 쪽', '제주공항', '협재 숙소', 장소 이름, '구좌읍' 같은 말을 출발 좌표로."""
+    t = (text or "").replace(" ", "")
+    if not t:
+        return None
+    for name, lat, lng in REGIONS:
+        if name in t:
+            return {"name": name, "lat": lat, "lng": lng}
+    p = s.find(t)
+    if p:
+        return {"name": p["name"], "lat": p["lat"], "lng": p["lng"]}
+    near = [p for p in s.places if any(w and w in t for w in (p.get("area") or "").split()[1:])]
+    if near:
+        return {"name": text.strip(), "lat": sum(p["lat"] for p in near) / len(near),
+                "lng": sum(p["lng"] for p in near) / len(near)}
+    return None
+
+
+def plan_course(date: str = "", start_hour: int = 10, stops: int = 3, theme: str = "전체", start_from: str = ""):
     s = store()
     date = norm_date(date, s)
-    pool = [p for p in s.places if theme not in THEMES or p["theme"] == theme] or None
-    plan = s.plan(date, max(6, min(18, int(start_hour))), max(1, min(5, int(stops))), pool)
+    n = max(1, min(5, int(stops)))
+    pool = [p for p in s.places if theme not in THEMES or p["theme"] == theme] or list(s.places)
+    origin = _origin(s, start_from)
+    note = None
+    if start_from and not origin:
+        note = f"'{start_from}'의 위치를 알아보지 못해 제주 전체에서 골랐어요."
+    if origin:                                   # 출발지 가까운 곳부터: 30km 안 → 45km 안 → 전체
+        for r in (30, 45, 999):
+            near = [p for p in pool if core.km(origin, p) <= r]
+            if len(near) >= n:
+                pool = near
+                break
+    plan = s.plan(date, max(6, min(18, int(start_hour))), n, pool, origin)
     if not plan:
         return {**_meta(s, date), "error": "해 지기 전에 둘러볼 시간이 모자라요. 출발 시간을 앞당겨 보세요."}
     st = plan["stops"]
-    items = [{"order": i + 1, "arrive": clock(t), "name": p["name"], "theme": p["theme"],
+    items = [{"order": i + 1, "arrive": clock(t), "name": p["name"], "area": p.get("area", ""), "theme": p["theme"],
               "stay_min": round(s.stay[p["theme"]] * 60), "drive_from_prev_min": d,
               "quiet_word": quiet_word(q), "parking": park_word(q),
+              "best_window": f"{s.best_window(p, date)}–{s.best_window(p, date) + 2}시",
               "directions_kakao": kakao_to(p), "directions_naver": naver_to(p)} for i, (p, t, q, d) in enumerate(st)]
     last = st[-1]
-    return {**_meta(s, date), "stops": items,
-            "end_time": clock(last[1] + s.stay[last[0]["theme"]]),
-            "total_drive_min": sum(x["drive_from_prev_min"] for x in items),
-            "kakao_route": kakao_course([x[0] for x in st]),
-            "naver_route": naver_course([x[0] for x in st]),
-            "rule": "비 오는 날은 오름을 빼고 숲길·마을을 더 권함" if s.rainy(date) else "한산함 합 − 이동 시간, 테마가 다양할수록 가점"}
+    out = {**_meta(s, date), "start_from": origin["name"] if origin else "첫 장소에서 시작",
+           "depart": clock(max(6, min(18, int(start_hour)))), "stops": items,
+           "end_time": clock(last[1] + s.stay[last[0]["theme"]]),
+           "total_drive_min": sum(x["drive_from_prev_min"] for x in items),
+           "kakao_route": kakao_course([x[0] for x in st]),
+           "naver_route": naver_course([x[0] for x in st]),
+           "rule": ("비 오는 날은 오름을 빼고 숲길·마을을 더 권함. " if s.rainy(date) else "")
+                   + "한산함 합 − 이동 시간(출발지에서 첫 장소까지 포함), 테마가 다양할수록 가점"}
+    if origin:
+        out["first_leg"] = f"{origin['name']}에서 {items[0]['name']}까지 차로 약 {items[0]['drive_from_prev_min']}분"
+    if note:
+        out["note"] = note
+    return out
 
 
 def rank_spots(date_from: str = "", date_to: str = "", order: str = "busy", limit: int = 10, scope: str = "all"):
@@ -166,12 +216,13 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {"date": _DATE}, "required": []}}},
     {"type": "function", "function": {
         "name": "plan_course",
-        "description": "출발 시각과 장소 수로 한산한 장소를 이어 코스를 짠다. 이동 시간·머무는 시간·해 지는 시각·비 예보를 반영하고 카카오맵 경로 링크를 준다.",
+        "description": "출발 시각·출발 지역·장소 수로 한산한 장소를 이어 코스를 짠다. 출발 지역을 주면 그 근처(30km 안)에서 고르고 첫 장소까지 이동 시간도 넣는다. 이동 시간·머무는 시간·해 지는 시각·비 예보를 반영하고 카카오맵 경로 링크를 준다.",
         "parameters": {"type": "object", "properties": {
             "date": _DATE,
             "start_hour": {"type": "integer", "description": "출발 시각(6~18시). 기본 10."},
             "stops": {"type": "integer", "description": "장소 수 1~5. 반나절 3, 하루 5."},
-            "theme": {"type": "string", "enum": ["전체", "숲길", "오름", "바다", "마을"]}}, "required": []}}},
+            "theme": {"type": "string", "enum": ["전체", "숲길", "오름", "바다", "마을"]},
+            "start_from": {"type": "string", "description": "출발 지역이나 장소. 예: 성산, 제주공항, 서귀포, 중문, 애월, 협재, 함덕, 구좌읍, 사려니숲길. 사용자가 '어디 쪽에서', '숙소가 어디' 라고 하면 꼭 넣는다. 비우면 제주 전체에서 고름."}}, "required": []}}},
     {"type": "function", "function": {
         "name": "rank_spots",
         "description": "기간 동안 제주 관광지(최대 448곳)를 '평소 대비' 예측으로 줄 세운다. 담당자의 '다음 주 붐빌 관광지 순위' 같은 분석 질문용.",

@@ -157,7 +157,8 @@ class Store:
         return "붐비는 날" if f > 1.08 else "한산한 날" if f < .95 else "평소 같은 날"
 
     # --- 코스 (빔 탐색, index.html makePlan 과 같은 식) ---
-    def plan(self, date, start, n, pool=None):
+    def plan(self, date, start, n, pool=None, origin=None):
+        """origin 을 주면 그곳에서 출발해 첫 장소까지 가는 시간도 계산한다 (첫 이동은 1분에 1점을 빼 가까운 곳을 더 먼저 고름)."""
         end = self.sun_down[parse(date).month - 1]
         wet = self.rainy(date)
         pool = pool or self.places
@@ -173,10 +174,12 @@ class Store:
 
         beam = []
         for p in pool:
-            if start + stay[p["theme"]] <= end:
-                q = quiet_stay(p, start)
-                beam.append({"stops": [(p, start, q, 0)], "t": start + stay[p["theme"]],
-                             "score": stop_score(q, p) + 8, "themes": {p["theme"]}})
+            d0 = drive_min(origin, p) if origin else 0
+            t0 = start + d0 / 60
+            if t0 + stay[p["theme"]] <= end:
+                q = quiet_stay(p, t0)
+                beam.append({"stops": [(p, t0, q, d0)], "t": t0 + stay[p["theme"]],
+                             "score": stop_score(q, p) + 8 - d0, "themes": {p["theme"]}})
         best = beam
         for _ in range(1, n):
             nxt = []
