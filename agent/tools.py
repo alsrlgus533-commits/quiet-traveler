@@ -63,10 +63,16 @@ def place_forecast(place_name: str, date: str = ""):
     hours = [{"hour": h, "quiet_score": s.quiet(p, h, date), "quiet_word": quiet_word(s.quiet(p, h, date))}
              for h in range(6, 21)]
     has = any(x["ratio_to_usual"] for x in days)
+    wifi = datahub.wifi_visitors(p["name"])
+    recent = None if "error" in wifi else {
+        "trend_word": wifi["trend_word"], "recent_vs_before": wifi["recent_vs_before"],
+        "quietest_weekday": wifi["quietest_weekday"], "busiest_weekday": wifi["busiest_weekday"],
+        "period": wifi["period"], "source": wifi["source"]}
     quiet_days = sorted([x for x in days if x["ratio_to_usual"]], key=lambda x: x["ratio_to_usual"])[:3]
     return {"place": _place_brief(s, p, 10, date) | {"desc": p.get("desc", "")}, **_meta(s, date),
             "hourly_on_date": hours, "next_14_days": days,
             "quietest_days": [x["date"] for x in quiet_days] if has else None,
+            "recent_actual_wifi": recent,
             "forecast_source": "한국관광공사 관광지 집중률 방문자 추이 예측" if has else "예측 대상이 아니어서 제주 전체 예측과 유형별 패턴으로 추정"}
 
 
@@ -124,7 +130,16 @@ def jeju_card_time_pattern(district: str = "내국인 주요 관광지", user_ty
     return datahub.card_time_pattern(district, user_type)
 
 
-FUNCS = {f.__name__: f for f in [find_quiet_places, place_forecast, get_weather, plan_course, rank_spots, jeju_card_time_pattern]}
+def wifi_visitors(place_name: str = "", limit: int = 10):
+    return datahub.wifi_visitors(place_name, limit)
+
+
+def area_visitors(area: str = "", limit: int = 8):
+    return datahub.area_visitors(area, limit)
+
+
+FUNCS = {f.__name__: f for f in [find_quiet_places, place_forecast, get_weather, plan_course, rank_spots,
+                                 wifi_visitors, area_visitors, jeju_card_time_pattern]}
 
 _DATE = {"type": "string", "description": "날짜. 'YYYY-MM-DD', '11/22', '오늘', '내일', '토요일' 등. 비우면 예측 첫날(보통 오늘)."}
 TOOLS = [
@@ -163,6 +178,21 @@ TOOLS = [
             "order": {"type": "string", "enum": ["busy", "quiet"], "description": "busy=평소보다 붐비는 순, quiet=한산한 순"},
             "limit": {"type": "integer", "description": "몇 곳까지. 기본 10, 최대 30."},
             "scope": {"type": "string", "enum": ["all", "app"], "description": "all=예측 대상 전체, app=앱의 장소 53곳만"}}, "required": []}}},
+    {"type": "function", "function": {
+        "name": "wifi_visitors",
+        "description": "제주데이터허브 '와이파이 AP그룹별 일일 사용량'(공공와이파이 하루 접속자 수, 약 3일 전까지 매일 갱신)으로 최근 5주 실제 붐빔을 본다. "
+                       "place_name 을 주면 그 장소의 날짜별 접속자·최근 7일 추세·요일별 지수, 비우면 37곳을 '요즘 평소보다 한산/붐빔' 순으로 준다. "
+                       "'요즘 실제로 붐벼?', '무슨 요일이 한산해?' 같은 질문용.",
+        "parameters": {"type": "object", "properties": {
+            "place_name": {"type": "string", "description": "장소 이름. 비우면 전체 순위."},
+            "limit": {"type": "integer", "description": "순위 몇 곳까지. 기본 10."}}, "required": []}}},
+    {"type": "function", "function": {
+        "name": "area_visitors",
+        "description": "제주데이터허브 '읍면동 단위 내국인 유동인구'(방문 인구, 공개가 2~3달 늦음)로 지역(읍면동)의 요일 패턴과 주민 대비 방문 비율을 본다. "
+                       "area 에 읍면동(구좌읍)이나 장소 이름(따라비오름)을 주면 그 지역, 비우면 방문이 몰리는/한적한 지역 순위.",
+        "parameters": {"type": "object", "properties": {
+            "area": {"type": "string", "description": "읍면동 또는 장소 이름. 비우면 전체 순위."},
+            "limit": {"type": "integer", "description": "순위 몇 곳까지. 기본 8."}}, "required": []}}},
     {"type": "function", "function": {
         "name": "jeju_card_time_pattern",
         "description": "제주데이터허브 '관광지·상업지구 시간대별 카드 데이터'로 지구별 시간대(오전·점심·오후·저녁·밤) 카드 결제 비율을 본다. 하루 중 언제 붐비는지의 근거.",

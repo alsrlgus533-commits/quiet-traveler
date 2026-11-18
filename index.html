@@ -1164,7 +1164,7 @@ paintThemeBtn();
 // 로컬 서버가 /api/health 에 답할 때만 대화창을 켠다 (claude.ai 게시본 등에서는 숨김).
 const TOOL_WORD = {find_quiet_places:"조용한 곳 찾기", place_forecast:"장소 예측", get_weather:"날씨",
   plan_course:"코스 짜기", rank_spots:"붐빔 순위", jeju_card_time_pattern:"제주데이터허브 카드 패턴"};
-const ASK_EX = ["이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?", "성산 쪽에서 10시부터 반나절 코스 짜줘", "다음 주 평소보다 붐빌 관광지 순위 알려줘"];
+const ASK_EX = ["이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?", "성산 쪽에서 10시부터 반나절 코스 짜줘", "다음 주 평소보다 붐빌 관광지 순위 알려줘", "요즘 성산일출봉 실제로 붐벼?"];
 const askHist = [];
 function esc(s){ return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]); }
 // 답의 간단한 마크다운(굵게, 목록, 링크, 줄바꿈)만 그린다. 그 밖의 HTML 은 모두 글자로 보인다.
