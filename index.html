@@ -363,7 +363,6 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
     </form>
   </section>
 
-  <div class="today" id="today"></div>
 
   <details class="legend" id="legend">
     <summary>‘한산해요·적당해요·붐벼요’는 어떻게 정하나요?</summary>
@@ -761,13 +760,6 @@ function dateEdges(){
   box.classList.toggle("more-l", box.scrollLeft>2);
   box.classList.toggle("more-r", box.scrollLeft<max-2);
 }
-function renderToday(){
-  const st=dayState(dayFactor(state.date)), [head,tip0]=DAY_MSG[st];
-  const tip = isRainy(state.date) ? "비 소식이 있어요. 오름보다 숲길이나 마을이 걷기 좋아요." : tip0;
-  const w = wxOf(state.date);
-  const wxLine = w ? `<p class="today-wx">${wxIcon(w)}<span>${w.word}${w.tmax!=null?` · <span class="num">${w.tmax}°${w.tmin!=null?`/${w.tmin}°`:""}</span>`:""}${w.pop?` · 비 올 확률 <span class="num">${w.pop}%</span>`:""}</span></p>` : "";
-  $("today").innerHTML = `<i class="${st==="calm"?"":st}" aria-hidden="true"></i><div><b>${head}</b><p>${tip}</p>${wxLine}</div>`;
-}
 function renderSwaps(){
   // 유명한 곳은 '자기 평소 대비' 로 줄 세운다. 집중률 값을 장소끼리 비교하면 안 되기 때문.
   const rows = SWAPS.map(s=>{
@@ -1023,7 +1015,7 @@ function renderMapInfo(p){
 function renderAll(){
   $("hourLabel").textContent = state.hour+"시";
   $("hour").setAttribute("aria-valuetext", state.hour+"시");
-  renderDates(); renderToday(); renderMap(); renderSwaps(); renderFamous(); renderPlan(); renderThemes(); renderList();
+  renderDates(); renderMap(); renderSwaps(); renderFamous(); renderPlan(); renderThemes(); renderList();
   if(state.open) openSheet(state.open, true);
 }
 
