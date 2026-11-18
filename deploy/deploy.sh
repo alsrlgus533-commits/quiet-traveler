@@ -21,5 +21,5 @@ if ! "${SSH[@]}" 'test -f /opt/quiet-traveler/.env'; then
 fi
 
 echo "== 설치·서비스"
-tr -d '' < deploy/remote_setup.sh | "${SSH[@]}" 'bash -s'
+tr -d '\r' < deploy/remote_setup.sh | "${SSH[@]}" 'bash -s'
 echo "끝: https://quiet.129-225-172-177.nip.io"
