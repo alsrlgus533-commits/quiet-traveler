@@ -273,6 +273,33 @@ def kakao_course(ps):
         f"{urllib.parse.quote(p['name'])},{p['lat']},{p['lng']}" for p in ps[:7])
 
 
+_NV = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def _nv62(v):
+    """네이버 지도 주소의 좌표 형식: 경·위도 × 1천만 + 20억을 62진수로 (index.html 의 nv62 와 같음)."""
+    n, out = math.floor(v * 1e7 + 0.5) + 2_000_000_000, ""
+    while n > 0:
+        out = _NV[n % 62] + out
+        n //= 62
+    return out
+
+
+def _nv_pt(p):
+    return f"{_nv62(p['lng'])},{_nv62(p['lat'])},{urllib.parse.quote(p['name'])},,ADDRESS_POI"
+
+
+def naver_course(ps):
+    """네이버 지도 웹 길찾기. 출발을 '-' 로 비워 네이버 지도에서 내 위치 등으로 고르게 하고, 마지막 곳이 도착, 나머지는 경유(최대 5)."""
+    goal, via = ps[-1], ps[:-1][:5]
+    return (f"https://map.naver.com/p/directions/-/{_nv_pt(goal)}/"
+            f"{':'.join(_nv_pt(p) for p in via) if via else '-'}/car")
+
+
+def naver_to(p):
+    return naver_course([p])
+
+
 @lru_cache(maxsize=1)
 def store() -> Store:
     return Store()

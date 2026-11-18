@@ -3,7 +3,7 @@ TOOLS 는 OpenAI 호환 함수 호출 형식(업스테이지 Solar 가 그대로
 from __future__ import annotations
 
 from . import core, datahub
-from .core import (clock, drive_min, fmt_date, kakao_course, kakao_to, norm_date, park_word,
+from .core import (clock, drive_min, fmt_date, kakao_course, kakao_to, naver_course, naver_to, norm_date, park_word,
                    quiet_word, store)
 
 THEMES = ["숲길", "오름", "바다", "마을"]
@@ -14,7 +14,7 @@ def _place_brief(s, p, h, date):
     out = {"name": p["name"], "kind": "유명한 곳" if p["famous"] else "조용한 곳", "theme": p["theme"],
            "area": p.get("area", ""), "quiet_score": q, "quiet_word": quiet_word(q),
            "parking": park_word(q), "best_window": f"{s.best_window(p, date)}–{s.best_window(p, date) + 2}시",
-           "directions": kakao_to(p)}
+           "directions_kakao": kakao_to(p), "directions_naver": naver_to(p)}
     u = s.usual(p, date)
     if u:
         out["vs_usual"] = u["word"]
@@ -94,12 +94,14 @@ def plan_course(date: str = "", start_hour: int = 10, stops: int = 3, theme: str
     st = plan["stops"]
     items = [{"order": i + 1, "arrive": clock(t), "name": p["name"], "theme": p["theme"],
               "stay_min": round(s.stay[p["theme"]] * 60), "drive_from_prev_min": d,
-              "quiet_word": quiet_word(q), "parking": park_word(q)} for i, (p, t, q, d) in enumerate(st)]
+              "quiet_word": quiet_word(q), "parking": park_word(q),
+              "directions_kakao": kakao_to(p), "directions_naver": naver_to(p)} for i, (p, t, q, d) in enumerate(st)]
     last = st[-1]
     return {**_meta(s, date), "stops": items,
             "end_time": clock(last[1] + s.stay[last[0]["theme"]]),
             "total_drive_min": sum(x["drive_from_prev_min"] for x in items),
             "kakao_route": kakao_course([x[0] for x in st]),
+            "naver_route": naver_course([x[0] for x in st]),
             "rule": "비 오는 날은 오름을 빼고 숲길·마을을 더 권함" if s.rainy(date) else "한산함 합 − 이동 시간, 테마가 다양할수록 가점"}
 
 
