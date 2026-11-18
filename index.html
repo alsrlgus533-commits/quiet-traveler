@@ -37,29 +37,27 @@ header{display:flex;flex-direction:column;gap:6px}
 header h1{font-size:34px;line-height:1.15}
 header p{margin:0;color:var(--muted)}
 
-/* 날짜 띠 */
-.dates{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:4px}
-.dates::-webkit-scrollbar{display:none}
-/* 넘길 날짜가 남은 쪽 끝을 흐리게 */
-.dates.more-r{mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
-.dates.more-l{mask-image:linear-gradient(90deg,transparent,#000 40px)}
-.dates.more-l.more-r{mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
-.dates.dragging,.dates.dragging .day{cursor:grabbing;user-select:none}
-.day{flex:0 0 auto;width:56px;padding:8px 0 9px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
-  display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
-.day small{font-size:11px;color:var(--muted)}
-.day b{font-size:17px;font-weight:600}
-.day i{width:6px;height:6px;border-radius:50%;background:var(--calm)}
-.day i.mid{background:var(--mid)} .day i.busy{background:var(--busy)}
-.day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
-.day[aria-pressed="true"] small{color:inherit;opacity:.8}
-.day[aria-pressed="true"] i{box-shadow:0 0 0 2px var(--bg)}
+/* 날짜: 한라산 분화구 바로 아래에 하루를 크게 보여 주고, 양 끝 < > 로 하루씩 넘긴다.
+   위쪽 여백(--day-top)은 스크립트가 그림 속 분화구 높이에 맞춰 정한다(placeDay). */
+.day-hero{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:var(--day-top,18vh) -8px 0}
+/* 날짜 글자는 판 없이 그림 위에 바로 얹고, 제목처럼 배경색 그림자를 둘러 읽히게 한다 */
+.day-now{flex:1;min-width:0;text-align:center;padding:4px 6px;
+  text-shadow:0 0 2px var(--bg),0 0 2px var(--bg),0 0 6px var(--bg),0 0 12px var(--bg),0 0 22px var(--bg)}
+.day-now .rel,.day-now .sub{color:var(--ink);font-weight:600}
+.day-now .sub .wx{filter:drop-shadow(0 0 3px var(--bg))}
+.day-now .rel{display:block;font-size:13px;letter-spacing:.06em;min-height:1em}
+.day-now .date{display:block;font-family:var(--f-display);font-size:24px;font-weight:700;line-height:1.25}
+.day-now .sub{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:2px 12px;margin-top:3px;font-size:14px}
+.day-now .sub > span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.day-now .sub .dot{margin:0}
+.day-arrow{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;padding:0;
+  background:color-mix(in srgb,var(--bg) 66%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink)}
+.day-arrow svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.day-arrow:disabled{opacity:.3;cursor:default}
 /* 날씨 아이콘: 선 아이콘, 해만 노란 계열로 */
 .wx{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
 .wx.sun,.wx.partly{color:var(--mid)}
 .wx.rain,.wx.shower,.wx.storm{color:var(--accent)}
-.wx-cell{display:flex;flex-direction:column;align-items:center;gap:0;font-size:11px;color:var(--muted);line-height:1.1}
-.day[aria-pressed="true"] .wx,.day[aria-pressed="true"] .wx-cell{color:inherit}
 .today-wx{display:flex;align-items:center;gap:6px;margin-top:6px !important;color:var(--ink) !important}
 .today-wx .wx{width:20px;height:20px;flex:0 0 auto}
 /* AI 대화창 */
@@ -161,6 +159,8 @@ figure.hero img{position:absolute;left:0;top:0;display:block;width:100%;height:a
 /* 어두운 화면은 밤 그림을 쓴다(스크립트가 바꿈). 이미 어두운 그림이라 살짝만 누른다. */
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) figure.hero img{filter:brightness(.85)}}
 :root[data-theme="dark"] figure.hero img{filter:brightness(.85)}
+/* 배경 날씨(비·눈·해·구름·안개)를 그리는 캔버스. 그림 위, 본문 아래에 놓인다(스크립트 WxFx). */
+figure.hero canvas.wx-fx{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* 첫 화면: 제목은 맨 위 하늘에 카드 없이 바로 얹고, 그 아래로 한라산이 보이게 비워 둔 뒤
    날짜 카드가 화면 절반쯤(46vh)에서 시작한다. 글자 둘레에 배경색 그림자를 둘러 그림 위에서도 읽히게 한다
    (밝게·어둡게 바꾸면 글자색과 그림자도 함께 바뀜). */
@@ -347,6 +347,7 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
 <figure class="hero">
   <img src="images/hero-tall.webp" decoding="async"
        alt="위로는 하늘과 한라산, 아래로는 억새밭과 돌담 사이로 빈 길이 이어지는 제주 들판 그림">
+  <canvas class="wx-fx" aria-hidden="true"></canvas>
 </figure>
 
 <div class="wrap">
@@ -356,10 +357,14 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
       <h1>조용한 여행자</h1>
       <button class="theme-btn" id="themeBtn" type="button"></button>
     </div>
+    <div class="day-hero" id="dayHero" role="group" aria-label="날짜 고르기">
+      <button class="day-arrow" id="dayPrev" type="button" aria-label="이전 날짜"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="day-now" id="dayNow" aria-live="polite"></div>
+      <button class="day-arrow" id="dayNext" type="button" aria-label="다음 날짜"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
   </header>
 
-  <section aria-label="날짜 선택">
-    <div class="dates" id="dates"></div>
+  <section aria-label="시간 선택">
     <div class="time">
       <div class="time-row"><span class="eyebrow">몇 시에 갈까요?</span><strong class="num" id="hourLabel">10시</strong></div>
       <input type="range" id="hour" min="6" max="20" step="1" value="10" aria-label="가는 시간">
@@ -767,20 +772,175 @@ function wxIcon(w, cls=""){
   if(!w || !WX_SVG[w.sky]) return "";
   return `<svg class="wx ${w.sky} ${cls}" viewBox="0 0 24 24" aria-hidden="true">${WX_SVG[w.sky]}</svg>`;
 }
-function renderDates(){
-  $("dates").innerHTML = state.dates.map(d=>{
-    const dt=parseYmd(d), st=dayState(dayFactor(d)), w=wxOf(d);
-    const wxLabel = w ? `, ${w.word}${w.tmax!=null?` 최고 ${w.tmax}도`:""}` : "";
-    return `<button class="day" aria-pressed="${d===state.date}" data-d="${d}" aria-label="${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일, ${DAY_WORD[st]}${wxLabel}">
-      <small>${WD[dt.getDay()]}</small><b class="num">${dt.getDate()}</b>
-      ${w ? `<span class="wx-cell">${wxIcon(w)}<span class="num">${w.tmax!=null?w.tmax+"°":""}</span></span>` : ""}</button>`;
-  }).join("");
-  dateEdges();
+// 배경 날씨: 고른 날짜의 날씨(sky)에 맞춰 배경 그림 위 캔버스에 비·눈·해·구름·안개를 움직인다.
+// 날씨 자료가 없으면 아무것도 그리지 않는다. 주소 뒤에 ?wx=rain 처럼 붙이면 그 날씨로 미리 볼 수 있다.
+// 움직임 줄이기를 켠 사람에게는 멈춘 한 장면만 그린다.
+const WX_TRY = (()=>{ try{ const v=new URLSearchParams(location.search).get("wx"); return v && WX_SVG[v] ? v : null; }catch(e){ return null; } })();
+const WxFx = (()=>{
+  const cv=document.querySelector("figure.hero canvas.wx-fx"), ctx=cv.getContext("2d");
+  const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let W=0, H=0, kind=null, dark=false, drops=[], flakes=[], clouds=[], fogs=[], dots=[], raf=0, last=0, t=0;
+  let flash=0, nextFlash=4, star=null, nextStar=6;
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const wet=()=>kind==="rain"||kind==="shower"||kind==="storm";
+  // 구름·안개 한 덩이를 미리 그려 둔 작은 캔버스 (매 장면 다시 그리지 않으려고)
+  const sprite=(w,h,draw)=>{ const c=document.createElement("canvas"); c.width=w; c.height=h; draw(c.getContext("2d"),w,h); return c; };
+  const puff=(g,x,y,r,a,c="255,255,255")=>{ const k=g.createRadialGradient(x,y,0,x,y,r); k.addColorStop(0,`rgba(${c},${a})`); k.addColorStop(1,`rgba(${c},0)`); g.fillStyle=k; g.fillRect(x-r,y-r,r*2,r*2); };
+  const cloudOf=c=>[0,1].map(s=>sprite(420,170,g=>{
+    const P = s ? [[90,105,62],[160,80,78],[240,92,70],[310,108,58],[200,120,66]]
+                : [[80,110,55],[150,88,70],[225,78,80],[300,100,64],[350,115,48],[190,122,60]];
+    P.forEach(([x,y,r])=>puff(g,x,y,r,.9,c)); }));
+  const CLOUD=cloudOf("255,255,255"), GREY=cloudOf("120,130,145");
+  const FOG=sprite(600,180,(g,w,h)=>{ g.save(); g.scale(1,h/w); puff(g,w/2,w/2,w/2,.7); g.restore(); });
+
+  function newDrop(any){ const storm=kind==="storm"; return {x:rnd(-W*.2,W), y:any?rnd(-H,H):rnd(-H*.3,-10), len:rnd(12,24)*(storm?1.25:1), sp:rnd(700,1050)*(storm?1.2:1)}; }
+  function newFlake(any){ const r=rnd(1.2,3.8); return {x:rnd(0,W), y:any?rnd(-H,H):rnd(-40,-5), r, sp:rnd(22,38)*r, ph:rnd(0,6.3), sw:rnd(10,32)}; }
+  function seed(){
+    const area=Math.max(.6,W*H/(390*844));
+    drops=[]; flakes=[]; clouds=[]; fogs=[]; dots=[];
+    if(wet()){ const n=Math.round((kind==="shower"?70:kind==="storm"?190:130)*area); for(let i=0;i<n;i++) drops.push(newDrop(true)); }
+    if(kind==="snow"){ const n=Math.round(95*area); for(let i=0;i<n;i++) flakes.push(newFlake(true)); }
+    if(kind==="sun"||kind==="partly"){ const n=Math.round((dark?70:24)*area);
+      for(let i=0;i<n;i++) dots.push({x:rnd(0,W), y:rnd(0,dark?H*.55:H), r:dark?rnd(.6,1.6):rnd(1.4,3), ph:rnd(0,6.3), sp:rnd(.6,1.8), up:rnd(6,16)}); }
+    const nc = kind==="cloud"?6 : kind==="partly"?3 : (wet()||kind==="snow")?4 : 0;
+    for(let i=0;i<nc;i++) clouds.push({x:rnd(-W*.3,W), y:rnd(-H*.04,H*.3), s:rnd(.7,1.4)*Math.max(1,W/700), sp:rnd(5,12), img:(kind==="partly"||dark?CLOUD:GREY)[i%2], a:rnd(.5,.85)});
+    if(kind==="fog") for(let i=0;i<8;i++) fogs.push({x:rnd(-W,W), y:H*(.2+i*.11)+rnd(-20,20), w:W*rnd(1.4,2.2), h:H*rnd(.22,.34), sp:rnd(10,24)*(i%2?1:-1), a:rnd(.6,.9)});
+  }
+  function size(){
+    const dpr=Math.min(1.5,devicePixelRatio||1); W=innerWidth; H=innerHeight;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); seed();
+  }
+  // 맨 위(하늘)에서만 어울리는 것(해·별)은 페이지를 내리면 흐려진다.
+  const skyK=()=>Math.max(0,1-scrollY/(H*1.3));
+
+  function frame(dt){
+    t+=dt; ctx.clearRect(0,0,W,H);
+    // 흐린 날·비·눈·안개는 맑은 그림을 조금 흐리게 덮는다.
+    const veil = dark ? {rain:.18,shower:.14,storm:.26,snow:.06,cloud:.12,fog:.06}[kind]
+                      : {rain:.4,shower:.3,storm:.5,snow:.3,cloud:.26,fog:.1}[kind];
+    if(veil){
+      const c = dark ? "5,10,25" : "72,84,102", vg=ctx.createLinearGradient(0,0,0,H);
+      vg.addColorStop(0,`rgba(${c},${Math.min(.7,veil*1.35)})`); vg.addColorStop(1,`rgba(${c},${veil*.65})`);
+      ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+    }
+
+    if(kind==="sun"||kind==="partly"){
+      const k=skyK();
+      if(!dark && k>0){
+        const sx=W*.82, sy=H*.06, R=Math.max(W,H)*.6, pulse=.85+.15*Math.sin(t*.8);
+        const g=ctx.createRadialGradient(sx,sy,0,sx,sy,R);
+        g.addColorStop(0,`rgba(255,246,215,${.95*k*pulse})`); g.addColorStop(.08,`rgba(255,226,150,${.6*k})`);
+        g.addColorStop(.35,`rgba(255,196,110,${.2*k})`); g.addColorStop(1,"rgba(255,190,100,0)");
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        // 햇살 줄기: 해에서 왼쪽 아래로 부채꼴로 뻗고, 아주 천천히 흔들린다
+        ctx.save(); ctx.translate(sx,sy); ctx.rotate(Math.sin(t*.15)*.06);
+        const L0=Math.hypot(W,H)*1.05;
+        for(let i=0;i<9;i++){
+          const a=Math.PI*(.55+i*.05), w=.018+.012*Math.sin(t*.5+i*1.7), L=L0*(.75+.25*Math.sin(t*.35+i*2.1));
+          const rg=ctx.createLinearGradient(0,0,Math.cos(a)*L,Math.sin(a)*L);
+          rg.addColorStop(0,`rgba(255,232,170,${.34*k})`); rg.addColorStop(.6,`rgba(255,232,170,${.1*k})`); rg.addColorStop(1,"rgba(255,232,170,0)");
+          ctx.fillStyle=rg; ctx.beginPath(); ctx.moveTo(0,0);
+          ctx.lineTo(Math.cos(a-w)*L,Math.sin(a-w)*L); ctx.lineTo(Math.cos(a+w)*L,Math.sin(a+w)*L); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+      }
+      // 낮: 천천히 떠오르는 따뜻한 빛 알갱이 / 밤: 반짝이는 별과 가끔 별똥별
+      for(const d of dots){
+        if(dark){
+          const a=(.35+.65*Math.max(0,Math.sin(t*d.sp+d.ph)))*k; if(a<.03) continue;
+          ctx.fillStyle=`rgba(235,240,255,${a})`; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7); ctx.fill();
+        } else {
+          d.y-=d.up*dt; d.x+=Math.sin(t*.7+d.ph)*.25; if(d.y<-5){ d.y=H+5; d.x=rnd(0,W); }
+          const a=.45+.4*Math.sin(t*d.sp+d.ph); ctx.fillStyle=`rgba(255,226,150,${a})`; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7); ctx.fill();
+        }
+      }
+      if(dark && k>.2){
+        nextStar-=dt; if(!star && nextStar<=0){ star={x:rnd(W*.3,W), y:rnd(0,H*.25), life:0}; nextStar=rnd(7,14); }
+        if(star){
+          star.life+=dt; const p=Math.min(1,star.life/.9), x=star.x-p*W*.35, y=star.y+p*H*.12;
+          const tg=ctx.createLinearGradient(x,y,x+60,y-20); tg.addColorStop(0,`rgba(255,255,255,${.9*(1-p)*k})`); tg.addColorStop(1,"rgba(255,255,255,0)");
+          ctx.strokeStyle=tg; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+60,y-20); ctx.stroke();
+          if(p>=1) star=null;
+        }
+      }
+    }
+    // 흘러가는 구름
+    for(const c of clouds){
+      c.x+=c.sp*dt; const w=c.img.width*c.s, h=c.img.height*c.s;
+      if(c.x>W+20){ c.x=-w-rnd(0,W*.3); c.y=rnd(-H*.04,H*.3); }
+      ctx.globalAlpha=c.a*(dark?.3:1); ctx.drawImage(c.img,c.x,c.y,w,h);
+    }
+    ctx.globalAlpha=1;
+    // 안개: 옅은 띠가 좌우로 천천히 흐른다
+    if(kind==="fog"){
+      const fg=ctx.createLinearGradient(0,0,0,H), fc=dark?"150,160,185":"236,239,243";
+      fg.addColorStop(0,`rgba(${fc},${dark?.08:.2})`); fg.addColorStop(.45,`rgba(${fc},${dark?.2:.5})`); fg.addColorStop(1,`rgba(${fc},${dark?.16:.4})`);
+      ctx.fillStyle=fg; ctx.fillRect(0,0,W,H);
+      for(const f of fogs){
+        f.x+=f.sp*dt; if(f.sp>0&&f.x>W) f.x=-f.w; if(f.sp<0&&f.x<-f.w) f.x=W;
+        ctx.globalAlpha=f.a*(dark?.45:1); ctx.drawImage(FOG,f.x,f.y-f.h/2,f.w,f.h);
+      }
+      ctx.globalAlpha=1;
+    }
+    // 비: 살짝 기운 빗줄기. 가는 줄과 굵은 줄을 나눠 그려 깊이를 준다
+    if(wet()){
+      const lean=kind==="storm"?.32:.14;
+      ctx.lineCap="round";
+      for(const pass of [0,1]){
+        ctx.strokeStyle = dark?`rgba(190,210,255,${pass?.45:.25})`:`rgba(225,235,248,${pass?.7:.4})`;
+        ctx.lineWidth = pass?1.3:.8; ctx.beginPath();
+        drops.forEach((d,i)=>{ if(i%2!==pass) return;
+          d.y+=d.sp*dt; d.x+=d.sp*lean*dt; if(d.y>H+30||d.x>W+30) Object.assign(d,newDrop(false));
+          ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-d.len*lean,d.y-d.len); });
+        ctx.stroke();
+      }
+      // 뇌우: 몇 초에 한 번 하늘이 약하게 번쩍인다 (잦은 깜빡임은 눈에 해로워서 피함)
+      if(kind==="storm"){
+        nextFlash-=dt; if(nextFlash<=0){ flash=1; nextFlash=rnd(7,13); }
+        if(flash>0){ ctx.fillStyle=`rgba(235,240,255,${.22*flash})`; ctx.fillRect(0,0,W,H); flash=Math.max(0,flash-dt*2.2); }
+      }
+    }
+    // 눈: 좌우로 흔들리며 천천히 내린다
+    if(kind==="snow"){
+      ctx.fillStyle=dark?"rgba(235,240,255,.85)":"rgba(255,255,255,.95)"; ctx.beginPath();
+      for(const f of flakes){
+        f.y+=f.sp*dt; if(f.y>H+10) Object.assign(f,newFlake(false));
+        const x=f.x+Math.sin(t*.8+f.ph)*f.sw; ctx.moveTo(x+f.r,f.y); ctx.arc(x,f.y,f.r,0,7);
+      }
+      ctx.fill();
+    }
+  }
+  function loop(now){
+    const dt=Math.min(.05,(now-(last||now))/1000); last=now; frame(dt); raf=requestAnimationFrame(loop);
+  }
+  function start(){
+    cancelAnimationFrame(raf); raf=0; last=0; size();
+    if(!kind){ ctx.clearRect(0,0,W,H); return; }
+    if(still){ t=1; frame(0); return; }    // 움직임 줄이기: 멈춘 한 장면
+    raf=requestAnimationFrame(loop);
+  }
+  let rT=0; addEventListener("resize",()=>{ clearTimeout(rT); rT=setTimeout(()=>{ if(kind) start(); },150); });
+  return { set(k,d){ k=WX_SVG[k]?k:null; if(k===kind&&d===dark) return; kind=k; dark=d; start(); } };
+})();
+function paintWx(){
+  const w=wxOf(state.date);
+  WxFx.set(WX_TRY || (w && w.sky), currentTheme()==="dark");
 }
-function dateEdges(){
-  const box=$("dates"), max=box.scrollWidth-box.clientWidth;
-  box.classList.toggle("more-l", box.scrollLeft>2);
-  box.classList.toggle("more-r", box.scrollLeft<max-2);
+function renderDates(){
+  const d=state.date, i=state.dates.indexOf(d), box=$("dayNow");
+  const md = x => { const t=parseYmd(x); return `${t.getMonth()+1}월 ${t.getDate()}일`; };
+  if(!d){ box.innerHTML=""; $("dayPrev").disabled=$("dayNext").disabled=true; return; }
+  const dt=parseYmd(d), st=dayState(dayFactor(d)), w=wxOf(d);
+  const now=new Date(), diff=Math.round((dt-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+  const rel = ["오늘","내일","모레"][diff] || (diff>0 ? `${diff}일 뒤` : "");
+  const temp = w && w.tmax!=null ? ` ${w.tmax}°${w.tmin!=null?` / ${w.tmin}°`:""}` : "";
+  box.innerHTML = `<span class="rel">${rel}</span>
+    <strong class="date">${md(d)} ${WD[dt.getDay()]}요일</strong>
+    <span class="sub"><span><i class="dot ${st}" aria-hidden="true"></i>${DAY_WORD[st]}</span>${w ? `<span>${wxIcon(w)}${w.word}<span class="num">${temp}</span></span>` : ""}</span>`;
+  const prev=state.dates[i-1], next=state.dates[i+1];
+  $("dayPrev").disabled=!prev; $("dayNext").disabled=!next;
+  $("dayPrev").setAttribute("aria-label", prev ? `이전 날짜, ${md(prev)}` : "이전 날짜 없음");
+  $("dayNext").setAttribute("aria-label", next ? `다음 날짜, ${md(next)}` : "다음 날짜 없음");
 }
 function renderSwaps(){
   // 유명한 곳은 '자기 평소 대비' 로 줄 세운다. 집중률 값을 장소끼리 비교하면 안 되기 때문.
@@ -1042,7 +1202,7 @@ function renderMapInfo(p){
 function renderAll(){
   $("hourLabel").textContent = state.hour+"시";
   $("hour").setAttribute("aria-valuetext", state.hour+"시");
-  renderDates(); renderMap(); renderSwaps(); renderFamous(); renderPlan(); renderThemes(); renderList();
+  renderDates(); renderMap(); renderSwaps(); renderFamous(); renderPlan(); renderThemes(); renderList(); paintWx();
   if(state.open) openSheet(state.open, true);
 }
 
@@ -1134,7 +1294,16 @@ function closeSheet(){
 // ---------- 이벤트 ----------
 // 다시 그리면 눌렀던 버튼이 새 요소로 바뀌어 포커스를 잃는다. 같은 자리로 되돌려 키보드 흐름을 지킨다.
 const refocus = box => { const b=$(box).querySelector('[aria-pressed="true"]'); if(b) b.focus({preventScroll:true}); };
-$("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!b) return; state.date=b.dataset.d; renderAll(); refocus("dates"); });
+// 날짜: < > 로 하루씩. 끝에 닿아 버튼이 꺼지면 포커스를 반대쪽 화살표로 옮긴다.
+function stepDate(n){
+  const i=state.dates.indexOf(state.date)+n;
+  if(i<0 || i>=state.dates.length) return;
+  state.date=state.dates[i]; renderAll();
+  const here=$(n<0?"dayPrev":"dayNext"), other=$(n<0?"dayNext":"dayPrev");
+  if(document.activeElement===here && here.disabled) other.focus({preventScroll:true});
+}
+$("dayPrev").addEventListener("click", ()=>stepDate(-1));
+$("dayNext").addEventListener("click", ()=>stepDate(1));
 // 대표 그림: 페이지를 내린 비율만큼 그림을 올려, 맨 위에선 그림 윗부분(하늘·한라산),
 // 맨 아래에선 그림 아랫부분(돌담길)이 보이게 한다. 움직임 줄이기를 켠 사람에게는 그림을 움직이지 않는다.
 (()=>{
@@ -1155,35 +1324,6 @@ $("dates").addEventListener("click", e=>{ const b=e.target.closest(".day"); if(!
   img.addEventListener("load",ask);
   new ResizeObserver(ask).observe(document.body);   // 목록 길이가 바뀌면 페이지 길이도 바뀐다
   paint();
-})();
-// 날짜 띠: 휴대폰은 손가락으로 밀면 되지만 PC 마우스는 세로 휠뿐이고 스크롤바도 숨겨 둬서 넘길 방법이 없었다.
-// 휠을 가로로 돌리고, 끌어서도 넘기게 한다.
-(()=>{
-  const box=$("dates");
-  box.addEventListener("scroll", dateEdges, {passive:true});
-  addEventListener("resize", dateEdges);
-  box.addEventListener("wheel", e=>{
-    if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;            // 트랙패드 가로 밀기는 브라우저에 맡김
-    const max=box.scrollWidth-box.clientWidth, dy=e.deltaY*(e.deltaMode===1?40:1);
-    if(max<=0 || (dy<0 && box.scrollLeft<=0) || (dy>0 && box.scrollLeft>=max-1)) return;  // 끝에 닿으면 페이지가 내려가게
-    e.preventDefault(); box.scrollLeft+=dy;
-  }, {passive:false});
-  let drag=null, moved=false;
-  box.addEventListener("pointerdown", e=>{
-    moved=false;
-    if(e.pointerType==="mouse" && e.button===0) drag={x:e.clientX, left:box.scrollLeft, id:e.pointerId};
-  });
-  box.addEventListener("pointermove", e=>{
-    if(!drag || e.pointerId!==drag.id) return;
-    const dx=e.clientX-drag.x;
-    if(!moved && Math.abs(dx)<6) return;                          // 살짝 흔들린 클릭은 그냥 클릭
-    if(!moved){ moved=true; box.setPointerCapture(e.pointerId); box.classList.add("dragging"); }
-    box.scrollLeft=drag.left-dx;
-  });
-  const stop=()=>{ drag=null; box.classList.remove("dragging"); };
-  box.addEventListener("pointerup", stop); box.addEventListener("pointercancel", stop);
-  // 끌고 난 뒤 따라오는 클릭이 날짜를 바꾸지 않게 막는다.
-  box.addEventListener("click", e=>{ if(moved){ moved=false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 })();
 $("hour").addEventListener("input", e=>{ state.hour=+e.target.value; state.sheetHour=state.hour; renderAll(); });
 $("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.listAll=false; state.theme=b.dataset.t; renderThemes(); renderList(); refocus("themes"); });
@@ -1207,7 +1347,7 @@ function showTab(t){
     if(b.dataset.go===t) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
   });
   // 아래로 내려가 있었으면 날짜 카드가 보이는 곳으로 올린다
-  const top = document.querySelector('.wrap > section[aria-label="날짜 선택"]').getBoundingClientRect().top + scrollY - 12;
+  const top = $("dayHero").getBoundingClientRect().top + scrollY - 12;
   if(scrollY > top) window.scrollTo({top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
 }
 $("tabbar").addEventListener("click", e=>{ const b=e.target.closest("[data-go]"); if(b) showTab(b.dataset.go); });
@@ -1262,13 +1402,28 @@ function paintThemeBtn(){
   const dark = currentTheme()==="dark", b = $("themeBtn");
   b.textContent = dark ? "☀ 밝게" : "☾ 어둡게";
   b.setAttribute("aria-label", dark ? "밝은 화면으로 바꾸기" : "어두운 화면으로 바꾸기");
-  paintHero(dark);
+  paintHero(dark); paintWx(); placeDay();
 }
 // 어두운 화면에서는 밤 그림(별·초승달·한라산, 귤밭 돌담 벤치)으로 바꾼다. 두 그림은 같은 크기(928×1664)라 스크롤 맞춤이 그대로 맞는다.
 const HERO = {
   light:["images/hero-tall.webp","위로는 하늘과 한라산, 아래로는 억새밭과 돌담 사이로 빈 길이 이어지는 제주 들판 그림"],
   dark: ["images/hero-night.webp","별과 초승달 아래 한라산과 귤밭이 보이고, 돌담 옆 벤치에 한 사람이 앉아 밤하늘을 올려다보는 그림"],
 };
+// 그림 속 분화구(밤 그림은 꼭대기) 바로 아래 높이. 그림 높이에 대한 비율 (928×1664 기준 660px, 815px)
+const CRATER = {light:.40, dark:.49};
+// 날짜 칸을 분화구 바로 아래에 놓는다. 배경 스크립트처럼 맨 위에서도 그림 윗부분을 건너뛰므로
+// (넓은 화면 25%, 좁은 화면 15%, 움직임 줄이기면 0) 그만큼 빼서 화면 위치를 구한다.
+function placeDay(){
+  const img=document.querySelector("figure.hero img"), H=img.offsetHeight, hero=$("dayHero");
+  if(!H) return;
+  const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const start = still ? 0 : Math.min(Math.max(0,H-innerHeight), H*(innerWidth<=600?.15:.25));
+  const y = H*CRATER[currentTheme()==="dark"?"dark":"light"] - start;
+  const base = hero.previousElementSibling.getBoundingClientRect().bottom + scrollY + 6;   // 제목 줄 아래 + 간격
+  hero.style.setProperty("--day-top", Math.max(12, Math.round(y + 6 - base)) + "px");
+}
+document.querySelector("figure.hero img").addEventListener("load", placeDay);
+addEventListener("resize", placeDay);
 function paintHero(dark){
   const img=document.querySelector("figure.hero img"), [src,alt]=HERO[dark?"dark":"light"];
   if(img.getAttribute("src")!==src){ img.src=src; img.alt=alt; }

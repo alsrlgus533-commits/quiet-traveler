@@ -56,6 +56,8 @@ python -m agent.server
 | `fetch_forecast.py` | 관광공사 예측 + 날씨 수집 → `forecast.json` |
 | `docs/` | 사용자 매뉴얼, 데이터 활용 명세, 개발 메모 |
 
+배경 그림 위에는 고른 날짜의 날씨(`forecast.json` 의 `weather[날짜].sky`)에 맞춰 비·소나기·뇌우·눈·맑음(밤엔 별)·구름·안개가 움직인다(`index.html` 의 `WxFx`). 날씨 자료가 없는 날은 아무것도 그리지 않는다. 주소 뒤에 `?wx=rain` 처럼 붙이면(`sun`·`partly`·`cloud`·`fog`·`rain`·`shower`·`snow`·`storm`) 그 날씨로 미리 볼 수 있다. 기기에서 움직임 줄이기를 켜면 멈춘 한 장면만 보인다.
+
 ## 사용 모델·라이브러리·외부 서비스
 
 | 구분 | 이름 | 용도 |
