@@ -155,11 +155,36 @@ def plan_course(date: str = "", start_hour: int = 10, stops: int = 3, theme: str
     return out
 
 
+def week_range(text):
+    """'이번 주', '다음 주', '이번 주말', '다음 주말', '주말' → (시작, 끝) YYYYMMDD. 아니면 None."""
+    import datetime as dt
+    t = (text or "").replace(" ", "")
+    if not t:
+        return None
+    today = dt.date.today()
+    mon = today - dt.timedelta(days=today.weekday())
+    f = lambda d: d.strftime("%Y%m%d")
+    if t in ("이번주말", "주말", "이번주토일"):
+        sat = mon + dt.timedelta(days=5)
+        return f(max(sat, today)), f(mon + dt.timedelta(days=6))
+    if t == "다음주말":
+        return f(mon + dt.timedelta(days=12)), f(mon + dt.timedelta(days=13))
+    if t == "이번주":
+        return f(today), f(mon + dt.timedelta(days=6))
+    if t == "다음주":
+        return f(mon + dt.timedelta(days=7)), f(mon + dt.timedelta(days=13))
+    return None
+
+
 def rank_spots(date_from: str = "", date_to: str = "", order: str = "busy", limit: int = 10, scope: str = "all"):
     """기간 동안 '평소(30일 평균) 대비' 예측이 높은/낮은 관광지 순위."""
     s = store()
-    d0 = norm_date(date_from, s)
-    d1 = norm_date(date_to, s) if date_to else d0
+    span = week_range(date_from)
+    if span:
+        d0, d1 = span
+    else:
+        d0 = norm_date(date_from, s)
+        d1 = norm_date(date_to, s) if date_to else d0
     days = [d for d in s.dates if d0 <= d <= d1] or [d0]
     names = s.all_spots if scope == "all" else [p["api"] for p in s.places + s.famous if p.get("api")]
     rows = []
@@ -227,7 +252,8 @@ TOOLS = [
         "name": "rank_spots",
         "description": "기간 동안 제주 관광지(최대 448곳)를 '평소 대비' 예측으로 줄 세운다. 담당자의 '다음 주 붐빌 관광지 순위' 같은 분석 질문용.",
         "parameters": {"type": "object", "properties": {
-            "date_from": _DATE, "date_to": _DATE,
+            "date_from": {"type": "string", "description": "시작 날짜. '이번 주', '다음 주', '이번 주말', '다음 주말' 처럼 기간 말을 그대로 넣어도 된다 (그때는 date_to 불필요)."},
+            "date_to": _DATE,
             "order": {"type": "string", "enum": ["busy", "quiet"], "description": "busy=평소보다 붐비는 순, quiet=한산한 순"},
             "limit": {"type": "integer", "description": "몇 곳까지. 기본 10, 최대 30."},
             "scope": {"type": "string", "enum": ["all", "app"], "description": "all=예측 대상 전체, app=앱의 장소 53곳만"}}, "required": []}}},

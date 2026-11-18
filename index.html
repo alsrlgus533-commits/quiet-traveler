@@ -256,6 +256,23 @@ html.sheet-open,html.sheet-open body{overflow:hidden}
 .sheet-actions{display:flex;gap:8px;flex-wrap:wrap}
 .link{display:inline-block;padding:10px 16px;border-radius:99px;background:var(--accent);color:var(--bg);text-decoration:none;font-weight:500}
 .note{font-size:12px;color:var(--muted)}
+/* 붐비는 곳 둘레의 한산한 곳 */
+.near{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:14px;
+  background:color-mix(in srgb,var(--calm) 9%,transparent);border:1px solid color-mix(in srgb,var(--calm) 25%,transparent)}
+.near .eyebrow{color:var(--ink)}
+.near-i,.near-m{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;text-align:left;padding:8px 10px;
+  border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+.near-i .dot,.near-m .dot{margin:0}
+.near-i b,.near-m b{font-size:14px}
+.near-i small,.near-m small{grid-column:2;font-size:12px;color:var(--muted)}
+/* 조용한 곳 목록: 이 시간에 붐비는 곳은 아래 칸으로 나눈다 */
+.list-split{margin:14px 0 4px;font-size:13px;font-weight:600;color:var(--busy)}
+.list-split small{display:block;font-weight:400;color:var(--muted)}
+/* 코스가 안 나올 때 시간 바로 바꾸기 */
+.fix-btn{margin-top:8px;padding:10px 14px;border-radius:12px;border:0;background:var(--accent);color:var(--bg);font:600 14px var(--f-body);cursor:pointer}
+/* 대화 답 속 장소 이름: 누르면 상세 */
+.plink{display:inline;padding:0;border:0;background:none;color:var(--accent);font:inherit;font-weight:600;
+  text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .fc{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
 .fc b{font-family:var(--f-display);font-size:18px}
 
@@ -713,6 +730,28 @@ function km(a,b){
   return 2*R*Math.asin(Math.sqrt(x));
 }
 function driveMin(a,b){ return Math.max(10, Math.round(km(a,b)*1.4/35*60/5)*5); }
+// 붐비는 곳 둘레(30km 안)에서 그 시간에 한산한 조용한 곳. 같은 성격(숲길·바다…)이면 가산, 멀수록 감점.
+function nearbyQuiet(p, h, n=2){
+  const kindOf = x => x.famous ? PROF_WORD[x.prof] : x.theme;
+  const wet=isRainy(state.date), kind = kindOf(p);
+  // 조용한 곳에 더해, 그 시간에 한산한 유명한 곳도 후보로 (가까운 곳이 훨씬 많아진다)
+  const all = [...PLACES, ...FAMOUS].filter(x=>x.id!==p.id && !(wet && kindOf(x)==="오름"))
+    .map(x=>({x, q:100-crowdAt(x,h,state.date), d:km(p,x)}))
+    .filter(o=>o.q>=55);
+  // 20km 안에서 먼저 찾고, 모자라면 35km 까지 넓힌다
+  const near = rows => rows.sort((a,b)=>(b.q+(kindOf(b.x)===kind?12:0)-b.d*2)-(a.q+(kindOf(a.x)===kind?12:0)-a.d*2)).slice(0,n);
+  const close = near(all.filter(o=>o.d<=20));
+  return close.length ? close : near(all.filter(o=>o.d<=35)).slice(0,1);
+}
+// cls: 시트는 near-i(상세 열기), 지도는 near-m(지도에서 고르기)
+function nearbyBlock(p, h, cls){
+  const q=100-crowdAt(p,h,state.date);
+  if(q>=45 && !p.famous) return "";
+  const rows=nearbyQuiet(p,h); if(!rows.length) return "";
+  const head = q<45 ? `${h}시엔 붐벼요 · 근처 한산한 곳` : "근처에 더 조용한 곳";
+  return `<div class="near"><span class="eyebrow">${head}</span>${rows.map(o=>
+    `<button class="${cls}" type="button" data-id="${o.x.id}" data-pin="${o.x.id}" data-famous="${p.name}"><i class="dot ${quietCls(o.q)}" aria-hidden="true"></i><b>${o.x.name}</b><small>${o.x.famous?"유명한 곳 · ":""}${o.x.famous?PROF_WORD[o.x.prof]:o.x.theme} · 차로 ${driveMin(p,o.x)}분 · ${h}시 ${quietWord(o.q)}</small></button>`).join("")}</div>`;
+}
 // 머무는 동안의 한산함: 도착할 때와 머무는 중간의 평균
 function quietStay(p,t,date){ return 100-(crowdAt(p,t,date)+crowdAt(p,t+STAY[p.theme]/2,date))/2; }
 // 가능한 순서를 다 따지면 5곳일 때 50만 가지라 슬라이더를 끌 때 버벅인다.
@@ -976,10 +1015,11 @@ function renderSwaps(){
     // 비 오는 날 오름 대신은 숲길에서 고른다.
     const theme = (isRainy(state.date) && paired.theme==="오름") ? "숲길" : paired.theme;
     const pool = PLACES.filter(p=>p.theme===theme && !used.has(p.id));
+    const fp = FAMOUS.find(f=>f.name===r.s.famous);
     const best = (pool.length?pool:[paired])
-      .map(p=>({p, q:100-crowdAt(p, state.hour, state.date)}))
-      .sort((a,b)=>b.q-a.q)[0];
-    r.alt = best.p; r.aq = best.q; used.add(best.p.id);
+      .map(p=>({p, q:100-crowdAt(p, state.hour, state.date), d: fp ? km(fp,p) : 0}))
+      .sort((a,b)=>(b.q-b.d*1.5)-(a.q-a.d*1.5))[0];
+    r.alt = best.p; r.aq = best.q; r.min = fp ? driveMin(fp, best.p) : null; used.add(best.p.id);
   }
   // 대신 갈 곳마저 붐비면 권하지 않는다.
   const shown = rows.filter(r=>r.aq>=45);
@@ -987,11 +1027,16 @@ function renderSwaps(){
     return `<button class="swap" data-id="${r.alt.id}" data-famous="${r.s.famous}">
       ${shotImg(r.alt.id)}
       <span class="ask"><b class="fam">${r.s.famous}</b><em class="c-busy">평소보다 붐벼요</em></span>
-      <span class="instead">대신 여긴 어때요?</span>
+      <span class="instead">대신 여긴 어때요?${r.min?` · 거기서 차로 ${r.min}분`:""}</span>
       <b class="alt">${r.alt.name}</b>
       ${scoreBadge(r.aq)}
     </button>`;
   }).join("") : '<p class="empty">오늘은 유명한 곳도 평소 수준이에요. 가고 싶던 곳으로 다녀오세요.</p>';
+}
+// 지금 시간에서 거꾸로 내려가며, 고른 장소 수를 다 넣을 수 있는 가장 늦은 출발 시간 (없으면 null)
+function fullPlanHour(){
+  for(let h=state.hour-1; h>=6; h--){ const pl=makePlan(state.date, h, state.planLen); if(pl && pl.stops.length>=state.planLen) return h; }
+  return null;
 }
 function renderPlan(){
   $("planLen").innerHTML = [[3,"반나절 · 3곳"],[5,"하루 · 5곳"]].map(([n,t])=>
@@ -999,7 +1044,10 @@ function renderPlan(){
   const plan = makePlan(state.date, state.hour, state.planLen);
   if(!plan){
     $("planLabel").textContent = "";
-    $("plan").innerHTML = '<p class="empty">해 지기 전에 둘러볼 시간이 모자라요. 가는 시간을 앞당겨 보세요.</p>';
+    // 지금 시간에서 거꾸로 내려가며 코스가 나오는 가장 늦은 출발 시간을 찾아, 한 번에 바꿀 수 있게 한다
+    const ok = fullPlanHour();
+    $("plan").innerHTML = `<p class="empty">${state.hour}시에 나서면 해 지기 전에 둘러볼 시간이 모자라요.</p>`
+      + (ok!=null ? `<button class="fix-btn" type="button" data-fixh="${ok}">${ok}시 출발로 바꾸기</button>` : "");
     return;
   }
   const st=plan.stops, last=st[st.length-1], drive=st.reduce((a,s)=>a+s.drive,0);
@@ -1014,7 +1062,7 @@ function renderPlan(){
       ${scoreBadge(s.q)}
       <span class="meta">${s.p.theme} · ${Math.round(STAY[s.p.theme]*60)}분쯤 머물러요</span>
     </button></li>`;
-  }).join("") + (st.length<state.planLen ? `<li class="note">해 지기 전까지 ${st.length}곳만 넣었어요.</li>` : "")
+  }).join("") + (st.length<state.planLen ? (h=>`<li class="note">해 지기 전까지 ${st.length}곳만 넣었어요.${h!=null?`<br><button class="fix-btn" type="button" data-fixh="${h}">${h}시 출발로 바꿔 ${state.planLen}곳 다 넣기</button>`:""}</li>`)(fullPlanHour()) : "")
     + (drive ? `<li class="note">차로 모두 ${dur(drive)}쯤이에요. 이동 시간은 거리로 어림했고, 식사 시간은 넣지 않았어요.</li>` : "")
     + navBlock(st.map(s=>s.p));
 }
@@ -1082,15 +1130,19 @@ function renderList(){
   $("listMore").hidden = more <= 0;
   $("listMore").textContent = state.listAll ? "접기" : `${more}곳 더 보기`;
   if(!state.listAll) ps = ps.slice(0, LIMIT);
+  let split=false;
   $("list").innerHTML = ps.length ? ps.map(({p,q})=>{
+    // 이 시간에 붐비는 곳은 '조용한 곳' 사이에 섞지 않고 아래 칸으로 나눠, 여유로운 시간을 함께 알려 준다
+    const head = (!split && q<45 && state.theme!=="저장") ? (split=true, `<p class="list-split">${state.hour}시엔 붐비는 곳<small>다른 시간에 가면 한산해요</small></p>`) : "";
     const l=level(q);
     const img = p.famous ? (FAMOUS_PHOTO[p.name] ? `images/famous/${FAMOUS_PHOTO[p.name]}` : "") : (PHOTO.has(p.id) ? `images/places/${p.id}.webp` : "");
     const meta = p.famous ? `유명한 곳 · ${PROF_WORD[p.prof]||""}` : `${p.theme} · ${p.area}`;
-    return `<button class="place" data-id="${p.id}">
+    const bwTxt = q<45 ? ` · <span class="c-calm">${bestWindow(p,state.date)}–${bestWindow(p,state.date)+2}시엔 한산해요</span>` : "";
+    return `${head}<button class="place" data-id="${p.id}">
       ${img?`<img class="shot" src="${img}" alt="" loading="lazy">`:""}
       <span class="name">${p.name}${state.saved.has(p.id)?' <span class="c-calm" role="img" aria-label="저장됨">♡</span>':""}</span>
       ${scoreBadge(q)}
-      <span class="meta">${meta}${wet && isOreum(p) ? ' · <span class="c-busy">비 예보, 미끄러워요</span>' : ""}</span>
+      <span class="meta">${meta}${bwTxt}${wet && isOreum(p) ? ' · <span class="c-busy">비 예보, 미끄러워요</span>' : ""}</span>
     </button>`;
   }).join("") : '<p class="empty">저장한 곳이 아직 없어요. 장소를 눌러 ♡ 저장해 보세요.</p>';
 }
@@ -1275,6 +1327,7 @@ function renderMapInfo(p){
   box.innerHTML = `<div class="row"><b>${p.name}</b><span class="${l.c}">${ripple(l.n)}</span></div>
     <small><span class="${l.c}">${state.hour}시 ${quietWord(q)}</span>${usual?` · <span class="${usual.c}">${usual.t}</span>`:""} · 가장 여유로운 때 ${bw}–${bw+2}시</small>
     <small>주차 예상 <span class="${parkWord(q).c}">${parkWord(q).t}</span>${state.me && inJeju(state.me) ? ` · 내 위치에서 약 <span class="num">${Math.max(1,Math.round(kmBetween(state.me,p)))}km</span>` : ""}</small>
+    ${nearbyBlock(p, state.hour, "near-m")}
     ${navLinks(p)}
     <div class="acts"><button class="more" type="button" data-open="${p.id}">자세히 보기</button>
       <button class="icon-btn map-save" type="button" data-save="${p.id}" aria-pressed="${state.saved.has(p.id)}">${state.saved.has(p.id)?"♡ 저장됨":"♡ 저장"}</button></div>`;
@@ -1339,6 +1392,7 @@ function openSheet(id, refresh, famous, opener){
     <div class="best"><div><span class="eyebrow">가장 조용한 때</span><br><b class="num">${bw}–${bw+2}시</b></div>
       <div class="${l.c}" style="text-align:right">${ripple(l.n)}<div class="lv"><span class="num">${sh}시</span> ${quietWord(q)}</div></div></div>
     <div class="park"><span class="eyebrow">주차 예상 · <span class="num">${sh}시</span></span><b class="${parkWord(q).c}">${parkWord(q).t}</b></div>
+    ${nearbyBlock(p, sh, "near-i")}
     <div>
       <div class="bars" role="group" aria-label="시간대별 혼잡 추정. 막대를 누르면 그 시간으로 바뀌어요">
         ${hours.map(h=>`<button type="button" class="${h>=bw&&h<bw+2?"best-h":""} ${h===sh?"now":""}" data-h="${h}" aria-pressed="${h===sh}" aria-label="${h}시 ${quietWord(100-crowdAt(p,h,state.date))}" ><i style="height:${Math.round(crowdAt(p,h,state.date)/peak*100)}%"></i></button>`).join("")}
@@ -1408,7 +1462,11 @@ $("dayNext").addEventListener("click", ()=>stepDate(1));
 })();
 $("hour").addEventListener("input", e=>{ state.hour=+e.target.value; state.sheetHour=state.hour; renderAll(); });
 $("themes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.listAll=false; state.theme=b.dataset.t; renderThemes(); renderList(); refocus("themes"); });
-document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap,.stop,.fq"); if(b) openSheet(b.dataset.id, false, b.dataset.famous, b); });
+document.addEventListener("click", e=>{ const b=e.target.closest(".place,.swap,.stop,.fq,.near-i,.plink"); if(b) openSheet(b.dataset.id, false, b.dataset.famous, b); });
+$("plan").addEventListener("click", e=>{
+  const b=e.target.closest("[data-fixh]"); if(!b) return;
+  state.hour=+b.dataset.fixh; state.sheetHour=state.hour; $("hour").value=state.hour; renderAll();
+});
 $("planLen").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.planLen=+b.dataset.n; renderPlan(); refocus("planLen"); });
 $("scrim").addEventListener("click", closeSheet);
 // 지도
@@ -1494,6 +1552,7 @@ $("map").addEventListener("keydown", e=>{
   e.preventDefault(); pickPin(g);
 });
 $("mapInfo").addEventListener("click", e=>{
+  const nb=e.target.closest(".near-m"); if(nb){ selectPin(nb.dataset.pin, true); return; }
   const s=e.target.closest("[data-save]");
   if(s){ const id=s.dataset.save; state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved();
     renderMap(); renderList(); const again=$("mapInfo").querySelector("[data-save]"); if(again) again.focus(); return; }
@@ -1554,7 +1613,8 @@ paintThemeBtn();
 // ---------- AI Agent 대화 ----------
 // 로컬 서버가 /api/health 에 답할 때만 대화창을 켠다 (claude.ai 게시본 등에서는 숨김).
 const TOOL_WORD = {find_quiet_places:"조용한 곳 찾기", place_forecast:"장소 예측", get_weather:"날씨",
-  plan_course:"코스 짜기", rank_spots:"붐빔 순위", jeju_card_time_pattern:"제주데이터허브 카드 패턴"};
+  plan_course:"코스 짜기", rank_spots:"붐빔 순위", jeju_card_time_pattern:"제주데이터허브 카드 패턴",
+  wifi_visitors:"제주데이터허브 와이파이", area_visitors:"제주데이터허브 유동인구"};
 const ASK_EX = ["이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?", "성산 쪽에서 10시부터 반나절 코스 짜줘", "다음 주 평소보다 붐빌 관광지 순위 알려줘", "요즘 성산일출봉 실제로 붐벼?"];
 const askHist = [];
 function esc(s){ return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]); }
@@ -1573,6 +1633,22 @@ function mdLite(t){
   if(inList) out+="</ul>";
   return out.replace(/(<br>)+$/,"");
 }
+// 답에 나온 장소 이름(조용한 곳·유명한 곳)을 버튼으로 바꾼다. 태그 밖 글자와 링크 밖에서만, 긴 이름부터.
+const PLACE_NAMES = () => [...PLACES, ...FAMOUS].map(p=>({id:p.id, n:p.name})).sort((a,b)=>b.n.length-a.n.length);
+function linkPlaces(html){
+  const names=PLACE_NAMES(); let inA=0;
+  return html.split(/(<[^>]+>)/).map(part=>{
+    if(part.startsWith("<")){ if(/^<a[\s>]/i.test(part)) inA++; else if(/^<\/a>/i.test(part)) inA=Math.max(0,inA-1); return part; }
+    if(inA || !part) return part;
+    const hit=[]; let out="", i=0;
+    while(i<part.length){
+      const m=names.find(x=>part.startsWith(x.n, i));
+      if(m){ out+=`<button type="button" class="plink" data-id="${m.id}">${m.n}</button>`; i+=m.n.length; }
+      else { out+=part[i]; i++; }
+    }
+    return out;
+  }).join("");
+}
 function addMsg(role, html, steps){
   const d=document.createElement("div"); d.className="msg "+role; d.innerHTML=html;
   if(steps && steps.length){ const s=document.createElement("span"); s.className="steps";
@@ -1587,7 +1663,7 @@ async function ask(q){
     const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:askHist})});
     const j=await r.json(); wait.remove();
     if(!r.ok) { addMsg("bot err", esc(j.error||"오류가 났어요.")); askHist.pop(); return; }
-    askHist.push({role:"assistant", content:j.reply}); addMsg("bot", mdLite(j.reply||""), j.steps);
+    askHist.push({role:"assistant", content:j.reply}); addMsg("bot", linkPlaces(mdLite(j.reply||"")), j.steps);
   }catch(e){ wait.remove(); addMsg("bot err","서버에 연결하지 못했어요. 'python -m agent.server' 로 실행했는지 확인해 주세요."); askHist.pop(); }
   finally{ $("askBtn").disabled=false; $("askInput").focus(); }
 }

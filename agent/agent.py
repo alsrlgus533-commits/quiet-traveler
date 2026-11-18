@@ -73,6 +73,24 @@ def _fill(text, links):
     return "\n".join(lines).strip()
 
 
+# 도구 → 답에 적을 데이터 이름 (AI 가 '근거:' 줄을 빠뜨렸을 때 서버가 채운다)
+SOURCE = {
+    "find_quiet_places": "한국관광공사 관광지 집중률 예측", "place_forecast": "한국관광공사 관광지 집중률 예측",
+    "plan_course": "한국관광공사 관광지 집중률 예측", "rank_spots": "한국관광공사 관광지 집중률 예측",
+    "get_weather": "기상청 예보", "wifi_visitors": "제주데이터허브 와이파이 일일 사용량",
+    "area_visitors": "제주데이터허브 읍면동 내국인 유동인구", "jeju_card_time_pattern": "제주데이터허브 관광지·상업지구 카드 데이터",
+}
+
+
+def _finish(text, links, steps):
+    text = _fill(text, links)
+    used = [s["tool"] for s in steps if s.get("ok")]
+    if used and "근거" not in text:
+        names = list(dict.fromkeys(SOURCE.get(t, t) for t in used))
+        text += "\n\n근거: " + ", ".join(names) + f" (조회일 {dt.date.today().isoformat()})"
+    return text
+
+
 def _context():
     s = store()
     today = dt.date.today()
@@ -102,7 +120,7 @@ def run(history: list[dict]) -> dict:
         msg = resp.choices[0].message
         calls = msg.tool_calls or []
         if not calls:
-            return {"reply": _fill(msg.content or "", links), "steps": steps, "model": model}
+            return {"reply": _finish(msg.content or "", links, steps), "steps": steps, "model": model}
         messages.append({"role": "assistant", "content": msg.content or "",
                          "tool_calls": [{"id": tc.id, "type": "function",
                                          "function": {"name": tc.function.name, "arguments": tc.function.arguments}}
@@ -120,7 +138,7 @@ def run(history: list[dict]) -> dict:
     # 도구를 너무 많이 부르면 지금까지의 결과로 마무리하게 한다
     messages.append({"role": "user", "content": "지금까지 받은 도구 결과만으로 답을 마무리해 줘."})
     resp = c.chat.completions.create(model=model, messages=messages)
-    return {"reply": _fill(resp.choices[0].message.content or "", links), "steps": steps, "model": model}
+    return {"reply": _finish(resp.choices[0].message.content or "", links, steps), "steps": steps, "model": model}
 
 
 if __name__ == "__main__":

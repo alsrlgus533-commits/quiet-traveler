@@ -1,0 +1,609 @@
+{
+ "date": "2026-11-18",
+ "model": "solar-pro4",
+ "rows": [
+  {
+   "q": "이번 토요일 비 안 오고 덜 붐비는 숲길 어디야?",
+   "expect": [
+    "find_quiet_places"
+   ],
+   "used": [
+    "get_weather",
+    "find_quiet_places"
+   ],
+   "sec": 7.6,
+   "error": null,
+   "places": [
+    "서귀포 치유의숲",
+    "머체왓숲길",
+    "삼다수숲길"
+   ],
+   "unsupported_places": [],
+   "links": 6,
+   "bad_links": [],
+   "numbers": 4,
+   "numbers_found": 4,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "11/21(토) 제주는 비 예보가 있고, 당일도 여행객이 붐비는 날이라 지금 고른 숲길들은 모두 '평소보다 붐빔'으로 뜨네요. 비 오는 날 오름은 권하지 않고, 숲길도 미끄럽거나 진흙길일 수 있어 더 조심해서 골라야 해요.\n\n- 삼다수숲길 (제주시 조천읍 교래리) — 한산함 적당해요 / 주차 보통 / 가장 여유로운 시간 7–9시 / 평소보다 붐빔 / [카카오맵 길안내](https://map.kakao.com/link/to/%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,33.4181,126.6535) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z42Yo,2xXZ6E,%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n- 서귀포 치유의숲 (서귀포시 호근동) — 한산함 적당해요 / 주차 보통 / 가장 여유로운 시간 7–9시 / 평소보다 붐빔 / [카카오맵 길안내](https://map.kakao.com/link/to/%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,33.292,126.5294) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yYQ8g,2xSH3W,%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,,ADDRESS_POI/-/car)\n- 머체왓숲길 (서귀포시 남원읍 한남리) — 한산함 붐벼요 / 주차 혼잡 / 가장 여유로운 시간 7–9시 / 평소보다 붐빔 / [카카오맵 길안내](https://map.kakao.com/link/to/%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,33.3302,126.679) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z57ji,2xUire,%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n\n가장 덜 붐빌 가능성은 삼다수숲길이나 서귀포 치유의숲인데, 둘 다 비가 오면 미끄러운 구간이 있을 수 있어요. 비가 잦거나 강하면 숲길보다 마을 산책·실내 쪽을 먼저 보는 게 안전해요.\n\n근거: 기상청 예보 11/21(토) 비, 강수확률 60%, 최고 11도·최저 7도 / 관광공사 예측 기반 한산함(날짜 11/21, 시각 10시, 숲길 테마)"
+  },
+  {
+   "q": "내일 오전에 한산한 바다 추천해줘",
+   "expect": [
+    "find_quiet_places"
+   ],
+   "used": [
+    "find_quiet_places",
+    "get_weather"
+   ],
+   "sec": 11.3,
+   "error": null,
+   "places": [
+    "하도 철새도래지",
+    "오조리 식산봉",
+    "평대리 해변",
+    "신창풍차해안",
+    "판포포구"
+   ],
+   "unsupported_places": [],
+   "links": 10,
+   "bad_links": [],
+   "numbers": 5,
+   "numbers_found": 5,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "내일은 비가 예상되고(오전 10시 기준 비 확률 60% · 최고 11도), 그래서 바닷가보다는 비에도 걷기 편한 숲길이나 마을을 먼저 권하는 쪽이에요. 그래도 바다를 꼭 보고 싶다면, 날씨 영향이 비교적 덜한 한적한 곳을 고르면 돼요.\n\n아래는 내일 오전 10시 기준 한산한 바다예요.\n\n- 평대리 해변 (제주시 구좌읍 평대리) — 한산해요 · 주차 여유 · 평소보다도 한산 · 가장 한산한 시간은 7–9시 · [카카오맵 길안내](https://map.kakao.com/link/to/%ED%8F%89%EB%8C%80%EB%A6%AC%20%ED%95%B4%EB%B3%80,33.5332,126.8407) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zbTXW,2y2Oxa,%ED%8F%89%EB%8C%80%EB%A6%AC%20%ED%95%B4%EB%B3%80,,ADDRESS_POI/-/car)\n- 판포포구 (제주시 한경면 판포리) — 한산해요 · 주차 여유 · 평소보다도 한산 · 가장 한산한 시간은 7–9시 · [카카오맵 길안내](https://map.kakao.com/link/to/%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,33.3654,126.1997) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yL0qQ,2xVM0E,%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,,ADDRESS_POI/-/car)\n- 오조리 식산봉 (서귀포시 성산읍 오조리) — 한산해요 · 주차 여유 · 평소 수준 · [카카오맵 길안내](https://map.kakao.com/link/to/%EC%98%A4%EC%A1%B0%EB%A6%AC%20%EC%8B%9D%EC%82%B0%EB%B4%89,33.4628,126.9211) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zfh7G,2xZRok,%EC%98%A4%EC%A1%B0%EB%A6%AC%20%EC%8B%9D%EC%82%B0%EB%B4%89,,ADDRESS_POI/-/car)\n- 하도 철새도래지 (제주시 구좌읍 하도리) — 한산해요 · 주차 여유 · 평소 수준 · [카카오맵 길안내](https://map.kakao.com/link/to/%ED%95%98%EB%8F%84%20%EC%B2%A0%EC%83%88%EB%8F%84%EB%9E%98%EC%A7%80,33.5102,126.8963) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zeeBG,2y1QHu,%ED%95%98%EB%8F%84%20%EC%B2%A0%EC%83%88%EB%8F%84%EB%9E%98%EC%A7%80,,ADDRESS_POI/-/car)\n- 신창풍차해안 (제주시 한경면 신창리) — 한산해요 · 주차 여유 · 평소 수준 · [카카오맵 길안내](https://map.kakao.com/link/to/%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,33.343,126.1722) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yJQTm,2xUPJK,%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,,ADDRESS_POI/-/car)\n\n오늘 같은 비 날이라 바람이 불면 체감 온도가 더 낮을 수 있어요. 가볍게 입고 가고, 오전 일찍일수록 (7–9시) 더 한산해요.\n\n만약 비를 피해 차분하게 걷고 싶다면 숲길·마을 쪽으로 바꿀 수도 있어요. 출발 지역(숙소가 어디 쪽인지)을 알려주면 이동 시간까지 넣은 코스를 짤게요.\n\n근거: 관광공사 30일 예측(장소별 평소 대비) × 규모 × 유형별 시간대 곡선으로 만든 내일 오전 한산함 추정, 그리고 기상청 단기·중기 예보(11/19 목, 비·최고 11도·비 확률 60%, 제주시·서귀포시 중 나쁜 쪽 기준)."
+  },
+  {
+   "q": "오늘 오후 3시에 한산한 오름 알려줘",
+   "expect": [
+    "find_quiet_places"
+   ],
+   "used": [
+    "find_quiet_places"
+   ],
+   "sec": 8.7,
+   "error": null,
+   "places": [
+    "따라비오름",
+    "저지오름",
+    "안돌오름"
+   ],
+   "unsupported_places": [],
+   "links": 6,
+   "bad_links": [],
+   "numbers": 2,
+   "numbers_found": 2,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "오늘(11/18 수) **오후 3시 기준 한산한 오름**을 날씨까지 함께 보면 이렇게 골랐다.\n\n- **안돌오름** (제주시 구좌읍 송당리) — 한산해요, 주차 여유, 가장 여유로운 시간 8~10시. 오후 3시도 평소 수준이라 한산하지만, 비 예보라 길이 미끄러워요. [카카오맵 길안내](https://map.kakao.com/link/to/%EC%95%88%EB%8F%8C%EC%98%A4%EB%A6%84,33.4571,126.7564) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z8mFa,2xZCyY,%EC%95%88%EB%8F%8C%EC%98%A4%EB%A6%84,,ADDRESS_POI/-/car)\n- **따라비오름** (서귀포시 표선면 가시리) — 한산해요, 주차 여유, 가장 여유로운 시간 8~10시. 마찬가지로 비 오는 날 오르막·미끄럼 주의. [카카오맵 길안내](https://map.kakao.com/link/to/%EB%94%B0%EB%9D%BC%EB%B9%84%EC%98%A4%EB%A6%84,33.3892,126.7533) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z8eBa,2xWLVm,%EB%94%B0%EB%9D%BC%EB%B9%84%EC%98%A4%EB%A6%84,,ADDRESS_POI/-/car)\n- **저지오름** (제주시 한경면 저지리) — 적당해요, 주차 보통, 가장 여유로운 시간 8~10시. 오늘 오후 3시는 한산함 중간 수준. [카카오맵 길안내](https://map.kakao.com/link/to/%EC%A0%80%EC%A7%80%EC%98%A4%EB%A6%84,33.333,126.251) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yN9T2,2xUpIQ,%EC%A0%80%EC%A7%80%EC%98%A4%EB%A6%84,,ADDRESS_POI/-/car)\n\n오늘 제주는 비가 올 확률 60%이고, 세 오름 모두 오후 3시 자체가 '가장 한산한 시간대'는 아니라서 출발 전 길 상태를 한번 확인하는 게 좋다. 비가 걱정되면 이번 오후엔 오름보다 숲길·마을을 먼저 보는 편이 낫다.\n\n근거: 관광공사 30일 예측(그 장소 평소 대비) × 장소 규모 × 유형별 시간대 곡선으로 한산함을 추정했고, 날씨는 기상청 예보(비 확률 60%, 이 시간대 최고 14℃ 전후)를 같이 봤다. 한산함·주차·가장 여유로운 시간은 실시간 측정이 아니라 패턴 기반 추정이다."
+  },
+  {
+   "q": "비 오는 날 가기 좋은 조용한 곳 있어?",
+   "expect": [
+    "find_quiet_places"
+   ],
+   "used": [
+    "get_weather",
+    "get_weather",
+    "find_quiet_places"
+   ],
+   "sec": 12.2,
+   "error": null,
+   "places": [
+    "서귀포 치유의숲",
+    "머체왓숲길",
+    "삼다수숲길"
+   ],
+   "unsupported_places": [],
+   "links": 6,
+   "bad_links": [],
+   "numbers": 6,
+   "numbers_found": 6,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "비 오는 날엔 숲길과 마을이 좋아요. 오늘(11/18 수) 10시 기준, 비 오는 날씨에도 가기 좋은 조용한 곳 3곳을 숲길 테마로 골랐어요.\n\n- 머체왓숲길 – 서귀포 남원읍 한남리, 한산함 적당해요, 주차 보통, 가장 여유로운 시간 7–9시, 평소 수준. 길안내: [카카오맵 길안내](https://map.kakao.com/link/to/%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,33.3302,126.679) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z57ji,2xUire,%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n- 삼다수숲길 – 제주시 조천읍 교래리, 한산함 적당해요, 주차 보통, 가장 여유로운 시간 7–9시, 오늘 평소보다 붐빔. 길안내: [카카오맵 길안내](https://map.kakao.com/link/to/%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,33.4181,126.6535) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z42Yo,2xXZ6E,%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n- 서귀포 치유의숲 – 서귀포 호근동, 한산함 적당해요, 주차 보통, 가장 여유로운 시간 7–9시, 오늘 평소보다 붐빔. 길안내: [카카오맵 길안내](https://map.kakao.com/link/to/%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,33.292,126.5294) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yYQ8g,2xSH3W,%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,,ADDRESS_POI/-/car)\n\n비 오는 날은 오름보다 숲길·마을이 낫고, 우산이나 방수 옷을 준비하면 좋아요. 가장 한산한 시간은 오전 7–9시라 조금 일찍 가면 더 여유로워요.\n\n근거: 기상청 예보(오늘·내일 비 확률 60%), 관광공사 30일 예측으로 만든 한산함 추정(오늘 11/18 수 오전 10시 기준)."
+  },
+  {
+   "q": "아이랑 걷기 좋은 조용한 마을 추천해줘",
+   "expect": [
+    "find_quiet_places"
+   ],
+   "used": [
+    "find_quiet_places"
+   ],
+   "sec": 8.5,
+   "error": null,
+   "places": [
+    "위미리 마을",
+    "가시리 마을",
+    "종달리 마을"
+   ],
+   "unsupported_places": [],
+   "links": 6,
+   "bad_links": [],
+   "numbers": 6,
+   "numbers_found": 6,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "오늘 제주는 비가 내릴 가능성이 높고(60%), 낮 최고 14도라서 아이랑 걷기에는 덥지 않아요.  \n대신 비가 올 수 있어서, 야외 마을 산책이 불편하면 실내 대체 장소도 함께 생각해 두면 좋아요.\n\n아이랑 걷기 좋은 조용한 마을 3곳이에요.  \n날이 궂으면 마을 안 천천히 걷기보다 가까운 숙소·카페 실내 프로그램으로 바꾸는 것도 방법이에요.\n\n- 가시리 마을 (서귀포시 표선면 가시리)  \n  한산함: 한산해요  \n  가장 여유로운 시간: 7–9시  \n  주차 예상: 여유  \n  길안내: [카카오맵 길안내](https://map.kakao.com/link/to/%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.3982,126.7199) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z6PI4,2xX9kY,%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n\n- 위미리 마을 (서귀포시 남원읍 위미리)  \n  한산함: 한산해요  \n  가장 여유로운 시간: 7–9시  \n  주차 예상: 여유  \n  길안내: [카카오맵 길안내](https://map.kakao.com/link/to/%EC%9C%84%EB%AF%B8%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.2749,126.6695) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z4IB2,2xRYzS,%EC%9C%84%EB%AF%B8%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n\n- 종달리 마을 (제주시 구좌읍 종달리)  \n  한산함: 한산해요  \n  가장 여유로운 시간: 7–9시  \n  주차 예상: 여유  \n  길안내: [카카오맵 길안내](https://map.kakao.com/link/to/%EC%A2%85%EB%8B%AC%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.509,126.9093) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zeMqs,2y1NzW,%EC%A2%85%EB%8B%AC%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n\n비가 올 수 있으니, 마을 안 걷기보다 마을 근처 실내 카페·작은 박물관·실내에서 아이랑 쉬기 쉬운 곳을 섞고 싶으면 숙소 위치나 출발지를 알려주세요. 거기서 가까운 코스로 다시 짜 드릴게요.\n\n근거: 관광공사 30일 예측으로 만든 한산함 추정(오늘 11/18 수), 기상청 예보(비 확률 60%, 낮 14도) 기준."
+  },
+  {
+   "q": "성산 쪽에서 10시부터 반나절 코스 짜줘",
+   "expect": [
+    "plan_course"
+   ],
+   "used": [
+    "plan_course"
+   ],
+   "sec": 7.3,
+   "error": null,
+   "places": [
+    "가시리 마을",
+    "종달리 마을",
+    "머체왓숲길"
+   ],
+   "unsupported_places": [],
+   "links": 8,
+   "bad_links": [],
+   "numbers": 10,
+   "numbers_found": 8,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "성산 쪽 10시 출발 반나절(3곳, 약 15:00쯤 종료) 코스야. 오늘 제주는 '적당해요' 수준이고, 오전 비 예보(60%)라 오름 대신 마을·숲길로 짰어.\n\n- 종달리 마을 — 10:15 도착, 한산해요, 주차 여유, 머물기 60분  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EC%A2%85%EB%8B%AC%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.509,126.9093) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zeMqs,2y1NzW,%EC%A2%85%EB%8B%AC%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n- 가시리 마을 — 12:05 도착, 한산해요, 주차 여유, 머물기 60분  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.3982,126.7199) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z6PI4,2xX9kY,%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n- 머체왓숲길 — 13:25 도착, 적당해요, 주차 보통, 머물기 90분  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,33.3302,126.679) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z57ji,2xUire,%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n- 코스 경로: [카카오맵으로 코스 길안내](https://map.kakao.com/link/by/car/%EC%A2%85%EB%8B%AC%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.509,126.9093/%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.3982,126.7199/%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,33.3302,126.679) · [네이버 지도로 코스 길안내](https://map.naver.com/p/directions/-/3z57ji,2xUire,%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,,ADDRESS_POI/3zeMqs,2y1NzW,%EC%A2%85%EB%8B%AC%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI:3z6PI4,2xX9kY,%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/car)\n\n모두 7~9시가 가장 한산한 시간대라, 10시 이후엔 조금 늦는 편이야. 그래도 오늘은 한적하게 돌기 괜찮은 조건. 비가 세지면 숲길은 미끄럽고 진흙이 될 수 있으니 바닥이 미끄러운 신발·신선도를 챙기면 좋아.\n\n근거: 관광공사 예측 11/18(수) 한산함·이동시간·주차·한산 시간대, 기상청 날씨는 비(최고 14℃, 강수확률 60), 출발지 성산 기준 30km 안 마을·숲길에서 고른 코스."
+  },
+  {
+   "q": "숙소가 애월인데 일요일 하루 코스 추천해줘",
+   "expect": [
+    "plan_course"
+   ],
+   "used": [
+    "plan_course"
+   ],
+   "sec": 6.3,
+   "error": null,
+   "places": [
+    "대평리 박수기정",
+    "서귀포 치유의숲",
+    "신창풍차해안",
+    "저지오름",
+    "판포포구"
+   ],
+   "unsupported_places": [],
+   "links": 12,
+   "bad_links": [],
+   "numbers": 21,
+   "numbers_found": 20,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "일요일(11/22) 애월 출발, 하루(5곳) 한산한 코스예요. 오늘 제주 전체적으로 여행객이 붐비는 날로 보이지만, 이 코스는 오전 10시 나가면 한산함이 비교적 괜찮은 곳들로 짰습니다.\n\n- 판포포구 (10:40 도착, 40분) - 한산해요 / 주차 여유 / 가장 여유로운 시간 7–9시\n- 신창풍차해안 (11:30, 40분) - 적당해요 / 주차 보통 / 가장 여유로운 시간 7–9시\n- 저지오름 (12:30, 60분) - 적당해요 / 주차 보통 / 가장 여유로운 시간 8–10시\n- 대평리 박수기정 (14:05, 40분) - 한산해요 / 주차 여유 / 가장 여유로운 시간 7–9시\n- 서귀포 치유의숲 (15:25, 90분) - 한산해요 / 주차 여유 / 가장 여유로운 시간 7–9시\n\n이동은 총 약 145분, 오후 4시 55분쯤 마무리돼서 숙소(애월)로 돌아오기에도 부담이 적어요. 날씨는 맑음, 최고 11도·최저 7도, 비 확률 10%예요. 오름(저지) 구간은 바람이 쌀쌀할 수 있으니 겉옷을 챙기면 좋아요.\n\n길안내는 아래를 그대로 누르면 카카오맵 경로가 나와요.\n- [카카오맵 길안내](https://map.kakao.com/link/to/%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,33.3654,126.1997) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yL0qQ,2xVM0E,%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,,ADDRESS_POI/-/car)\n- [카카오맵 길안내](https://map.kakao.com/link/to/%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,33.343,126.1722) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yJQTm,2xUPJK,%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,,ADDRESS_POI/-/car)\n- [카카오맵 길안내](https://map.kakao.com/link/to/%EC%A0%80%EC%A7%80%EC%98%A4%EB%A6%84,33.333,126.251) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yN9T2,2xUpIQ,%EC%A0%80%EC%A7%80%EC%98%A4%EB%A6%84,,ADDRESS_POI/-/car)\n- [카카오맵 길안내](https://map.kakao.com/link/to/%EB%8C%80%ED%8F%89%EB%A6%AC%20%EB%B0%95%EC%88%98%EA%B8%B0%EC%A0%95,33.2372,126.3587) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yRG40,2xQove,%EB%8C%80%ED%8F%89%EB%A6%AC%20%EB%B0%95%EC%88%98%EA%B8%B0%EC%A0%95,,ADDRESS_POI/-/car)\n- [카카오맵 길안내](https://map.kakao.com/link/to/%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,33.292,126.5294) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yYQ8g,2xSH3W,%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,,ADDRESS_POI/-/car)\n\n코스 경로는 [카카오맵으로 코스 길안내](https://map.kakao.com/link/by/car/%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,33.3654,126.1997/%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,33.343,126.1722/%EC%A0%80%EC%A7%80%EC%98%A4%EB%A6%84,33.333,126.251/%EB%8C%80%ED%8F%89%EB%A6%AC%20%EB%B0%95%EC%88%98%EA%B8%B0%EC%A0%95,33.2372,126.3587/%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,33.292,126.5294) · [네이버 지도로 코스 길안내](https://map.naver.com/p/directions/-/3yYQ8g,2xSH3W,%EC%84%9C%EA%B7%80%ED%8F%AC%20%EC%B9%98%EC%9C%A0%EC%9D%98%EC%88%B2,,ADDRESS_POI/3yL0qQ,2xVM0E,%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,,ADDRESS_POI:3yJQTm,2xUPJK,%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,,ADDRESS_POI:3yN9T2,2xUpIQ,%EC%A0%80%EC%A7%80%EC%98%A4%EB%A6%84,,ADDRESS_POI:3yRG40,2xQove,%EB%8C%80%ED%8F%89%EB%A6%AC%20%EB%B0%95%EC%88%98%EA%B8%B0%EC%A0%95,,ADDRESS_POI/car) 을 누르면 애월에서 이어지는 전체 지도가 나와요.\n\n더 일찍 움직이면 바다의 한산함이 더 좋아져요(판포포구·신창·저지는 7–10시가 가장 여유). 반대로 오후엔 숲길(치유의숲)이 한산해요. 필요하면 바다를 더 보고 싶다거나, 오름 대신 다른 분위기로 바꾸고 싶다 말해 주세요.\n\n근거: 관광공사 11/22(일) 한산 장소·코스 예측(제주 붐빔: 여행객으로 붐벼요), 기상청 날씨 예보(맑음, 11/22, 비 확률 10%), 애월 출발 기준 이동시간 반영."
+  },
+  {
+   "q": "서귀포에서 출발해서 5곳 도는 하루 코스 짜줘",
+   "expect": [
+    "plan_course"
+   ],
+   "used": [
+    "plan_course"
+   ],
+   "sec": 9.0,
+   "error": null,
+   "places": [
+    "위미리 마을",
+    "가시리 마을",
+    "머체왓숲길",
+    "삼다수숲길"
+   ],
+   "unsupported_places": [],
+   "links": 10,
+   "bad_links": [],
+   "numbers": 15,
+   "numbers_found": 10,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "오늘(11/18 수요일)은 비 예보(낮 14°C, 비 확률 60%)라서 오름 대신 숲길과 마을을 엮은 코스로 짰어. 서귀포에서 10시 출발해 5곳을 도는 하루 코스야. 돌아온다는 건 **4번째 장소였던 삼다수숲길에서 서귀포로 돌아가는 길**까지 포함해 끝내. 아래가 그 코스야.\n\n- 10:00 서귀포 출발  \n- 10:25 도착 → 위미리 마을 (한산해요 / 주차 여유 / 가장 여유 7~9시)  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EC%9C%84%EB%AF%B8%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.2749,126.6695) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z4IB2,2xRYzS,%EC%9C%84%EB%AF%B8%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n- 11:25 출발 → 12:00 도착 → 가시리 마을 (한산해요 / 주차 여유 / 가장 여유 7~9시)  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.3982,126.7199) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z6PI4,2xX9kY,%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI/-/car)\n- 13:00 출발 → 13:20 도착 → 머체왓숲길 (적당해요 / 주차 보통 / 가장 여유 7~9시)  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,33.3302,126.679) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z57ji,2xUire,%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n- 14:50 출발 → 15:15 도착 → 삼다수숲길 (한산해요 / 주차 여유 / 가장 여유 7~9시)  \n  [카카오맵 길안내](https://map.kakao.com/link/to/%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,33.4181,126.6535) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3z42Yo,2xXZ6E,%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,,ADDRESS_POI/-/car)\n- 이후 서귀포로 돌아가기 (총 이동 약 105분)  \n  [카카오맵으로 코스 길안내](https://map.kakao.com/link/by/car/%EC%9C%84%EB%AF%B8%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.2749,126.6695/%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,33.3982,126.7199/%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,33.3302,126.679/%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,33.4181,126.6535) · [네이버 지도로 코스 길안내](https://map.naver.com/p/directions/-/3z42Yo,2xXZ6E,%EC%82%BC%EB%8B%A4%EC%88%98%EC%88%B2%EA%B8%B8,,ADDRESS_POI/3z4IB2,2xRYzS,%EC%9C%84%EB%AF%B8%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI:3z6PI4,2xX9kY,%EA%B0%80%EC%8B%9C%EB%A6%AC%20%EB%A7%88%EC%9D%84,,ADDRESS_POI:3z57ji,2xUire,%EB%A8%B8%EC%B2%B4%EC%99%93%EC%88%B2%EA%B8%B8,,ADDRESS_POI/car)\n\n비가 오면 숲길도 미끄럽고 흙길은 좋지 않으니, 우비나 방수 신발 준비해. 머체왓숲길은 '적당해요'라서 점심 시간대와 겹치면 사람이 조금 늘 수 있어. 날 맑으면 아침 7~9시 출발이 가장 여유롭고, 오늘 같은 비 오는 날엔 오전이 더 한산한 편이야.\n\n비 때문에 오름은 뺐고, 5곳을 꽉 채우려면 삼다수숲길에서 마친 뒤 서귀포로 돌아오는 걸 끝으로 보면 돼. 만약 lunch를 중문에 편하게 먹고 싶다면 가시리 대신 중문 쪽 마을로 바꿀 수 있어(그쪽은 더 붐빌 수 있음).\n\n근거: 관광공사 예측 기준 11/18(수) 제주 여행객 '적당해요', 기상청 예보 비(60%)·낮 14°C, 비 오는 날 오름 제외·숲길·마을 우선 규칙, 서귀포 출발 10시·5 stops 반나절~하루 코스."
+  },
+  {
+   "q": "다음 주에 성산일출봉 가장 한산한 날은?",
+   "expect": [
+    "place_forecast"
+   ],
+   "used": [
+    "place_forecast"
+   ],
+   "sec": 5.1,
+   "error": null,
+   "places": [
+    "성산일출봉"
+   ],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 1,
+   "numbers_found": 1,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "성산일출봉은 다음 주(11/18~12/1) 중에서도 **12월 1일(화)**이 가장 한산해요.\n\n- 12/1(화): 평소 대비 0.76배(평소보다 한산), 10시 기준 한산 점수 70점.\n- 그다음으로 덜 붐비는 날: 11/22(일), 11/27(금).\n\n참고로 갈 때는 **오전 8~10시**나 **저녁 7시 이후**가 한산해요. 낮 11시~오후 4시는 붐비는 편이니 피하면 좋아요.\n\n- 결론 먼저: 다음 주 가장 한산한 날은 12/1(화).\n- 그날만 굵은 글씨로 강조: **12/1(화)**.\n\n---\n\n근거: 한국관광공사 관광지 집중률 예측(11/18~12/16), 성산일출봉 forecast 결과; 실제 붐빔 참고는 제주데이터허브 와이파이 접속자(2026-10-12~11-15). 오늘은 2026-11-18."
+  },
+  {
+   "q": "우도 내일 몇 시에 가면 덜 붐벼?",
+   "expect": [
+    "place_forecast"
+   ],
+   "used": [
+    "place_forecast"
+   ],
+   "sec": 8.7,
+   "error": null,
+   "places": [
+    "우도"
+   ],
+   "unsupported_places": [],
+   "links": 2,
+   "bad_links": [],
+   "numbers": 2,
+   "numbers_found": 2,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "내일 우도는 평소보다 조금 붐빌 전망이지만(평소보다 붐빔, 1.21배), 그래도 한산함 점수는 높은 편이에요.  \n\n**가장 덜 붐비는 시간**: 6~10시(모두 \"한산해요\"), 그중 오전 7~9시가 가장 여유롭습니다. 오후 1~5시는 붐비는 편이니 피해 주세요.\n\n- **추천**: 내일 우도는 오전 7~9시에 들어가는 게 덜 붐벼요.  \n- **날씨 주의**: 내일(예보 비, 비 확률 60%, 최고 11℃)이라 우도내 야외는 우비·바람 대비가 필요해요. 비가 오면 해안 산책보다 마을 쪽 실내·쉬어가는 곳을 먼저 보는 게 편합니다.  \n- **주차**: 여유 예상이에요.  \n- **길안내**: [카카오맵 길안내](https://map.kakao.com/link/to/%EC%9A%B0%EB%8F%84,33.5195,126.951) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zgwUg,2y2eTu,%EC%9A%B0%EB%8F%84,,ADDRESS_POI/-/car)\n\n**근거**: 한국관광공사 관광지 집중률 예측 기준 11/19(목) 우도 시간대별 한산함·날씨·주차. 실제 최근 붐빔은 제주데이터허브 와이파이 접속자(10/12~11/15) 기준으로 평소와 비슷했고, 요일은 월요일 한산·수요일 붐빔 패턴."
+  },
+  {
+   "q": "사려니숲길 이번 주말에 붐벼?",
+   "expect": [
+    "place_forecast"
+   ],
+   "used": [
+    "get_weather",
+    "place_forecast",
+    "wifi_visitors"
+   ],
+   "sec": 10.1,
+   "error": null,
+   "places": [
+    "사려니숲길"
+   ],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 2,
+   "numbers_found": 2,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "- 날씨: 11/21(토)은 **비 예보(강수확률은 이야기 안 나왔지만 '비'로 표시)**이고, 제주는 그날 여행객으로 붐벼요.\n- 사려니숲길 예측: '주말'이라는 날짜를 못 읽어서 바로 못 뽑았어요. 대신 실제 기록과 요일 패턴으로 볼게요.\n- 실제 붐빔(최근): 10/12~11/15 기록으로는 **요즘 평소보다 한산**해요. 최근 7일 평균 약 22.6명, 전체 기간 평균 약 29.7명보다 낮아요. 다만 와이파이에 접속한 사람만 세어 실제 방문객의 일부라, 장소끼리 숫자 비교는 하지 않아요.\n- 요일 패턴: 가장 한산한 요일은 **월요일(지수 78)**, 그다음이 금요일(96), 토요일(94)이고, 목요일이 가장 붐볐어요(118). 토·일요일은 평균(100)보다 살짝 낮은 편이에요.\n\n한 줄 결론: 이번 주말(11/21~22)은 **날씨가 비**라 붐비는 걸 피해도 오름·숲길 산책엔 좋은 조건이 아니에요. 사려니숲길 자체는 요즘 평소보다 한산한 편이고 토요일도 평균보단 조금 덜 붐비는 패턴이지만, '비 오는 주말'이라 한산함을 기대하긴 어려워요.\n\n근거: 관광공사 예측(사려니숲길 주말 예측 호출은 날짜 인식 실패로 못 씀), 기상청+Open-Meteo 날씨(11/21 토 '비'), 제주데이터허브 와이파이 접속자(10/12~11/15, 최근 한산·요일지수)로 봤어요.\n\n원하면 이번 주말에 비를 피해 가기 좋은 숲길·마을을 대신 찾아드릴게요. 출발 지역(숙소 쪽)이나 시간을 알려주면 더 맞게 골라줘요."
+  },
+  {
+   "q": "협재해수욕장 대신 갈 만한 한산한 곳 있어?",
+   "expect": [
+    "find_quiet_places",
+    "place_forecast"
+   ],
+   "used": [
+    "find_quiet_places"
+   ],
+   "sec": 6.1,
+   "error": null,
+   "places": [
+    "하도 철새도래지",
+    "오조리 식산봉",
+    "협재해수욕장",
+    "평대리 해변",
+    "신창풍차해안",
+    "판포포구"
+   ],
+   "unsupported_places": [],
+   "links": 10,
+   "bad_links": [],
+   "numbers": 9,
+   "numbers_found": 9,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "협재해수욕장 대신 오늘(11/18 수) 바람이 덜 닿지 않고 한산한 바다 장소 5곳을 골랐어요. 오늘은 비 예보가 60%라, 비 오는 바다 풍경이 괜찮다면 훨씬 여유롭게 볼 수 있어요.\n\n- **평대리 해변** — 한산해요, 주차 여유, 가장 여유로운 시간 7–9시. 평소보다 한산 수준은 비슷해요. [카카오맵 길안내](https://map.kakao.com/link/to/%ED%8F%89%EB%8C%80%EB%A6%AC%20%ED%95%B4%EB%B3%80,33.5332,126.8407) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zbTXW,2y2Oxa,%ED%8F%89%EB%8C%80%EB%A6%AC%20%ED%95%B4%EB%B3%80,,ADDRESS_POI/-/car)\n- **판포포구** — 한산해요, 주차 여유, 가장 여유로운 시간 7–9시. 평소보다도 더 한산해요. [카카오맵 길안내](https://map.kakao.com/link/to/%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,33.3654,126.1997) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yL0qQ,2xVM0E,%ED%8C%90%ED%8F%AC%ED%8F%AC%EA%B5%AC,,ADDRESS_POI/-/car)\n- **하도 철새도래지** — 한산해요, 주차 여유, 7–9시가 제일 한산. 평소 수준. [카카오맵 길안내](https://map.kakao.com/link/to/%ED%95%98%EB%8F%84%20%EC%B2%A0%EC%83%88%EB%8F%84%EB%9E%98%EC%A7%80,33.5102,126.8963) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zeeBG,2y1QHu,%ED%95%98%EB%8F%84%20%EC%B2%A0%EC%83%88%EB%8F%84%EB%9E%98%EC%A7%80,,ADDRESS_POI/-/car)\n- **오조리 식산봉** — 한산해요, 주차 여유, 7–9시. 평소 수준. [카카오맵 길안내](https://map.kakao.com/link/to/%EC%98%A4%EC%A1%B0%EB%A6%AC%20%EC%8B%9D%EC%82%B0%EB%B4%89,33.4628,126.9211) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3zfh7G,2xZRok,%EC%98%A4%EC%A1%B0%EB%A6%AC%20%EC%8B%9D%EC%82%B0%EB%B4%89,,ADDRESS_POI/-/car)\n- **신창풍차해안** — 한산해요, 주차 여유, 7–9시. 평소 수준. [카카오맵 길안내](https://map.kakao.com/link/to/%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,33.343,126.1722) · [네이버 지도 길안내](https://map.naver.com/p/directions/-/3yJQTm,2xUPJK,%EC%8B%A0%EC%B0%BD%ED%92%8D%EC%B0%A8%ED%95%B4%EC%95%88,,ADDRESS_POI/-/car)\n\n가장 덜 붐비는 시간대는 대체로 이른 아침(7–9시)이고, 지금 출발하면 오전 10시부터 차차 붐빌 수 있어요. 비 오는 날에는 오름보다 이런 해안·포구 쪽이 움직이기 편해요.\n\n근거: 관광공사 30일 예측(장소별 평소 대비) × 장소 규모 × 유형별 시간대 곡선으로 만든 한산함 추정(오늘 11/18 수 오전 10시 기준) + 기상청 비 예보(60%)."
+  },
+  {
+   "q": "이번 주 제주 날씨 어때?",
+   "expect": [
+    "get_weather"
+   ],
+   "used": [
+    "get_weather"
+   ],
+   "sec": 3.0,
+   "error": null,
+   "places": [],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 0,
+   "numbers_found": 0,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "이번 주 전체를 보는 값은 없어서, 오늘(2026-11-18)부터 14일 예보를 가져왔어.\n\n- 오늘 수요일(11/18): 아침 최저 11℃ / 낮 최고 16℃, 대체로 맑다가 오후부터 구름이 많겠어. 바람은 약하고 비 예보는 없어 보여.\n- 내일 목요일(11/19): 최저 10℃ / 최고 15℃, 구름이 조금 더 늘고 오후에 구름 많을 듯. 비는 없을 예보야.\n- 금요일(11/20)쯤부터 후반으로 갈수록 기온이 조금 더 내려가고 하늘은 흐린 날이 섞일 수 있어. 14일치 예보 안에서 비 소식이 아주 붙어 있으면 다시 알려줄게.\n\n정리하면 이번 주 초중반은 비 없이 선선하고 고즈넉한 날씨에 가까워. 그래도 가기 전 하루 이틀은 날씨를 한 번 더 보는 게 좋아.  \n날씨 확인했으니까, 특정 날짜의 한산한 장소나 코스를 보고 싶으면 날짜·출발 지역·대략 몇 곳 들를지 알려줘.\n\n근거: 기상청 단기·중기예보 + Open-Meteo (오늘~14일 예보, 2026-11-18 기준)."
+  },
+  {
+   "q": "다음 주 평소보다 붐빌 관광지 10곳 순위 알려줘",
+   "expect": [
+    "rank_spots"
+   ],
+   "used": [
+    "rank_spots"
+   ],
+   "sec": 8.0,
+   "error": null,
+   "places": [
+    "삼다수숲길"
+   ],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 13,
+   "numbers_found": 12,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "다음 주(11/23 월~11/29 일) 평소보다 붐빌 관광지 10곳, 평소 대비 순서로 정리해드릴게요.\n\n- 남원 큰엉해안 — 평소 대비 212% (2.12배)\n- 금호리조트 제주아쿠아나 — 166%\n- 차귀도 — 156%\n- 대포포구 — 155%\n- 수보사(구 광명사) — 155%\n- 자구내포구 — 153%\n- 갯거리오름(갯그르) — 152%\n- 삼다수숲길 — 152%\n- 제주별빛누리공원 — 152%\n- 대록산(큰사슴이오름) — 151%\n\n**맺음말**: 위 숫자는 각 관광지의 자기 평소 대비 예측이라, 관광지끼리 방문객 수나 질서를 비교하진 않아요. 붐빌 거라 예측된 곳 대신 비슷한 테마의 한산한 곳을 찾고 싶으면, 원하는 날짜·요일·숙소를 알려주세요.\n\n**근거**: 한국관광공사 관광지 집중률 방문자 추이 예측 (제주 관광지 448곳 대상), 기간 11/23(월)~11/29(일), 평소보다 붐비는 순(busy)으로 정렬."
+  },
+  {
+   "q": "이번 주말 평소보다 한산한 관광지는?",
+   "expect": [
+    "rank_spots"
+   ],
+   "used": [
+    "rank_spots"
+   ],
+   "sec": 4.1,
+   "error": null,
+   "places": [],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 11,
+   "numbers_found": 10,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "이번 주말(11/21 토 ~ 11/22 일) 평소보다 한산한 관광지를 10곳 정리했어요.\n\n- 사라오름 – 평소 대비 31% (가장 한산해요)\n- 동백포레스트 – 35%\n- 위미동백나무군락 – 53%\n- 제주양떼목장 – 55%\n- 최남단체험감귤농장 – 57%\n- 넥슨컴퓨터박물관 – 58%\n- 도치돌 알파카목장 – 60%\n- 제주 보성시장 – 60%\n- 유민미술관 – 61%\n- 피규어뮤지엄 제주 – 61%\n\n이 순위들은 ‘각 관광지의 자기 평소 대비’ 값이라, 서로 방문객이 얼마나 적은지 견주는 숫자는 아니에요. 따라서 여행 계획을 짤 땐 그날 날씨도 함께 보고, 오고 싶은 테마(숲길·오름·바다·마을·실내)에 맞춰 고르는 게 좋아요.\n\n근거: 한국관광공사 관광지 집중률 예측 (11/21~11/22, 평소보다 한산한 순)."
+  },
+  {
+   "q": "요즘 성산일출봉 실제로 붐벼?",
+   "expect": [
+    "wifi_visitors"
+   ],
+   "used": [
+    "wifi_visitors"
+   ],
+   "sec": 5.3,
+   "error": null,
+   "places": [
+    "성산일출봉"
+   ],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 6,
+   "numbers_found": 6,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "성산일출봉은 요즘(10/12~11/15) 평소보다 아주 붐비거나 아주 한산한 편은 아니다. 최근 7일 평균 접속자는 하루 122.9명, 그 전 기간 평균은 137.6명이라 최근은 오히려 조금 낮은 쪽이다. 추세도 \"평소와 비슷해요\"로 나온다. 다만 여기는 공공와이파이 접속자만 센 거라, 실제 방문객의 일부다.\n\n요일로는 목요일이 가장 한산함 지수가 낮고(가장 상대적으로 붐빔), 월·토·일요일이 한산한 편이다. 최근 7일만 보면 11/10(화) 175명, 11/15(일) 146명으로 꽤 있었고, 11/14(토) 72명, 11/09(월) 69명으로 낮았다.\n\n곧 갈 계획이면 날짜 압력을 더 정확히 알려줄 수 있어. 언제, 몇 시쯤 가는지, 그리고 주차·동선 보기 쉬운 돛오름/섭지 쪽도 함께 볼지 알려주면 예측과 날씨를 같이 맞춰 줄게.\n\n근거: 제주데이터허브 와이파이 일일 사용량 (조회일 2026-11-18)"
+  },
+  {
+   "q": "요즘 평소보다 한산해진 관광지 알려줘",
+   "expect": [
+    "wifi_visitors"
+   ],
+   "used": [
+    "wifi_visitors"
+   ],
+   "sec": 9.2,
+   "error": null,
+   "places": [
+    "서귀포매일올레시장",
+    "서귀포 치유의숲",
+    "동문재래시장",
+    "김녕해수욕장",
+    "함덕해수욕장",
+    "평대리 해변",
+    "표선해수욕장",
+    "종달리 마을",
+    "중문색달해변",
+    "곽지해수욕장",
+    "광치기해변",
+    "천지연폭포",
+    "삼다수숲길",
+    "새별오름",
+    "정방폭포",
+    "비자림",
+    "용두암",
+    "한라산",
+    "우도"
+   ],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 15,
+   "numbers_found": 14,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "요즘 평소보다 **확실히 한산해진 곳**을 와이파이 접속 기록(지난 기록, 2026-10-12~11-15 기준)으로 보면 이렇게 보여요.\n\n---\n\n**한산해요 (평소의 50~70% 수준)**\n- 삼다수숲길 — 평소 대비 0.52 (최근 7일 평균 7.6명) / 가장 한산한 편\n- 새별오름 — 0.54 (16.3명)\n- 김녕해수욕장 — 0.55 (22.3명)\n- 평대리 해변 — 0.58 (2.3명, 사람도 적고 한결같이 조용한 편)\n- 중문색달해변 — 0.67 (8.4명)\n- 광치기해변 — 0.67 (30.0명)\n- 천지연폭포 — 0.69 (86.4명)\n- 함덕해수욕장 — 0.70 (156.6명)\n- 용두암 — 0.72 (33.9명)\n- 곽지해수욕장 — 0.72 (14.3명)\n\n**참고로 평소와 비슷하거나 살짝 덜한 곳**\n- 오름·숲길 쪽: 한라산(0.98→사실상 평소 수준, 137.7명), 비자림(0.98), 우도(0.96), 종달리 마을(1.04로 오히려 약간 늘음), 서귀포 치유의숲(0.95)\n- 시장·폭포: 동문재래시장(0.92, 389.4명), 서귀포매일올레시장(0.87, 260명), 정방폭포(0.88), 표선해수욕장(0.91)\n\n**요일 패턴 (제주 전체)**\n- 평일(화~금)이 104~108 정도로 조금 높고, 토(92)·일(83)이 더 한산한 편이에요.\n\n---\n\n**정리**\n가장 확실하게 \"요즘 한산하다\"고 볼 수 있는 곳은 삼다수숲길·새별오름·김녕해수욕장·평대리 해변 쪽이에요. 다만 이 수치는 공공와이파이에 접속한 사람 기준이라 실제 방문객 전부가 아니고, 장소끼리 숫자를 직접 비교하기보다 같은 장소의 예전 대비 변화로 보는 게 맞아요. 같이 좀 더 보고 싶은 장소가 있으면, 날씨와 함께 한산한 시간대·주차도 찾아드릴게요.\n\n근거: 제주데이터허브 공공와이파이 AP그룹별 일일 사용량 (2026-10-12 ~ 2026-11-15, 최신 11-15), 37곳 비교."
+  },
+  {
+   "q": "구좌읍은 무슨 요일에 사람이 적어?",
+   "expect": [
+    "area_visitors"
+   ],
+   "used": [
+    "area_visitors"
+   ],
+   "sec": 3.3,
+   "error": null,
+   "places": [],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 0,
+   "numbers_found": 0,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "구좌읍은 **화요일**이 가장 한산해요. 그다음으로는 월요일도 비교적 적고, 주말(토·일)은 바쁜 편이에요.\n\n- **가장 한산한 요일**: 화요일  \n- **요일 지수(100이 평균)**: 월 95 · 화 89 · 수 89 · 목 92 · 금 103 · 토 118 · 일 115  \n- **가장 바쁜 요일**: 토요일  \n\n근거: 제주데이터허브 읍면동 단위 내국인 유동인구(구좌읍), 2026-07-07~08-31 기준. 이 자료는 2~3달 늦는 공개 데이터라 최근 몇 주 패턴을 보는 값이고, 방문객(여행객+지역 활동) 기준이며 외국인은 포함되지 않아요."
+  },
+  {
+   "q": "주민에 비해 방문객이 많이 몰리는 읍면동은 어디야?",
+   "expect": [
+    "area_visitors"
+   ],
+   "used": [
+    "area_visitors"
+   ],
+   "sec": 12.1,
+   "error": null,
+   "places": [],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 16,
+   "numbers_found": 11,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "주민 대비 방문객이 가장 많이 몰리는 읍면동은 **서귀포시 예래동**이야. 하루 평균 방문객이 사는 사람 수보다 약 2.16배로 가장 높아. 그다음은 **정방동(약 1.29배)**, **도두동(약 1.25배)** 순서야.\n\n- 예래동: 주민 1명당 방문객 약 2.16배 (하루 평균 약 158,225명)\n- 정방동: 약 1.29배 (약 46,609명)\n- 도두동: 약 1.25배 (약 62,872명)\n- 일도1동: 약 1.12배 (약 38,602명)\n- 안덕면: 약 0.99배 (약 223,502명) — 주민 대비로는 1배 안팎이지만 방문 절대 수는 커\n\n반대로 주민 대비 방문객이 적은 쪽은 서홍동·동홍화·화북동·일도2동 등이 약 0.16~0.17배 수준이야.\n\n참고로 요일 패턴은 금요일이 102, 토요일이 113, 일요일이 108로 주말이 더 붐비고, 화요일(93)·월요일(96) 등이 상대적으로 한산해.\n\n근거: 제주데이터허브 읍면동 단위 내국인 유동인구(방문 인구), 2026-07-07 ~ 2026-08-31 기간, 주민 대비 방문 인구 비율 기준 순위. 외국인은 포함되지 않아."
+  },
+  {
+   "q": "구도심은 하루 중 언제 카드 결제가 많아?",
+   "expect": [
+    "jeju_card_time_pattern"
+   ],
+   "used": [
+    "jeju_card_time_pattern",
+    "jeju_card_time_pattern"
+   ],
+   "sec": 8.7,
+   "error": null,
+   "places": [],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 10,
+   "numbers_found": 10,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "두 구도심 모두 **저녁(오후 6시 전후~밤)** 에 카드 결제가 가장 많고, **오전**이 가장 적다. 다만 데이터가 2017년 11월 기준이라 요즘과 완전히 같지는 않을 수 있다.\n\n- **제주시 구도심 (내국인 관광객, 2017.11)**\n  - 저녁 31.5% (결제 약 15,298건) — 가장 많음\n  - 오후 28.7%\n  - 점심 19.2%\n  - 오전 9.7% — 가장 적음\n  - 밤 11.0%\n\n- **서귀포시 구도심 (내국인 관광객, 2017.11)**\n  - 저녁 40.9% (결제 약 14,694건) — 가장 많음\n  - 오후 23.8%\n  - 점심 15.0%\n  - 오전 7.7% — 가장 적음\n  - 밤 12.6%\n\n**한마디로:** 구도심은 낮보다 **저녁에 결제·방문(카드 기준)이 몰리는 편**이고, **오전~이른 낮이 상대적으로 한산**하다. 서귀포 구도심이 제주 구도심보다 저녁 비중이 더 크고, 오전에 더 조용하다.\n\n- 참고: 이 카드 데이터는 ‘결제 시간대’ 비율이라 실제 방문 인원·머무는 시간과는 다를 수 있다.\n- 더 최근 데이터가 필요하거나 중국 관광객 기준으로 보고 싶으면 그 조건으로 다시 볼 수 있다.\n\n근거: 제주데이터허브 관광지·상업지구 카드 데이터 (조회일 2026-11-18)"
+  },
+  {
+   "q": "서울 맛집 추천해줘",
+   "expect": [],
+   "used": [],
+   "sec": 3.2,
+   "error": null,
+   "places": [],
+   "unsupported_places": [],
+   "links": 0,
+   "bad_links": [],
+   "numbers": 0,
+   "numbers_found": 0,
+   "checks": {
+    "tool": true,
+    "places": true,
+    "links": true,
+    "basis": true
+   },
+   "pass": true,
+   "reply": "죄송하지만 제 전문은 제주 여행·한적한 장소 안내라 서울 맛집은 추천하지 못해요. \n\n만약 제주에서 한산한 카페·식당·오름·숲길을 시간대별로 찾고 싶으면, 날짜와 출발 지역을 알려주시면 그에 맞는 장소와 코스를 바로 정리해 드릴게요."
+  }
+ ]
+}
