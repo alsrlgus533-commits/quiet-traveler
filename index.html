@@ -761,8 +761,8 @@ const $ = id => document.getElementById(id);
 // 그날 제주 전체가 어떤 날인지. 날짜 점, 읽어 주는 말, 오늘 카드가 같은 기준을 쓴다.
 function dayState(f){ return f>1.08 ? "busy" : f<.95 ? "calm" : "mid"; }
 // 그날 제주 전체에 오는 관광객 예측(30일 평균 대비). 장소 표시와 같은 말(한산해요·적당해요·붐벼요)로 부드럽게 말한다.
-const DAY_WORD = {busy:"붐벼요", mid:"적당해요", calm:"한산해요"};
-function dayLine(rel, st){ return `${["오늘","내일","모레"].includes(rel) ? rel : "이날"} 제주는 ${DAY_WORD[st]}`; }
+const DAY_WORD = {busy:"여행객으로 붐벼요", mid:"여행객이 적당해요", calm:"여행객이 적어 한산해요"};
+function dayLine(rel, st){ return `${rel==="오늘" ? "오늘" : "이날"} 제주는 ${DAY_WORD[st]}`; }
 const DAY_MSG = {
   busy:["평소보다 붐비는 날이에요", "사람이 몰리기 전, 아침 일찍 나서 보세요."],
   mid: ["평소와 비슷한 날이에요", "유명한 곳은 오전에 다녀오면 여유로워요."],
