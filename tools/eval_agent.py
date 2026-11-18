@@ -6,7 +6,7 @@
   1. 도구 선택   : 그 질문에 맞는 도구(expect 중 하나 이상)를 불렀는가
   2. 장소 근거   : 답에 나온 장소 이름이 모두 도구 결과에 있는가 (지어낸 장소가 없는가)
   3. 링크        : 답의 지도 링크가 모두 도구가 만든 주소인가, 채워지지 않은 {{표시}} 가 남지 않았는가
-  4. 근거 줄     : 답 끝에 '근거:' 가 있는가
+  4. 깔끔한 답   : '근거:' 줄이나 영어 도구 이름(plan_course 등)이 답에 섞이지 않았는가 (출처는 화면이 따로 보여 줌)
   5. 수치 근거율 : 답에 나온 숫자(시간·분·%·°) 가운데 도구 결과에서 찾을 수 있는 비율 (참고 지표)
 업스테이지 API 를 질문 수만큼 부르므로 사용량이 든다.
 """
@@ -98,7 +98,8 @@ def run_one(q, expect, names):
 
     places = _mentioned(reply, names)
     # 질문에 사용자가 직접 적은 장소(예: '협재해수욕장 대신…')는 답에 나와도 지어낸 것이 아니므로 뺀다
-    unsupported = [n for n in places if n not in blob and n not in q]
+    flat, qflat = blob.replace(" ", ""), q.replace(" ", "")   # "따라비 오름"·"따라비오름" 처럼 띄어쓰기만 다른 건 같은 곳
+    unsupported = [n for n in places if n.replace(" ", "") not in flat and n.replace(" ", "") not in qflat]
 
     text = re.sub(r"\[[^\]]*\]\(https?://[^\s)]+\)", " ", reply)     # 지도 링크 속 숫자는 빼고 센다
     nums = NUM.findall(text)
@@ -114,12 +115,14 @@ def run_one(q, expect, names):
         "tool": (not expect and not used) or bool(set(expect) & set(used)),
         "places": not unsupported,
         "links": not bad_urls and "{{" not in reply,
-        "basis": (not expect) or ("근거" in reply),
+        "clean": not re.search(r"^\s*(?:[-*•]\s*)?(?:\*\*)?\s*근거\s*(?:\*\*)?\s*[:：]", reply, re.M)
+                 and not any(t["function"]["name"] in reply for t in tools.TOOLS),
     }
     return {"q": q, "expect": expect, "used": used, "sec": sec, "error": err,
             "places": places, "unsupported_places": unsupported, "links": len(urls), "bad_links": bad_urls,
             "numbers": len(nums), "numbers_found": num_ok, "checks": checks,
-            "pass": all(checks.values()) and not err, "reply": reply}
+            "pass": all(checks.values()) and not err, "reply": reply,
+            "guard": out.get("checked") or {}}
 
 
 def main():
@@ -144,7 +147,7 @@ def main():
 def report(rows, model, day):
     n = len(rows)
     passed = sum(r["pass"] for r in rows)
-    agg = {k: sum(r["checks"][k] for r in rows) for k in ("tool", "places", "links", "basis")}
+    agg = {k: sum(r["checks"][k] for r in rows) for k in ("tool", "places", "links", "clean")}
     nums = sum(r["numbers"] for r in rows)
     nums_ok = sum(r["numbers_found"] for r in rows)
     avg = round(sum(r["sec"] for r in rows) / n, 1)
@@ -157,19 +160,20 @@ def report(rows, model, day):
         "# 에이전트 검증 결과", "",
         f"- 날짜: {day} · 모델: 업스테이지 `{model}` · 질문 {n}개 (`python tools/eval_agent.py`)",
         f"- **전체 통과 {passed}/{n}**",
-        f"- 도구 선택 {agg['tool']}/{n} · 장소 근거 {agg['places']}/{n} · 링크 정상 {agg['links']}/{n} · 근거 줄 {agg['basis']}/{n}",
+        f"- 도구 선택 {agg['tool']}/{n} · 장소 근거 {agg['places']}/{n} · 링크 정상 {agg['links']}/{n} · 깔끔한 답 {agg['clean']}/{n}",
         f"- 수치 근거율(참고): 답에 나온 숫자 {nums}개 중 {nums_ok}개({round(nums_ok / max(1, nums) * 100)}%)를 도구 결과에서 찾음",
-        f"- 평균 응답 시간 {avg}초", "",
+        f"- 평균 응답 시간 {avg}초",
+        f"- 서버 답 검사가 다시 답하게 한 횟수: 말만 하고 안 찾음 {sum(bool((r.get('guard') or {}).get('retried_for_action')) for r in rows)}번 · 도구 결과에 없는 장소 {sum(bool((r.get('guard') or {}).get('retried_for_grounding')) for r in rows)}번 (사용자에게는 다시 답한 결과만 보임)", "",
         "확인 기준: 도구 선택 = 질문에 맞는 도구를 불렀는가 · 장소 근거 = 답의 장소가 모두 도구 결과나 질문에 있는가(지어낸 장소 없음) · "
-        "링크 = 지도 주소가 모두 도구가 만든 것인가 · 근거 줄 = 답 끝에 '근거:'가 있는가. "
+        "링크 = 지도 주소가 모두 도구가 만든 것인가 · 깔끔한 답 = '근거:' 줄이나 영어 도구 이름이 답에 없는가(출처는 화면이 답 아래 '조회한 데이터'로 보여 줌). "
         "수치 근거율은 표기 차이(0.87 → 13% 줄어듦 등)로 낮게 잡힐 수 있어 참고 지표로만 둔다.", "",
-        "| # | 질문 | 부른 도구 | 도구 | 장소 | 링크 | 근거 | 수치 | 초 |",
+        "| # | 질문 | 부른 도구 | 도구 | 장소 | 링크 | 깔끔 | 수치 | 초 |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for i, r in enumerate(rows, 1):
         c = r["checks"]
         lines.append(f"| {i} | {r['q']} | {', '.join(r['used']) or '없음'} | {ok(c['tool'])} | {ok(c['places'])} | "
-                     f"{ok(c['links'])} | {ok(c['basis'])} | {r['numbers_found']}/{r['numbers']} | {r['sec']} |")
+                     f"{ok(c['links'])} | {ok(c['clean'])} | {r['numbers_found']}/{r['numbers']} | {r['sec']} |")
     fails = [r for r in rows if not r["pass"]]
     if fails:
         lines += ["", "## 확인이 필요한 답", ""]
