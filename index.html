@@ -760,7 +760,8 @@ function kakaoRoute(a,b){
 const $ = id => document.getElementById(id);
 // 그날 제주 전체가 어떤 날인지. 날짜 점, 읽어 주는 말, 오늘 카드가 같은 기준을 쓴다.
 function dayState(f){ return f>1.08 ? "busy" : f<.95 ? "calm" : "mid"; }
-const DAY_WORD = {busy:"붐비는 날", mid:"평소 같은 날", calm:"한산한 날"};
+// 그날 제주에 오는 관광객 수 예측(30일 평균 대비)이라, '관광객'을 말에 넣어 무엇이 많고 적은지 바로 알게 한다
+const DAY_WORD = {busy:"관광객 많은 날", mid:"관광객 보통인 날", calm:"관광객 적은 날"};
 const DAY_MSG = {
   busy:["평소보다 붐비는 날이에요", "사람이 몰리기 전, 아침 일찍 나서 보세요."],
   mid: ["평소와 비슷한 날이에요", "유명한 곳은 오전에 다녀오면 여유로워요."],
