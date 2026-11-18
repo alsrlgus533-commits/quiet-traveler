@@ -567,7 +567,7 @@ const state = { forecast:null, overall:1, dates:[], date:null, hour:10, theme:"�
   mapLayer:"all",   // 지도: 전체 / 조용한 곳 / 유명한 곳
   mapSel:null,
   mapView:{cx:500, cy:292.5, z:1},   // 지도 확대: 가운데 좌표와 배율(1~4)
-  me:null };        // 내 위치 {lat,lng}. 허락했을 때만 받고, 이 기기 안에서만 쓴다    // 지도에서 고른 점의 id
+  me:null };        // 내 위치 {lat,lng}. 허락했을 때만 받고, 이 기기 안에서만 쓴다
 function loadSaved(){ try{ return new Set(JSON.parse(localStorage.getItem("qt-saved")||"[]")); }catch(e){ return new Set(); } }
 function storeSaved(){ try{ localStorage.setItem("qt-saved", JSON.stringify([...state.saved])); }catch(e){} }
 
