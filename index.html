@@ -1350,7 +1350,7 @@ function showTab(t){
   const top = $("dayHero").getBoundingClientRect().top + scrollY - 12;
   if(scrollY > top) window.scrollTo({top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
 }
-$("tabbar").addEventListener("click", e=>{ const b=e.target.closest("[data-go]"); if(b) showTab(b.dataset.go); });
+$("tabbar").addEventListener("click", e=>{ const b=e.target.closest("[data-go]"); if(b){ state.tabPicked=true; showTab(b.dataset.go); } });
 showTab("home");
 $("listMore").addEventListener("click", ()=>{ state.listAll=!state.listAll; renderList(); });
 // 위치를 쓸 수 없는 화면(게시 화면 iframe, https 아닌 주소)에서는 내 위치 버튼을 숨긴다
@@ -1491,6 +1491,8 @@ async function ask(q){
     $("askForm").addEventListener("submit", e=>{ e.preventDefault(); ask($("askInput").value); });
     $("askInput").addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); ask($("askInput").value); } });
     if(!j.agent){ $("askInput").disabled=true; $("askBtn").disabled=true; }
+    // AI 가 켜져 있으면 처음 화면은 '물어보기' 탭 (그사이 다른 탭을 눌렀으면 그대로 둔다)
+    else if(!state.tabPicked) showTab("ask");
   }catch(e){}
 })();
 
