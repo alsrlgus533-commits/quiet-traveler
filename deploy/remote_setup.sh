@@ -42,6 +42,8 @@ User=ubuntu
 WorkingDirectory=/opt/quiet-traveler
 ExecStart=/opt/quiet-traveler/.venv/bin/python fetch_forecast.py
 ExecStart=/bin/sh -c '[ "$$(date +%%u)" = 1 ] && /opt/quiet-traveler/.venv/bin/python -m agent.datahub || true'
+# 에이전트는 켜질 때 읽은 예측을 기억하므로, 새로 받은 뒤 다시 켜서 반영한다 (+ = root 로 실행)
+ExecStartPost=+/bin/systemctl restart quiet-traveler
 UNIT
 sudo tee /etc/systemd/system/quiet-traveler-refresh.timer >/dev/null <<'UNIT'
 [Unit]
