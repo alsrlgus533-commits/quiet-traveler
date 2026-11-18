@@ -1485,7 +1485,7 @@ async function ask(q){
     const r=await fetch("/api/health",{cache:"no-store"}); if(!r.ok) return;
     const j=await r.json(); if(!j.ok) return;
     $("askSec").hidden=false; $("tabAsk").hidden=false;
-    $("askModel").textContent = j.agent ? "업스테이지 Solar" : "AI 키가 없어 대화가 꺼져 있어요";
+    $("askModel").textContent = j.agent ? "" : "AI 키가 없어 대화가 꺼져 있어요";
     $("askEx").innerHTML = ASK_EX.map(q=>`<button class="chip" type="button">${esc(q)}</button>`).join("");
     $("askEx").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(b) ask(b.textContent); });
     $("askForm").addEventListener("submit", e=>{ e.preventDefault(); ask($("askInput").value); });
