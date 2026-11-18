@@ -12,10 +12,37 @@ import argparse
 import json
 import os
 import sys
+import threading
+import time
 import traceback
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 from .config import ROOT, env
+
+# 공개 주소에 띄울 때 업스테이지 사용량이 새지 않도록 질문 수를 묶는다 (0 이면 제한 없음, 내 PC 기본값).
+#   CHAT_LIMIT_PER_IP_HOUR : 한 사람(IP)이 1시간에 할 수 있는 질문 수
+#   CHAT_LIMIT_PER_DAY     : 서버 전체가 하루에 받는 질문 수
+_LOCK = threading.Lock()
+_HITS: dict[str, list[float]] = {}
+_DAY = {"date": "", "n": 0}
+
+
+def _allow(ip: str):
+    per_ip = int(env("CHAT_LIMIT_PER_IP_HOUR", "0") or 0)
+    per_day = int(env("CHAT_LIMIT_PER_DAY", "0") or 0)
+    now, today = time.time(), time.strftime("%Y-%m-%d")
+    with _LOCK:
+        if _DAY["date"] != today:
+            _DAY.update(date=today, n=0)
+        if per_day and _DAY["n"] >= per_day:
+            return "오늘 시연용 질문 수를 다 썼어요. 내일 다시 물어봐 주세요. (화면의 추천·지도·코스는 그대로 쓸 수 있어요)"
+        hits = [t for t in _HITS.get(ip, []) if now - t < 3600]
+        if per_ip and len(hits) >= per_ip:
+            return f"질문이 많아 잠시 쉬어 갈게요. 1시간에 {per_ip}번까지 물을 수 있어요."
+        hits.append(now)
+        _HITS[ip] = hits
+        _DAY["n"] += 1
+    return None
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -25,7 +52,7 @@ class Handler(SimpleHTTPRequestHandler):
     # .env 나 코드 폴더는 화면으로 내보내지 않는다
     def send_head(self):
         path = self.path.split("?")[0]
-        if path.startswith("/.env") or path.startswith("/agent/") or path.startswith("/tools/") or path.startswith("/.git"):
+        if path.startswith(("/.env", "/agent/", "/tools/", "/.git", "/dist/", "/deploy/")):
             self.send_error(404)
             return None
         return super().send_head()
@@ -52,6 +79,13 @@ class Handler(SimpleHTTPRequestHandler):
             history = data.get("messages") or []
             if not history or history[-1].get("role") != "user":
                 return self._json(400, {"error": "마지막 메시지는 사용자 질문이어야 해요."})
+            # Caddy 같은 앞단을 거쳐 오면 실제 접속 IP 는 X-Forwarded-For 첫 값이다
+            ip = self.client_address[0]
+            if ip in ("127.0.0.1", "::1") and self.headers.get("X-Forwarded-For"):
+                ip = self.headers["X-Forwarded-For"].split(",")[0].strip()
+            busy = _allow(ip)
+            if busy:
+                return self._json(429, {"error": busy})
             from .agent import run
             return self._json(200, run(history))
         except RuntimeError as e:                    # 키 없음 등 설정 문제
