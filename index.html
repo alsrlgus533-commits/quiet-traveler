@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>조용한 여행자</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -7,20 +8,21 @@
 <style>
 /* Layout: 한 손 세로 스크롤. 날짜 띠 → 시간 → 오늘의 제주 → 붐비는 곳 대신 → 조용한 곳 목록 → 아래에서 올라오는 상세 시트 */
 :root{
-  --bg:#F0F3EA; --surface:#F8FBFD; --ink:#1C2A24; --muted:#5A6870; --line:#D5E1EA;
+  --bg:#F0F3EA; --surface:#F8FBFD; --ink:#1C2A24; --muted:#46535B; --line:#D5E1EA;
   --accent:#2C786A; --accent-soft:#DCEBE3; --calm:#367A56; --busy:#A5542F; --mid:#836920;
   --f-display:"Gowun Batang","Nanum Myeongjo",serif;
   --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --r:14px;
   --card:rgba(228,240,250,.62);   /* 카드: 낮 하늘에 맞춘 반투명 하늘빛 파스텔 */
   --bar:rgba(234,244,250,.90);    /* 아래 메뉴 바 */
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#161929; --surface:#262A42; --ink:#ECEDF6; --muted:#A9ACC6; --line:#3B3F60;
+  --bg:#161929; --surface:#262A42; --ink:#ECEDF6; --muted:#C6C9E0; --line:#3B3F60;
   --accent:#8CC6B8; --accent-soft:#2B3150; --calm:#8FCBA0; --busy:#E89B70; --mid:#DCBF6B; color-scheme:dark;
   --card:rgba(108,112,170,.42); --bar:rgba(56,60,98,.88)}}
 :root[data-theme="dark"]{
-  --bg:#161929; --surface:#262A42; --ink:#ECEDF6; --muted:#A9ACC6; --line:#3B3F60;
+  --bg:#161929; --surface:#262A42; --ink:#ECEDF6; --muted:#C6C9E0; --line:#3B3F60;
   --accent:#8CC6B8; --accent-soft:#2B3150; --calm:#8FCBA0; --busy:#E89B70; --mid:#DCBF6B; color-scheme:dark;
   --card:rgba(108,112,170,.42); --bar:rgba(56,60,98,.88)}
 
@@ -320,8 +322,8 @@ html.sheet-open .tabbar{visibility:hidden}
 /* 지도 위에서는 브라우저 확대·스크롤 대신 지도 자체의 두 손가락 확대·끌기를 쓴다 */
 #map{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
 #map.zoomed{cursor:grab}
-#map .nm{font-family:var(--f-body);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);pointer-events:none}
-#map .nm.fam{fill:var(--muted);font-weight:500}
+#map .nm{font-family:var(--f-body);font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--surface);pointer-events:none}
+#map .nm.fam{fill:var(--muted);font-weight:600}
 /* 지도 아래 장소 이름 줄: 점이 작아 누르기 어려울 때 이름으로 고른다 */
 .map-strip{display:flex;gap:6px;overflow-x:auto;margin:2px -6px 0;padding:2px 6px 4px;scrollbar-width:none;scroll-snap-type:x proximity}
 .map-strip::-webkit-scrollbar{display:none}
@@ -330,6 +332,8 @@ html.sheet-open .tabbar{visibility:hidden}
 .mchip i{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
 .mchip i.calm{background:var(--calm)} .mchip i.mid{background:var(--mid)} .mchip i.busy{background:var(--busy)}
 .mchip.fam{color:var(--muted)}
+.mchip small{font-size:11px;color:var(--muted);margin-left:2px}
+.mchip[aria-pressed="true"] small{color:inherit;opacity:.75}
 .mchip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .map-info{scroll-margin-bottom:96px}
 #map .me{fill:#2f7cf6;stroke:#fff} #map .me-halo{fill:#2f7cf6;fill-opacity:.18}
@@ -1187,8 +1191,9 @@ function mapBox(){
   v.cx=Math.min(JEJU.w-w/2, Math.max(w/2, v.cx)); v.cy=Math.min(JEJU.h-h/2, Math.max(h/2, v.cy));
   return [v.cx-w/2, v.cy-h/2, w, h].map(n=>+n.toFixed(1));
 }
+const MAXZ=6;   // 가장 크게 볼 때 배율 (점이 몰린 시내도 손가락으로 고를 수 있게)
 function mapZoom(z, cx, cy){
-  const v=state.mapView; v.z=Math.max(1, Math.min(4, z));
+  const v=state.mapView; v.z=Math.max(1, Math.min(MAXZ, z));
   if(cx!=null){ v.cx=cx; v.cy=cy; }
   if(v.z===1){ v.cx=JEJU.w/2; v.cy=JEJU.h/2; }
   renderMap();
@@ -1199,6 +1204,7 @@ function mapScale(){ const w=$("map").getBoundingClientRect().width; return (w||
 function mapNames(v, k, sel){
   if(v.z < 1.8) return "";
   const s=mapScale(), f=11.5/(s*v.z), [bx,by,bw,bh]=mapBox(), placed=[], out=[];
+  if(state.me && inJeju(state.me)){ const [mx,my]=mapXY(state.me); placed.push([mx-16*k, my-44*k, mx+16*k, my+12*k]); }
   const cand = state.mapItems.filter(({p})=>(!p.famous || v.z>=2.6) && !(sel && sel.id===p.id))
     .map(o=>({...o, xy:mapXY(o.p)}))
     .filter(o=>o.xy[0]>bx && o.xy[0]<bx+bw && o.xy[1]>by && o.xy[1]<by+bh)
@@ -1210,7 +1216,7 @@ function mapNames(v, k, sel){
       if(box[0]<bx || box[2]>bx+bw) continue;
       if(placed.some(b=>!(box[2]<b[0]||box[0]>b[2]||box[3]<b[1]||box[1]>b[3]))) continue;
       placed.push(box);
-      out.push(`<text class="nm${o.p.famous?" fam":""}" x="${(side>0?x+gap:x-gap).toFixed(1)}" y="${(y+f*0.35).toFixed(1)}" text-anchor="${side>0?"start":"end"}" style="font-size:${f.toFixed(1)}px;stroke-width:${(f*0.28).toFixed(1)}px">${o.p.name}</text>`);
+      out.push(`<text class="nm${o.p.famous?" fam":""}" x="${(side>0?x+gap:x-gap).toFixed(1)}" y="${(y+f*0.35).toFixed(1)}" text-anchor="${side>0?"start":"end"}" style="font-size:${f.toFixed(1)}px;stroke-width:${(f*0.38).toFixed(1)}px">${o.p.name}</text>`);
       break;
     }
   }
@@ -1218,8 +1224,12 @@ function mapNames(v, k, sel){
 }
 // 지도 아래 이름 줄: 한산한 순서
 function renderMapStrip(){
-  const rows = [...state.mapItems].sort((a,b)=>b.q-a.q);
-  $("mapStrip").innerHTML = rows.map(({p,q})=>`<button class="mchip${p.famous?" fam":""}" type="button" data-pin="${p.id}" aria-pressed="${state.mapSel===p.id}"><i class="${quietCls(q)}" aria-hidden="true"></i>${p.name}</button>`).join("");
+  const me = state.me && inJeju(state.me) ? state.me : null;
+  const rows = state.mapItems.map(o=>({...o, km: me ? kmBetween(me, o.p) : 0}))
+    .sort((a,b)=> me ? a.km-b.km : b.q-a.q);
+  const strip=$("mapStrip");
+  strip.setAttribute("aria-label", me ? "내 위치에서 가까운 순서로 본 장소" : "한산한 순서로 본 장소");
+  strip.innerHTML = rows.map(({p,q,km})=>`<button class="mchip${p.famous?" fam":""}" type="button" data-pin="${p.id}" aria-pressed="${state.mapSel===p.id}"><i class="${quietCls(q)}" aria-hidden="true"></i>${p.name}${me?`<small class="num">${km<1?"1km 안":Math.round(km)+"km"}</small>`:""}</button>`).join("");
 }
 // 누른 곳에서 가장 가까운 점 (손가락 끝 크기 안, 화면 px 기준)
 function nearestPin(cx, cy){
@@ -1249,7 +1259,7 @@ function selectPin(id, focusMap){
 function zoomAt(z, cx, cy){
   const r=$("map").getBoundingClientRect(), [bx,by,bw,bh]=mapBox(), v=state.mapView;
   const fx=(cx-r.left)/r.width, fy=(cy-r.top)/r.height, px=bx+fx*bw, py=by+fy*bh;
-  v.z=Math.max(1, Math.min(4, z));
+  v.z=Math.max(1, Math.min(MAXZ, z));
   if(v.z===1){ v.cx=JEJU.w/2; v.cy=JEJU.h/2; }
   else { v.cx=px+(.5-fx)*JEJU.w/v.z; v.cy=py+(.5-fy)*JEJU.h/v.z; }
   renderMap();
@@ -1299,8 +1309,9 @@ function locateMe(){
     state.me={lat:pos.coords.latitude, lng:pos.coords.longitude};
     if(inJeju(state.me)){
       const [x,y]=mapXY(state.me);
-      mapZoom(3, x, y);
-      say("내 위치 둘레를 크게 보여 줘요. 지도를 끌어 옮길 수 있어요.");
+      mapZoom(4, x, y);
+      $("mapStrip").scrollTo({left:0});
+      say("내 위치 둘레를 크게 보여 줘요. 아래 이름 줄은 가까운 순서라, 지도에서 누르기 어려우면 이름을 골라 주세요.");
     } else {
       const far = Math.round(kmBetween(state.me, {lat:33.38, lng:126.55}));   // 제주 한가운데(한라산)까지
       mapZoom(1);
@@ -1327,7 +1338,7 @@ function renderMap(){
   const v=state.mapView, k=1/Math.sqrt(v.z);
   $("map").setAttribute("viewBox", mapBox().join(" "));
   $("map").classList.toggle("zoomed", v.z>1);
-  $("mapIn").disabled = v.z>=4; $("mapOut").disabled = v.z<=1;
+  $("mapIn").disabled = v.z>=MAXZ; $("mapOut").disabled = v.z<=1;
   $("mapMe").setAttribute("aria-pressed", String(!!state.me));
   const pin = p=>{
     const [x,y]=mapXY(p), q=100-crowdAt(p,state.hour,state.date), r=(p.famous?12:18)*k, sel=state.mapSel===p.id;
@@ -1352,7 +1363,7 @@ function renderMap(){
   $("map").innerHTML = `<path class="land" d="${JEJU.path}"/>
     <path class="peak" d="M${hx-14},${hy+10} L${hx},${hy-14} L${hx+14},${hy+10}Z"/>
     <text class="peak-t" x="${hx}" y="${hy+38}" text-anchor="middle">한라산</text>
-    ${items.map(pin).join("")}${names}${meMark(k)}${label}`;
+    ${meMark(k)}${items.map(pin).join("")}${names}${label}`;
   renderMapInfo(sel);
 }
 function renderMapInfo(p){
