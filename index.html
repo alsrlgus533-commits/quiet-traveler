@@ -470,10 +470,10 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
 </div>
 
 <nav class="tabbar" id="tabbar" aria-label="화면 고르기">
-  <button type="button" data-go="home" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c7 0 14-6 14-14C11 5 5 11 5 19z"/><path d="M5 19l7-7"/></svg><span>추천</span></button>
+  <button type="button" data-go="ask" id="tabAsk" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-4 4v-4H5z"/></svg><span>물어보기</span></button>
   <button type="button" data-go="map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-6.2-6-11a6 6 0 0 1 12 0c0 4.8-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span>지도</span></button>
   <button type="button" data-go="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg><span>코스</span></button>
-  <button type="button" data-go="ask" id="tabAsk" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-4 4v-4H5z"/></svg><span>물어보기</span></button>
+  <button type="button" data-go="home" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c7 0 14-6 14-14C11 5 5 11 5 19z"/><path d="M5 19l7-7"/></svg><span>추천</span></button>
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -1261,21 +1261,38 @@ function kmBetween(a,b){
   return 2*6371*Math.asin(Math.sqrt(x));
 }
 // 내 위치는 이 기기 안에서만 쓰고 어디에도 보내지 않는다. 제주 안이면 그 둘레를 크게 보여 준다.
+// 위치를 못 쓰는 브라우저 구분: 카카오톡·네이버·인스타그램 등 앱 안 브라우저는 위치를 막아 두는 경우가 많다
+function inAppBrowser(){ return /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent); }
+function isIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1); }
+function geoFailText(err){
+  if(err.code===1){                       // 권한 거부
+    if(inAppBrowser()) return "앱 안 브라우저(카카오톡 등)에서는 위치를 쓸 수 없어요. 오른쪽 위 메뉴에서 '다른 브라우저로 열기'를 눌러 크롬·사파리로 열어 주세요.";
+    return isIOS()
+      ? "위치 권한이 꺼져 있어요. 아이폰 설정 > 개인정보 보호 및 보안 > 위치 서비스에서 켜고, 아래 Safari 웹사이트(또는 Chrome)를 '앱을 사용하는 동안'으로 바꾼 뒤 다시 눌러 주세요."
+      : "위치 권한이 꺼져 있어요. 주소창 왼쪽 자물쇠(또는 ⋮ > 설정 > 사이트 설정 > 위치)에서 이 사이트를 허용한 뒤 다시 눌러 주세요.";
+  }
+  return "위치를 잡지 못했어요. 휴대폰의 위치(GPS)가 켜져 있는지 확인하고, 창가나 밖에서 다시 눌러 주세요.";
+}
+// 내 위치는 이 기기 안에서만 쓰고 어디에도 보내지 않는다. 제주 안이면 그 둘레를 크게 보여 준다.
+// 먼저 빠르게(기지국·와이파이, 5분 안의 위치 재사용) 찾고, 못 찾으면 GPS 정밀 모드로 20초 동안 한 번 더 찾는다.
 function locateMe(){
   const msg=$("mapMsg");
   if(!navigator.geolocation){ msg.textContent="이 브라우저는 위치를 알려 주지 않아요."; return; }
   msg.textContent="내 위치를 찾는 중이에요…";
-  navigator.geolocation.getCurrentPosition(pos=>{
+  const ok = pos=>{
     state.me={lat:pos.coords.latitude, lng:pos.coords.longitude};
     if(inJeju(state.me)){
       const [x,y]=mapXY(state.me);
       msg.textContent="내 위치 둘레를 크게 보여 줘요. 지도를 끌어 옮길 수 있어요.";
       mapZoom(3, x, y);
     } else { msg.textContent="지금 제주 밖이라 제주 전체를 보여 줘요. +를 눌러 크게 볼 수 있어요."; mapZoom(1); }
-  }, err=>{
-    msg.textContent = err.code===1 ? "위치를 쓸 수 없어 제주 전체를 보여 줘요. +를 눌러 크게 볼 수 있어요."
-                                   : "위치를 찾지 못했어요. 잠시 뒤 다시 눌러 보세요.";
-  }, {enableHighAccuracy:false, timeout:10000, maximumAge:300000});
+  };
+  navigator.geolocation.getCurrentPosition(ok, err=>{
+    if(err.code===1){ msg.textContent=geoFailText(err); return; }
+    msg.textContent="조금 더 정확하게 찾는 중이에요… (최대 20초)";
+    navigator.geolocation.getCurrentPosition(ok, e2=>{ msg.textContent=geoFailText(e2); },
+      {enableHighAccuracy:true, timeout:20000, maximumAge:0});
+  }, {enableHighAccuracy:false, timeout:8000, maximumAge:300000});
 }
 function quietCls(q){ return q>=65 ? "calm" : q>=45 ? "mid" : "busy"; }
 function renderMap(){
@@ -1508,7 +1525,10 @@ $("listMore").addEventListener("click", ()=>{ state.listAll=!state.listAll; rend
 // 위치를 쓸 수 없는 화면(게시 화면 iframe, https 아닌 주소)에서는 내 위치 버튼을 숨긴다
 (function(){
   const pp = document.permissionsPolicy || document.featurePolicy;
-  const ok = !!navigator.geolocation && window.isSecureContext !== false && !(pp && pp.allowsFeature && !pp.allowsFeature("geolocation"));
+  let framed=false; try{ framed = window.self !== window.top; }catch(e){ framed = true; }
+  // 정책을 알려 주는 브라우저(크롬 등)는 그 답을 따르고, 못 알려 주는 브라우저(아이폰 사파리)는 다른 창 안이면 막힌 것으로 본다
+  const allowed = (pp && pp.allowsFeature) ? pp.allowsFeature("geolocation") : !framed;
+  const ok = !!navigator.geolocation && window.isSecureContext !== false && allowed;
   $("mapMe").hidden = !ok;
 })();
 $("mapIn").addEventListener("click", ()=>mapZoom(state.mapView.z*1.6));
