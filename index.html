@@ -1549,10 +1549,16 @@ addEventListener("resize", fitPicks);
 function findMe(ask){
   if(!state.geoOk) return;
   state.geo="finding"; renderPicks();
-  navigator.geolocation.getCurrentPosition(pos=>{
+  const ok = pos=>{
     state.me={lat:pos.coords.latitude, lng:pos.coords.longitude};
     state.geo = inJeju(state.me) ? "ok" : "far"; renderPicks();
-  }, ()=>{ state.geo="none"; renderPicks(); }, {enableHighAccuracy:false, timeout:ask?15000:8000, maximumAge:600000});
+  };
+  const fail = ()=>{ state.geo="none"; renderPicks(); };
+  // 먼저 빠르게(기지국·와이파이) 찾고, 못 찾으면 GPS 정밀 모드로 한 번 더 찾는다 (와이파이·기지국 위치가 꺼진 폰도 GPS 로는 잡힌다)
+  navigator.geolocation.getCurrentPosition(ok, err=>{
+    if(err.code===1) return fail();
+    navigator.geolocation.getCurrentPosition(ok, fail, {enableHighAccuracy:true, timeout:20000, maximumAge:0});
+  }, {enableHighAccuracy:false, timeout:ask?10000:8000, maximumAge:600000});
 }
 $("picks").addEventListener("click", e=>{ const b=e.target.closest(".pick"); if(!b) return;
   if(b.id==="askPick") openAsk(b); else openSheet(b.dataset.id, false, null, b); });
