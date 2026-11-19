@@ -1455,6 +1455,15 @@ function stepDate(n){
 }
 $("dayPrev").addEventListener("click", ()=>stepDate(-1));
 $("dayNext").addEventListener("click", ()=>stepDate(1));
+// 맨 위에서 건너뛸 그림 윗부분(px). 폰(좁은 화면)은 15%로 하늘·한라산을 길게 보여 주고,
+// PC(넓은 화면)는 그림이 가로에 맞춰 세로로 아주 길어지므로 분화구가 화면 높이 30% 쯤에 오게 더 건너뛴다.
+// (그래야 PC 첫 화면에 날짜와 그 아래 내용이 함께 보인다. 배경 스크립트와 날짜 위치 계산이 함께 쓴다)
+function heroStart(img){
+  const H=img.offsetHeight, room=Math.max(0,H-innerHeight);
+  if(innerWidth<=600) return Math.min(room, H*.15);
+  const crater = H*({light:.40, dark:.49})[currentTheme()==="dark" ? "dark" : "light"];   // 그림 속 분화구 높이 (CRATER 와 같은 값)
+  return Math.min(room, Math.max(H*.25, crater - innerHeight*.30));
+}
 // 대표 그림: 페이지를 내린 비율만큼 그림을 올려, 맨 위에선 그림 윗부분(하늘·한라산),
 // 맨 아래에선 그림 아랫부분(돌담길)이 보이게 한다. 움직임 줄이기를 켠 사람에게는 그림을 움직이지 않는다.
 (()=>{
@@ -1466,7 +1475,7 @@ $("dayNext").addEventListener("click", ()=>stepDate(1));
     if(still) return;
     // 맨 위에서도 그림 윗부분(넓은 화면 25%, 좁은 화면 15%)은 건너뛴다. 한라산이 제목 위 화면 위쪽 절반에 오게.
     const room=Math.max(0,img.offsetHeight-innerHeight), page=document.documentElement.scrollHeight-innerHeight;
-    const k=page>0 ? Math.min(1,Math.max(0,scrollY/page)) : 0, start=Math.min(room,img.offsetHeight*(innerWidth<=600?.15:.25));
+    const k=page>0 ? Math.min(1,Math.max(0,scrollY/page)) : 0, start=heroStart(img);
     img.style.transform=`translate3d(0,${(-(start+(room-start)*k)).toFixed(1)}px,0)`;
   };
   const ask=()=>{ if(!queued){ queued=true; requestAnimationFrame(paint); } };
@@ -1606,7 +1615,7 @@ function placeDay(){
   const img=document.querySelector("figure.hero img"), H=img.offsetHeight, hero=$("dayHero");
   if(!H) return;
   const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const start = still ? 0 : Math.min(Math.max(0,H-innerHeight), H*(innerWidth<=600?.15:.25));
+  const start = still ? 0 : heroStart(img);
   const y = H*CRATER[currentTheme()==="dark"?"dark":"light"] - start;
   const base = hero.previousElementSibling.getBoundingClientRect().bottom + scrollY + 6;   // 제목 줄 아래 + 간격
   hero.style.setProperty("--day-top", Math.max(12, Math.round(y + 6 - base)) + "px");
