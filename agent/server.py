@@ -4,7 +4,8 @@
     python -m agent.server --port 9000
 
 POST /api/chat   {"messages":[{"role":"user","content":"…"}, …]} → {"reply", "steps", "model"}
-GET  /api/health → {"ok", "agent": 키가 있어 대화가 되는지}
+POST /api/picks  {"cands":[{"id","q","drive","kind"}…], "n", "date", "wet", "near"} → {"ids", "why", "ai", "cached"}
+GET  /api/health → {"ok", "agent": 키가 있어 대화가 되는지, "picks": 오늘 첫 화면 AI 선별 호출·캐시·토큰 수}
 """
 from __future__ import annotations
 
@@ -85,10 +86,27 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/api/health"):
-            return self._json(200, {"ok": True, "agent": bool(env("UPSTAGE_API_KEY"))})
+            from .picks import STATS
+            return self._json(200, {"ok": True, "agent": bool(env("UPSTAGE_API_KEY")), "picks": STATS})
         return super().do_GET()
 
+    def _ip(self):
+        # Caddy 같은 앞단을 거쳐 오면 실제 접속 IP 는 X-Forwarded-For 첫 값이다
+        ip = self.client_address[0]
+        if ip in ("127.0.0.1", "::1") and self.headers.get("X-Forwarded-For"):
+            ip = self.headers["X-Forwarded-For"].split(",")[0].strip()
+        return ip
+
     def do_POST(self):
+        if self.path.startswith("/api/picks"):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                data = json.loads(self.rfile.read(min(n, 20_000)).decode("utf-8") or "{}")
+                from .picks import choose
+                return self._json(200, choose(data, self._ip()))
+            except Exception as e:
+                traceback.print_exc()
+                return self._json(500, {"error": type(e).__name__})
         if not self.path.startswith("/api/chat"):
             return self._json(404, {"error": "없는 주소"})
         try:
@@ -97,11 +115,7 @@ class Handler(SimpleHTTPRequestHandler):
             history = data.get("messages") or []
             if not history or history[-1].get("role") != "user":
                 return self._json(400, {"error": "마지막 메시지는 사용자 질문이어야 해요."})
-            # Caddy 같은 앞단을 거쳐 오면 실제 접속 IP 는 X-Forwarded-For 첫 값이다
-            ip = self.client_address[0]
-            if ip in ("127.0.0.1", "::1") and self.headers.get("X-Forwarded-For"):
-                ip = self.headers["X-Forwarded-For"].split(",")[0].strip()
-            busy = _allow(ip)
+            busy = _allow(self._ip())
             if busy:
                 return self._json(429, {"error": busy})
             from .agent import run

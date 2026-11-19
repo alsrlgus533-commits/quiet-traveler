@@ -48,6 +48,7 @@ python -m agent.server
 | `agent/tools.py` | 도구 함수와 도구 설명(함수 호출 스키마 `TOOLS`) |
 | `agent/core.py` | 한산함 점수·코스·날씨 판단 계산 |
 | `agent/datahub.py` | 제주데이터허브 API 호출과 저장본 (`python -m agent.datahub` 로 갱신) |
+| `agent/picks.py` | 첫 화면 추천: 계산식 후보 12곳 중 AI(solar-mini4)가 5~6곳을 골라 순서·이유 꼬리표를 붙임. 같은 후보는 캐시, 하루·IP 호출 한도, 실패 시 계산식 순서 (1회 약 550토큰) |
 | `agent/server.py` | 화면과 `/api/chat` 을 함께 띄우는 로컬 서버 (표준 라이브러리) |
 | `agent/data/places.json` | 장소 53곳(조용한 곳 16, 유명한 곳 37) — `node tools/export_places.mjs` 로 화면에서 뽑음 |
 | `agent/data/datahub_wifi.json` | 제주데이터허브 와이파이 저장본 (최근 35일, 장소 37곳 AP) |

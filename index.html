@@ -405,6 +405,7 @@ html.sheet-open .tabbar{visibility:hidden}
 .pick-txt{position:absolute;left:10px;right:10px;bottom:8px;z-index:1;display:flex;flex-direction:column;gap:1px}
 .pick-txt b{font-family:var(--f-display);font-size:16px;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .pick-txt small{font-size:12px;opacity:.92;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.pick-txt .nw{white-space:nowrap}
 .pick .score{position:absolute;top:8px;right:8px;z-index:1;padding:4px 7px;border-radius:10px;
   background:color-mix(in srgb,var(--surface) 90%,transparent);font-size:12px;font-weight:700}
 .pick .score .ripple u{width:3px}
@@ -1480,25 +1481,56 @@ function picks(){
   }).sort((a,b)=>b.s-a.s);
   const out=[], per={};
   for(const o of pool){ if((per[o.kind]||0)>=2) continue; per[o.kind]=(per[o.kind]||0)+1; out.push(o); if(out.length===6) break; }
+  // AI 에게 넘길 후보: 점수 순 12곳(테마마다 3곳까지). AI 는 이 안에서만 고른다.
+  const cand=[], pc={};
+  for(const o of pool){ if((pc[o.kind]||0)>=3) continue; pc[o.kind]=(pc[o.kind]||0)+1; cand.push(o); if(cand.length===12) break; }
+  out.cand = cand;
   return out;
+}
+// 첫 화면 AI 선별: 계산식 후보 12곳을 서버(/api/picks)에 보내 AI 가 고른 순서와 이유를 받는다.
+// 같은 후보 묶음이면 브라우저와 서버가 모두 기억해 두어 다시 묻지 않는다. 실패하면 계산식 순서 그대로.
+const aiPick = {memo:{}, wait:null};
+function aiPickKey(cand, n){
+  return [state.date, n, isRainy(state.date)?1:0, ...cand.map(o=>`${o.p.id}:${Math.floor(o.q/5)}:${Math.floor(o.drive/10)}`)].join("|");
+}
+function askAiPicks(cand, n){
+  const key=aiPickKey(cand, n);
+  if(aiPick.memo[key] || aiPick.wait===key) return;
+  aiPick.wait=key;
+  const me = state.me && inJeju(state.me);
+  fetch("/api/picks",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({n, date:state.date, wet:isRainy(state.date), near:!!me,
+      cands:cand.map(o=>({id:o.p.id, q:Math.round(o.q), drive:o.drive, kind:o.kind}))})})
+    .then(r=>r.ok?r.json():null).then(j=>{
+      if(aiPick.wait===key) aiPick.wait=null;
+      if(!j || !j.ai || !Array.isArray(j.ids)) return;
+      aiPick.memo[key]=j;
+      if(aiPickKey((picks().cand||[]), n)===key) renderPicks();   // 그사이 날짜·위치가 바뀌었으면 그리지 않는다
+    }).catch(()=>{ if(aiPick.wait===key) aiPick.wait=null; });
 }
 function renderPicks(){
   if(!state.date){ $("picks").innerHTML=""; return; }
   const me = state.me && inJeju(state.me);
-  const rows = picks().slice(0, state.askOn ? 5 : 6);
+  const n = state.askOn ? 5 : 6, base = picks(), cand = base.cand || [];
+  // AI 가 켜져 있으면 후보 12곳 중에서 AI 가 고른 순서를 쓰고, 아직 답이 없으면 계산식 순서로 먼저 보여 준다
+  const ai = state.askOn && state.geo!=="finding" ? aiPick.memo[aiPickKey(cand, n)] : null;
+  const rows = ai ? ai.ids.map(id=>cand.find(o=>o.p.id===id)).filter(Boolean).slice(0, n) : base.slice(0, n);
+  if(state.askOn && state.geo!=="finding" && !ai && cand.length>n) askAiPicks(cand, n);
   $("picks").innerHTML = rows.map((o,i)=>{
-    const p=o.p, src = p.famous ? famPhoto(p) : `images/places/full/${p.id}.webp`;
-    const sub = me ? `${o.kind} · 차로 ${o.drive}분` : `${o.kind} · ${(p.area||"").split(" ").slice(-1)[0] || PROF_WORD[p.prof]}`;
+    const p=o.p, src = p.famous ? famPhoto(p) : `images/places/full/${p.id}.webp`, why = ai && ai.why ? ai.why[p.id] : "";
+    const where = me ? `차로 ${o.drive}분` : ((p.area||"").split(" ").slice(-1)[0] || PROF_WORD[p.prof]);
+    const sub = why ? `${why} · ${where}` : `${o.kind} · ${where}`;
     return `<button class="pick" type="button" data-id="${p.id}" data-h="${o.h}" style="--i:${i}" aria-label="${p.name}, ${sub}, ${quietWord(o.q)}">
       <img src="${src}" alt="" decoding="async">${scoreBadge(o.q)}
-      <span class="pick-txt"><b>${p.name}</b><small>${sub}</small></span></button>`;
+      <span class="pick-txt"><b>${p.name}</b><small>${why ? `${why} · <span class="nw">${where}</span>` : sub}</small></span></button>`;
   }).join("") + (state.askOn ? `<button class="pick ask-pick" type="button" id="askPick" style="--i:5" aria-label="물어보세요. 어디 갈지 같이 고민해요">
       <img class="day" src="images/ask-haru-day.webp?v=3" alt=""><img class="night" src="images/ask-haru-night.webp?v=3" alt="" loading="lazy"><span class="pick-txt"><b>물어보세요</b><small>어디 갈지 같이 고민해요</small></span></button>` : "");
   const today = isTodayYmd(state.date);
-  const note = state.geo==="finding" ? "내 위치를 찾는 중이에요…"
+  const base_note = state.geo==="finding" ? "내 위치를 찾는 중이에요…"
     : me ? (today ? "지금 내 둘레에서 한산한 곳" : "이날 내 둘레에서 한산한 곳")
     : state.geo==="far" ? "제주 밖이라 한산한 순서로 골랐어요"
     : (today ? "지금 제주에서 한산한 곳" : "이날 제주에서 한산한 곳");
+  const note = ai ? `AI가 고른 ${base_note}` : base_note;
   const retry = !me && state.geoOk && state.geo!=="finding" && state.geo!=="far" ? ` <button type="button" id="geoBtn">내 위치로 보기</button>` : "";
   $("pickNote").innerHTML = note + retry;
   if($("geoBtn")) $("geoBtn").onclick = ()=>findMe(true);

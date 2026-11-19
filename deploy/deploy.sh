@@ -21,7 +21,7 @@ rm -rf "$tmp"
 
 if ! "${SSH[@]}" 'test -f /opt/quiet-traveler/.env'; then
   echo "== .env 처음 올리기 (질문 수 제한 추가)"
-  { tr -d '\r' < .env; printf '\nCHAT_LIMIT_PER_IP_HOUR=20\nCHAT_LIMIT_PER_DAY=300\n'; } \
+  { tr -d '\r' < .env; printf '\nCHAT_LIMIT_PER_IP_HOUR=20\nCHAT_LIMIT_PER_DAY=300\nPICKS_LIMIT_PER_IP_HOUR=40\nPICKS_LIMIT_PER_DAY=500\n'; } \
     | "${SSH[@]}" 'umask 077 && cat > /opt/quiet-traveler/.env'
 fi
 
