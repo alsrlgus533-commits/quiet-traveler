@@ -57,6 +57,17 @@ class Handler(SimpleHTTPRequestHandler):
             return None
         return super().send_head()
 
+    def end_headers(self):
+        # 화면(HTML)과 예측 파일은 브라우저가 예전 것을 쓰지 않게 매번 서버에 확인하고(no-cache),
+        # 바뀔 일이 드문 그림·글꼴은 하루 동안 저장해 두게 한다. (이 표시가 없으면 폰 브라우저가 몇 시간씩 옛 화면을 보여 줌)
+        path = self.path.split("?")[0]
+        if not path.startswith("/api/"):
+            if path == "/" or path.endswith((".html", ".json")):
+                self.send_header("Cache-Control", "no-cache")
+            elif path.endswith((".webp", ".png", ".jpg", ".jpeg", ".svg", ".woff2", ".ico")):
+                self.send_header("Cache-Control", "public, max-age=86400")
+        super().end_headers()
+
     def _json(self, code, obj):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
