@@ -473,6 +473,9 @@ html.sheet-open .tabbar{visibility:hidden}
 .start-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .start-chips .ochip{font-size:14px;padding:8px 14px}
 .linkish{border:0;background:none;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+.clear-row{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.clear-row .linkish{color:var(--muted)}
+.clear-row .danger{padding:6px 12px;border-radius:99px;border:0;background:var(--busy);color:#fff;font-weight:600;cursor:pointer}
 .fill-btn{width:100%;padding:12px;border-radius:14px;border:1px dashed var(--accent);background:none;color:var(--accent);font-weight:600;cursor:pointer}
 /* 여섯째 판: 물어보세요 (AI 가 켜져 있을 때만). 배경과 같은 손그림 풍의 돌하르방. 밝게/어둡게에 따라 낮·밤 그림 */
 .pick.ask-pick img{object-position:50% 22%}
@@ -1568,9 +1571,12 @@ function renderPicks(){
   const base_note = state.geo==="finding" ? "내 위치를 찾는 중이에요…"
     : me ? (today ? "지금 내 근처 한산한 곳" : "이날 내 근처 한산한 곳")
     : state.geo==="far" ? "제주 밖이라 한산한 순서로 골랐어요"
-    : (today ? "지금 제주에서 한산한 곳" : "이날 제주에서 한산한 곳") + (state.geo==="none" && state.geoErr ? (state.geoErr===1 ? " · 위치 권한이 꺼져 있어요" : " · 위치를 못 찾았어요") : "");
-  const note = ai ? `AI가 고른 ${base_note}` : base_note;
-  const retry = !me && state.geoOk && state.geo!=="finding" && state.geo!=="far" ? ` <button type="button" id="geoBtn">내 위치로 보기</button>` : "";
+    : (today ? "지금 제주에서 한산한 곳" : "이날 제주에서 한산한 곳");
+  // 'AI가 고른'은 거부감이 있을 수 있어 앱 이름과 이어지는 말로. '~곳'으로 끝나는 안내에만 붙인다(위치 찾는 중·제주 밖 안내는 그대로)
+  const note = /^(지금|이날)/.test(base_note) ? `조용한 여행을 위한 ${base_note}` : base_note;
+  // 위치를 못 받은 까닭은 문장 대신 버튼 글자로 (안내 줄이 길어져 첫 화면이 넘치지 않게)
+  const geoWord = state.geo==="none" && state.geoErr ? (state.geoErr===1 ? "위치 켜고 보기" : "내 위치 다시 찾기") : "내 위치로 보기";
+  const retry = !me && state.geoOk && state.geo!=="finding" && state.geo!=="far" ? ` <button type="button" id="geoBtn">📍 ${geoWord}</button>` : "";
   $("pickNote").innerHTML = note + retry;
   if($("geoBtn")) $("geoBtn").onclick = ()=>findMe(true);
   fitPicks();
@@ -1579,9 +1585,10 @@ function renderPicks(){
 function fitPicks(){
   const g=$("picks"); if(!g.firstChild) return;
   const top=g.getBoundingClientRect().top+scrollY, w=g.clientWidth;
-  const bar=$("tabbar"), bh = bar && bar.offsetParent ? bar.offsetHeight + 14 : 0;   // 아래 메뉴 바 높이만큼 비움
+  // 아래 메뉴 바 높이만큼 비움 (고정 요소라 offsetParent 가 늘 null 이어서 표시 여부는 계산된 스타일로 본다)
+  const bar=$("tabbar"), bh = bar && getComputedStyle(bar).display!=="none" ? bar.offsetHeight + 14 : 0;
   const avail=innerHeight - top - 12 - 20 - bh;          // 아래 여백
-  const row=Math.max(120, Math.min((w-10)/2*1.05, (avail-20)/3));
+  const row=Math.max(96, Math.min((w-10)/2*1.05, (avail-20)/3));   // 96px 아래로는 줄이지 않고 스크롤을 허락
   g.style.setProperty("--row", Math.floor(row)+"px");
 }
 addEventListener("resize", fitPicks);
@@ -1628,12 +1635,21 @@ function openSaved(opener){
         return `<div style="position:relative"><button class="pick" type="button" data-open="${p.id}" style="width:100%;height:100%" aria-label="${p.name}, ${quietWord(q)}">
           <img src="${photoOf(p)}" alt="">${scoreBadge(q)}<span class="pick-txt"><b>${p.name}</b><small>${kindOfP(p)}</small></span></button>
           <button class="unsave" type="button" data-un="${p.id}" aria-label="${p.name} 저장 빼기">♥</button></div>`; }).join("")}</div>
+       <div class="clear-row" id="clearRow"><button type="button" class="linkish" id="clearAll">저장한 곳 모두 지우기</button></div>
        <div class="go one"><a href="#" id="toCourse"><img src="images/picto/car.webp?v=3" alt=""><span><b>이 곳들로 내 코스 보기</b><small>한산한 시간·이동 시간으로 순서를 정해요</small></span></a></div>`
     : `<p class="empty">아직 저장한 곳이 없어요.<br>사진을 눌러 들어간 뒤 <b>♡ 저장</b>을 누르면 여기에 모여요.</p>`;
   shell("__saved", `${ps.length}곳`, "저장한 곳", body, opener);
   $("sheet").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openSheet(b.dataset.open, false, null, b));
   $("sheet").querySelectorAll("[data-un]").forEach(b=>b.onclick=()=>{ state.saved.delete(b.dataset.un); storeSaved(); updateBar(); openSaved(); });
   if($("toCourse")) $("toCourse").onclick=e=>{ e.preventDefault(); openCourse(); };
+  // 모두 지우기: 실수로 다 사라지지 않게 한 번 더 묻는다
+  if($("clearAll")) $("clearAll").onclick=()=>{
+    $("clearRow").innerHTML = `<span>저장한 ${ps.length}곳을 <b>모두 지울까요?</b></span>
+      <button type="button" class="danger" id="clearYes">모두 지우기</button><button type="button" class="icon-btn" id="clearNo">취소</button>`;
+    $("clearNo").onclick=()=>openSaved();
+    $("clearYes").onclick=()=>{ state.saved.clear(); storeSaved(); updateBar(); openSaved(); };
+    $("clearNo").focus();
+  };
 }
 // 코스 출발 시각: 오늘이면 지금(30분 단위로 올림), 다른 날은 9시
 // 출발 시각: 오늘이면 지금(30분 단위로 올림). 다른 날은 사용자가 고른 시각(state.startAt), 안 골랐으면 null → 먼저 묻는다.
