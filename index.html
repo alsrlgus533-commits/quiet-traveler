@@ -341,7 +341,9 @@ html.sheet-open .tabbar{visibility:hidden}
 .map-ctl button[aria-pressed="true"]{color:#2f7cf6}
 .map-ctl button:disabled{opacity:.4;cursor:default}
 .map-ctl button[hidden]{display:none}
-.map-msg{margin:0;font-size:12px;color:var(--muted)} .map-msg:empty{display:none}
+.map-msg{margin:0;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line)} .map-msg:empty{display:none}
+.map-msg.warn{border-color:color-mix(in srgb,var(--busy) 45%,transparent);background:color-mix(in srgb,var(--busy) 10%,var(--surface))}
 #map .land{fill:var(--surface);stroke:var(--line);stroke-width:2}
 #map .peak{fill:var(--muted)}
 #map .peak-t{font:600 22px var(--f-body);fill:var(--muted)}
@@ -452,8 +454,8 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
         <button type="button" id="mapOut" aria-label="작게 보기">−</button>
       </div>
     </div>
-    <div class="map-strip" id="mapStrip" role="group" aria-label="한산한 순서로 본 장소"></div>
     <p class="map-msg" id="mapMsg" role="status"></p>
+    <div class="map-strip" id="mapStrip" role="group" aria-label="한산한 순서로 본 장소"></div>
     <p class="map-key"><span class="dot calm"></span>한산해요 <span class="dot mid"></span>적당해요 <span class="dot busy"></span>붐벼요 · 큰 점 조용한 곳</p>
     <div class="map-info" id="mapInfo"></div>
   </section>
@@ -1267,34 +1269,45 @@ function kmBetween(a,b){
 }
 // 위치를 못 쓰는 브라우저 구분: 카카오톡·네이버·인스타그램 등 앱 안 브라우저는 위치를 막아 두는 경우가 많다
 function inAppBrowser(){ return /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent); }
+function isSamsung(){ return /SamsungBrowser/i.test(navigator.userAgent); }
 function isIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1); }
 function geoFailText(err){
   if(err.code===1){                       // 권한 거부
     if(inAppBrowser()) return "앱 안 브라우저(카카오톡 등)에서는 위치를 쓸 수 없어요. 오른쪽 위 메뉴에서 '다른 브라우저로 열기'를 눌러 크롬·사파리로 열어 주세요.";
+    if(isSamsung()) return "삼성 인터넷에서 이 사이트의 위치가 막혀 있어요(오류 1). 주소창 왼쪽 자물쇠 > 권한에서 위치를 허용하거나, ⋮(메뉴) > 설정 > 사이트 및 다운로드 > 사이트 권한 > 위치에서 이 주소를 지운 뒤 다시 눌러 주세요.";
     return isIOS()
-      ? "위치 권한이 꺼져 있어요. 아이폰 설정 > 개인정보 보호 및 보안 > 위치 서비스에서 켜고, 아래 Safari 웹사이트(또는 Chrome)를 '앱을 사용하는 동안'으로 바꾼 뒤 다시 눌러 주세요."
-      : "위치 권한이 꺼져 있어요. 주소창 왼쪽 자물쇠(또는 ⋮ > 설정 > 사이트 설정 > 위치)에서 이 사이트를 허용한 뒤 다시 눌러 주세요.";
+      ? "위치 권한이 꺼져 있어요. 아이폰 설정 > 개인정보 보호 및 보안 > 위치 서비스에서 켜고, 아래 Safari 웹사이트(또는 Chrome)를 '앱을 사용하는 동안'으로 바꾼 뒤 다시 눌러 주세요. (오류 1)"
+      : "위치 권한이 꺼져 있어요. 주소창 왼쪽 자물쇠(또는 ⋮ > 설정 > 사이트 설정 > 위치)에서 이 사이트를 허용한 뒤 다시 눌러 주세요. (오류 1)";
   }
-  return "위치를 잡지 못했어요. 휴대폰의 위치(GPS)가 켜져 있는지 확인하고, 창가나 밖에서 다시 눌러 주세요.";
+  return `위치를 잡지 못했어요. 휴대폰 위에서 내려 '위치'가 켜져 있는지 확인하고, 창가나 밖에서 다시 눌러 주세요. (오류 ${err.code}${err.code===3?" 시간 초과":" 위치 없음"})`;
 }
 // 내 위치는 이 기기 안에서만 쓰고 어디에도 보내지 않는다. 제주 안이면 그 둘레를 크게 보여 준다.
 // 먼저 빠르게(기지국·와이파이, 5분 안의 위치 재사용) 찾고, 못 찾으면 GPS 정밀 모드로 20초 동안 한 번 더 찾는다.
 function locateMe(){
   const msg=$("mapMsg");
-  if(!navigator.geolocation){ msg.textContent="이 브라우저는 위치를 알려 주지 않아요."; return; }
-  msg.textContent="내 위치를 찾는 중이에요…";
+  const say=(t, warn)=>{ msg.textContent=t; msg.classList.toggle("warn", !!warn);
+    const r=msg.getBoundingClientRect(); if(r.bottom > innerHeight-90 || r.top < 0) msg.scrollIntoView({block:"center", behavior:"smooth"}); };
+  if(!navigator.geolocation){ say("이 브라우저는 위치를 알려 주지 않아요.", true); return; }
+  say("내 위치를 찾는 중이에요…");
+  if(navigator.permissions && navigator.permissions.query){
+    navigator.permissions.query({name:"geolocation"}).then(p=>{ if(p.state==="denied") say(geoFailText({code:1}), true); }).catch(()=>{});
+  }
   const ok = pos=>{
     state.me={lat:pos.coords.latitude, lng:pos.coords.longitude};
     if(inJeju(state.me)){
       const [x,y]=mapXY(state.me);
-      msg.textContent="내 위치 둘레를 크게 보여 줘요. 지도를 끌어 옮길 수 있어요.";
       mapZoom(3, x, y);
-    } else { msg.textContent="지금 제주 밖이라 제주 전체를 보여 줘요. +를 눌러 크게 볼 수 있어요."; mapZoom(1); }
+      say("내 위치 둘레를 크게 보여 줘요. 지도를 끌어 옮길 수 있어요.");
+    } else {
+      const far = Math.round(kmBetween(state.me, {lat:33.38, lng:126.55}));   // 제주 한가운데(한라산)까지
+      mapZoom(1);
+      say(`위치는 찾았어요. 다만 지금 계신 곳이 제주에서 약 ${far.toLocaleString()}km 떨어져 있어 지도에 표시할 수 없어요. 제주에 도착해서 누르면 내 위치 둘레를 크게 보여 줘요.`, true);
+    }
   };
   navigator.geolocation.getCurrentPosition(ok, err=>{
-    if(err.code===1){ msg.textContent=geoFailText(err); return; }
-    msg.textContent="조금 더 정확하게 찾는 중이에요… (최대 20초)";
-    navigator.geolocation.getCurrentPosition(ok, e2=>{ msg.textContent=geoFailText(e2); },
+    if(err.code===1){ say(geoFailText(err), true); return; }
+    say("조금 더 정확하게 찾는 중이에요… (최대 20초)");
+    navigator.geolocation.getCurrentPosition(ok, e2=>{ say(geoFailText(e2), true); },
       {enableHighAccuracy:true, timeout:20000, maximumAge:0});
   }, {enableHighAccuracy:false, timeout:8000, maximumAge:300000});
 }
