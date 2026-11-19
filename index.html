@@ -164,11 +164,12 @@ figure.hero canvas.wx-fx{position:absolute;inset:0;width:100%;height:100%;displa
 /* 첫 화면: 제목은 맨 위 하늘에 카드 없이 바로 얹고, 그 아래로 한라산이 보이게 비워 둔 뒤
    날짜 카드가 화면 절반쯤(46vh)에서 시작한다. 글자 둘레에 배경색 그림자를 둘러 그림 위에서도 읽히게 한다
    (밝게·어둡게 바꾸면 글자색과 그림자도 함께 바뀜). */
-header{margin:0 -8px;padding:4px 8px 0;min-height:calc(46vh - 46px)}
+header{margin:0 -8px;padding:4px 8px 0}   /* 높이는 날짜 칸 위치(placeDay)가 정한다 */
 header h1,header p,header .eyebrow{text-shadow:0 0 16px var(--bg),0 0 6px var(--bg),0 0 2px var(--bg)}
+/* 카드는 반투명하게 두어 배경 그림이 비쳐 보이게 하고, 뒤를 흐리게 해서 글자는 읽히게 한다 */
 .wrap > section,.wrap > .today{border-radius:18px;margin-inline:-8px;padding:16px;
-  background:color-mix(in srgb,var(--bg) 82%,transparent);
-  -webkit-backdrop-filter:blur(12px) saturate(1.1);backdrop-filter:blur(12px) saturate(1.1)}
+  background:color-mix(in srgb,var(--bg) 58%,transparent);
+  -webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2)}
 .wrap > .today{background:color-mix(in srgb,var(--accent-soft) 88%,transparent)}
 figure.band img{aspect-ratio:5/2}
 
@@ -1455,14 +1456,13 @@ function stepDate(n){
 }
 $("dayPrev").addEventListener("click", ()=>stepDate(-1));
 $("dayNext").addEventListener("click", ()=>stepDate(1));
-// 맨 위에서 건너뛸 그림 윗부분(px). 폰(좁은 화면)은 15%로 하늘·한라산을 길게 보여 주고,
-// PC(넓은 화면)는 그림이 가로에 맞춰 세로로 아주 길어지므로 분화구가 화면 높이 30% 쯤에 오게 더 건너뛴다.
-// (그래야 PC 첫 화면에 날짜와 그 아래 내용이 함께 보인다. 배경 스크립트와 날짜 위치 계산이 함께 쓴다)
+// 맨 위에서 건너뛸 그림 윗부분(px). 그림 속 분화구가 폰은 화면 높이 18%(제목 바로 아래), PC 는 30% 쯤에 오게 한다.
+// 날짜 칸이 분화구 바로 아래에 붙으므로, 이렇게 해야 첫 화면에 날짜와 그 아래 내용이 함께 보인다.
+// (배경 스크립트와 날짜 위치 계산(placeDay)이 함께 쓴다)
 function heroStart(img){
-  const H=img.offsetHeight, room=Math.max(0,H-innerHeight);
-  if(innerWidth<=600) return Math.min(room, H*.15);
+  const H=img.offsetHeight, room=Math.max(0,H-innerHeight), phone=innerWidth<=600;
   const crater = H*({light:.40, dark:.49})[currentTheme()==="dark" ? "dark" : "light"];   // 그림 속 분화구 높이 (CRATER 와 같은 값)
-  return Math.min(room, Math.max(H*.25, crater - innerHeight*.30));
+  return Math.min(room, Math.max(H*(phone?.15:.25), crater - innerHeight*(phone?.18:.30)));
 }
 // 대표 그림: 페이지를 내린 비율만큼 그림을 올려, 맨 위에선 그림 윗부분(하늘·한라산),
 // 맨 아래에선 그림 아랫부분(돌담길)이 보이게 한다. 움직임 줄이기를 켠 사람에게는 그림을 움직이지 않는다.
@@ -1618,7 +1618,9 @@ function placeDay(){
   const start = still ? 0 : heroStart(img);
   const y = H*CRATER[currentTheme()==="dark"?"dark":"light"] - start;
   const base = hero.previousElementSibling.getBoundingClientRect().bottom + scrollY + 6;   // 제목 줄 아래 + 간격
-  hero.style.setProperty("--day-top", Math.max(12, Math.round(y + 6 - base)) + "px");
+  // 폰에서는 그림 위치와 상관없이 날짜가 제목 아래 56px 안에 오게 한다 (밤 그림은 한라산이 아래쪽이라 따라가면 너무 내려감)
+  const gap = innerWidth<=600 ? Math.min(56, Math.round(y + 6 - base)) : Math.round(y + 6 - base);
+  hero.style.setProperty("--day-top", Math.max(12, gap) + "px");
 }
 document.querySelector("figure.hero img").addEventListener("load", placeDay);
 addEventListener("resize", placeDay);
