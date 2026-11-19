@@ -10,6 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import math
+import re
 import os
 import urllib.parse
 from functools import lru_cache
@@ -216,16 +217,25 @@ def norm_date(s: str | None, store: Store) -> str:
     if not s:
         return store.dates[0] if store.dates else today.strftime("%Y%m%d")
     s = s.strip()
-    if s in ("오늘", "today"):
-        return today.strftime("%Y%m%d")
-    if s in ("내일", "tomorrow"):
-        return (today + dt.timedelta(days=1)).strftime("%Y%m%d")
-    if s in ("모레",):
-        return (today + dt.timedelta(days=2)).strftime("%Y%m%d")
-    for i, w in enumerate("월화수목금토일"):
-        if s.startswith(w) and ("요일" in s or len(s) == 1):
-            ahead = (i - today.weekday()) % 7
-            return (today + dt.timedelta(days=ahead)).strftime("%Y%m%d")
+    t = s.replace(" ", "")
+    ymd = lambda d: d.strftime("%Y%m%d")
+    rel = {"오늘": 0, "today": 0, "지금": 0, "내일": 1, "tomorrow": 1, "모레": 2, "내일모레": 2, "글피": 3}
+    if t in rel:
+        return ymd(today + dt.timedelta(days=rel[t]))
+    # '주말'·'이번 주말' → 다가오는 토요일, '다음 주말' → 다음 주 토요일
+    if t in ("주말", "이번주말"):
+        return ymd(today + dt.timedelta(days=(5 - today.weekday()) % 7))
+    if t == "다음주말":
+        return ymd(today - dt.timedelta(days=today.weekday()) + dt.timedelta(days=12))
+    # '토요일'·'이번 토요일'·'이번 주 토요일'(다가오는 그 요일), '다음 주 토요일'(다음 주 월~일 중 그 요일)
+    m = re.fullmatch(r"(이번주?|다음주|담주)?([월화수목금토일])(요일)?", t)
+    if m:
+        i = "월화수목금토일".index(m.group(2))
+        if m.group(1) in ("다음주", "담주"):
+            return ymd(today - dt.timedelta(days=today.weekday()) + dt.timedelta(days=7 + i))
+        if m.group(1) == "이번주":
+            return ymd(today - dt.timedelta(days=today.weekday()) + dt.timedelta(days=i))
+        return ymd(today + dt.timedelta(days=(i - today.weekday()) % 7))
     digits = "".join(c if c.isdigit() else " " for c in s).split()
     if len(digits) == 1 and len(digits[0]) == 8:
         return digits[0]

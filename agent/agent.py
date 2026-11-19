@@ -30,21 +30,26 @@ SYSTEM = """당신은 '조용한 여행자'라는 제주 여행·관광 분석 �
 - 장소·시간·날씨·순위·비율 같은 숫자와 사실은 반드시 도구 결과에서만 가져온다. 도구에 없는 숫자나 장소를 지어내지 않는다.
 - 질문에 맞는 도구를 먼저 부른다. 필요하면 여러 도구를 차례로 부른다 (예: 날씨를 본 뒤 장소 찾기).
 - 코스·일정을 짜 달라면 반드시 plan_course 를, 장소 추천이면 find_quiet_places 를 부르고, 그 결과에 나온 장소만 말한다. 도구 결과에 없는 장소 이름을 꺼내지 않는다.
-- 날짜가 없으면 오늘 기준으로 본다. '이번 주말'은 다가오는 토·일요일이다.
+- '평소보다 붐빌/한산할 관광지', '붐빌 관광지 순위'처럼 '평소보다'·'순위'가 나오면 rank_spots 를 부른다 (기간 말은 date_from 에 그대로). 그냥 '한산한 곳'은 find_quiet_places 다.
+- 날짜가 없으면 오늘 기준으로 본다. '이번 주말'은 다가오는 토·일요일이다. '지금'은 아래에 적힌 현재 시각(정시)을 hour 로 쓴다.
+- '○○ 근처', '○○ 쪽', '동쪽·서쪽·남쪽·북쪽' 처럼 위치가 나오면 find_quiet_places 의 near 에 넣는다. 이어지는 질문의 '거기·그 근처'는 앞 답에서 말한 장소를 near 에 넣는다.
+- 앞 대화에 나온 정보로 답하더라도, 새로 장소·한산함·주차를 말하려면 도구를 다시 부른다.
 - 비 예보가 있는 날은 오름을 권하지 않고 숲길·마을을 먼저 권한다.
 - 답은 한국어로, 쉬운 말로 짧게. 먼저 결론 한두 문장, 그다음 장소·코스를 목록으로. 화면이 표(|)·제목(#)·구분선(---)을 못 그리므로 굵은 글씨와 '-' 목록만 쓴다.
 - 장소마다 한산함(한산해요/적당해요/붐벼요), 가장 여유로운 시간, 주차 예상을 붙인다.
 - 길안내는 도구 결과의 directions·course_route 값(예: {{길안내:삼다수숲길}}, {{코스경로1}})을 중괄호까지 그대로 적는다. 그 자리에 카카오맵·네이버 지도 길안내 링크가 들어간다. 인터넷 주소(URL)는 직접 쓰지 않는다.
 - '근거:' 줄이나 데이터 출처 목록을 답에 따로 쓰지 않는다. 화면이 답 아래에 조회한 데이터를 보여 준다. 다만 와이파이·유동인구처럼 지난 기록을 쓸 때는 기간을 문장 안에서 짧게 밝힌다.
-- 도구 이름(find_quiet_places, plan_course 같은 영어 이름)이나 계산 방식 설명을 답에 쓰지 않는다.
+- 도구 이름(find_quiet_places, plan_course 같은 영어 이름), '도구'라는 말, 도구를 부르거나 다시 답하는 과정, 계산 방식 설명을 답에 쓰지 않는다. 사용자에게는 결과만 말한다.
 - 한산함과 주차는 실시간 측정이 아니라 예측·패턴으로 만든 추정이다. 사용자가 실시간인지 물으면 그렇게 답한다.
 - 앞으로의 날짜는 관광공사 예측(find_quiet_places·place_forecast·rank_spots)으로, '요즘 실제로 어땠는지'는 와이파이 접속자(wifi_visitors)로, 지역·요일 패턴은 유동인구(area_visitors)로 답한다. 둘 이상을 함께 쓰면 근거가 더 탄탄하다.
 - 와이파이·유동인구는 지난 기록이다. 기간(예: 10/12~11/15)을 밝히고, 미래 예측처럼 말하지 않는다. 와이파이 접속자는 방문객의 일부라 장소끼리 숫자를 견주지 않는다.
 - 관광공사 집중률은 장소마다 '자기 평소 대비' 값이라, 장소끼리 방문객 수를 비교하는 말로 쓰지 않는다.
-- 제주 여행·관광 데이터와 상관없는 질문에는 할 수 있는 일을 짧게 안내한다."""
+- 인사·감사('고마워', '안녕')에는 도구 없이 한두 문장으로만 답한다. 할 수 있는 일을 목록으로 늘어놓지 않는다.
+- 제주 여행·관광 데이터와 상관없는 질문에는 할 수 있는 일을 한두 문장으로 짧게 안내한다."""
 
 
-_TOKEN = re.compile(r"\{\{([^{}]{1,40})\}\}")
+# {{길안내:이름}} · {{코스경로1}} — AI 가 괄호를 하나만 써도({길안내:이름}) 알아본다
+_TOKEN = re.compile(r"\{\{?((?:길안내:|코스경로)[^{}]{0,40})\}?\}")
 
 
 def _linkify(obj, links):
@@ -86,24 +91,40 @@ TOOL_WORD = {
 }
 # 찾는 동작을 '앞으로 하겠다'고만 한 말 (찾아보겠습니다·찾을게요·고를게·코스를 짤게요 …).
 # '도와드릴게요'·'안내할게요' 같은 인사말은 걸리지 않게, 찾는 동작 낱말 바로 뒤의 말끝만 본다.
-_PROMISE = re.compile(r"(찾|알아보|알아볼|확인해 ?보|확인해 ?볼|조회|살펴보|살펴볼|골라 ?보|고르|고를|짜 ?보|짜 ?볼|짤)[^\s.,!?]{0,4}?(겠습니다|겠어요|게요|게)(?=[\s.!,]|$)")
+_PROMISE = re.compile(r"(찾|불러 ?보|불러 ?볼|부르|부를|알아보|알아볼|확인해 ?보|확인해 ?볼|조회|살펴보|살펴볼|골라 ?보|고르|고를|짜 ?보|짜 ?볼|짤)[^\s.,!?]{0,4}?(겠습니다|겠어요|게요|게)(?=[\s.!,]|$)")
+# 제주 여행·혼잡에 대한 질문인지 (그렇다면 첫 차례부터 도구를 부르게 한다). '추천'은 '서울 맛집 추천'처럼 범위 밖에도 쓰여 뺐다.
+_TRAVEL = re.compile(r"(한산|붐비|붐벼|붐빌|붐빔|덜 ?붐|조용|여유|코스|일정|날씨|비 ?와|비 ?오|관광지|명소|오름|숲길|바다|해변|해수욕장|마을|폭포"
+                     r"|요일|몇 ?시|주차|와이파이|유동|카드|순위|근처|주변|쪽에서|가볼|가 ?볼|갈 ?만|어디|제주)")
+# 도구를 하나도 안 불렀는데 한산함·주차를 말하면 지어낸 것이다
+_CROWD = re.compile(r"(한산해요|적당해요|붐벼요|한산함|주차\s*(?:예상|여유|보통|혼잡))")
 _BASIS = re.compile(r"^\s*(?:[-*•]\s*)?(?:\*\*)?\s*근거\s*(?:\*\*)?\s*[:：].*$", re.M)
 
 
 def _finish(text, links, steps):
-    """표시를 실제 링크로 채우고, '근거:' 줄은 뺀다 (출처는 화면이 답 아래 '조회한 데이터'로 따로 보여 줌)."""
+    """표시를 실제 링크로 채우고, '근거:' 줄은 뺀다 (출처는 화면이 답 아래 '조회한 데이터'로 따로 보여 줌).
+    AI 가 길안내를 하나도 안 붙였으면, 답에 나온 장소(최대 5곳)의 길안내를 맨 아래에 붙인다."""
     text = _fill(text, links)
+    if "](http" not in text:
+        names = [t.split(":", 1)[1] for t in links if t.startswith("길안내:")]
+        hit = [n for n in names if n in text][:5]
+        if hit:
+            text += "\n\n**길안내**\n" + "\n".join(f"- {n}: {links['길안내:' + n]}" for n in hit)
     text = _BASIS.sub("", text)
     for k, v in TOOL_WORD.items():
         text = text.replace(f"`{k}`", v).replace(k, v)
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
+def _now():
+    """한국 시간 (VM 시계가 UTC 여도 '오늘'·'지금'이 틀리지 않게)."""
+    return dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+
+
 def _context():
     s = store()
-    today = dt.date.today()
+    now = _now()
     rng = f"{fmt_date(s.dates[0])} ~ {fmt_date(s.dates[-1])}" if s.dates else "없음"
-    return (f"오늘은 {today.isoformat()} ({'월화수목금토일'[today.weekday()]}요일)이다. "
+    return (f"오늘은 {now.date().isoformat()} ({'월화수목금토일'[now.weekday()]}요일), 지금은 한국 시간 {now.hour}시 {now.minute:02d}분이다. "
             f"관광지 예측이 있는 기간: {rng}. 날씨 예보는 앞의 14일 정도만 있다.")
 
 
@@ -111,7 +132,17 @@ def client():
     key = env("UPSTAGE_API_KEY")
     if not key:
         raise RuntimeError("UPSTAGE_API_KEY 가 없어요. .env 파일에 'UPSTAGE_API_KEY=발급받은키' 를 넣어 주세요.")
-    return OpenAI(api_key=key, base_url=env("UPSTAGE_BASE_URL", "https://api.upstage.ai/v1"))
+    return OpenAI(api_key=key, base_url=env("UPSTAGE_BASE_URL", "https://api.upstage.ai/v1"), timeout=60, max_retries=2)
+
+
+def _named_place(question):
+    """질문에 앱 장소 이름(띄어쓰기 무시)이 있으면 그 이름."""
+    q = question.replace(" ", "")
+    s = store()
+    for p in sorted(s.places + s.famous, key=lambda x: -len(x["name"])):
+        if p["name"].replace(" ", "") in q:
+            return p["name"]
+    return None
 
 
 def _ungrounded(text, seen, question):
@@ -135,22 +166,37 @@ def run(history: list[dict]) -> dict:
     c = client()
     model = env("UPSTAGE_MODEL", "solar-pro4")
     messages = [{"role": "system", "content": SYSTEM + "\n\n" + _context()}]
-    messages += [{"role": m["role"], "content": str(m["content"])} for m in history[-12:]
-                 if m.get("role") in ("user", "assistant") and m.get("content")]
-    steps, links, nudged, grounded = [], {}, False, False
+    link = re.compile(r"\[([^\]]+)\]\(https?://[^)]+\)")
+    messages += [{"role": m["role"], "content": link.sub(lambda g: g.group(1), str(m["content"])) if m["role"] == "assistant" else str(m["content"])}
+                 for m in history[-12:] if m.get("role") in ("user", "assistant") and m.get("content")]
     question = str(history[-1].get("content", ""))
+    # 여행·혼잡 질문이면 첫 차례부터 도구를 꼭 부르게 한다 (인사·범위 밖 질문은 그대로 말로 답함)
+    steps, links, nudged, grounded = [], {}, False, False
+    if re.search(r"(요즘|최근|실제로)", question) and re.search(r"(붐|한산|사람)", question):
+        force = {"type": "function", "function": {"name": "wifi_visitors"}}  # '요즘 실제로 붐벼?' 는 지난 와이파이 기록
+    elif _named_place(question) and not re.search(r"(근처|주변|대신|말고|쪽|코스|일정)", question):
+        force = {"type": "function", "function": {"name": "place_forecast"}}  # '사려니숲길 주말에 붐벼?' 처럼 한 장소를 물음
+    elif re.search(r"(평소보다.{0,15}(관광지|곳|명소|데)|순위)", question):
+        force = {"type": "function", "function": {"name": "rank_spots"}}   # '평소보다 ~한 관광지' · '순위' 는 평소 대비 순위
+    else:
+        force = bool(_TRAVEL.search(question))
     seen = ""                                   # 지금까지 받은 도구 결과 글자 (답 검사용)
     for _ in range(MAX_ROUNDS):
-        resp = c.chat.completions.create(model=model, messages=messages, tools=tools.TOOLS, tool_choice="auto")
+        # 검사 장치가 다시 시킨 차례에는 말로 미루지 못하게 도구 호출을 강제한다
+        resp = c.chat.completions.create(model=model, messages=messages, tools=tools.TOOLS,
+                                         tool_choice=force if isinstance(force, dict) else ("required" if force else "auto"))
+        force = False
         msg = resp.choices[0].message
         calls = msg.tool_calls or []
         if not calls:
             text = msg.content or ""
             # 1) "찾아보겠습니다"처럼 하겠다는 말만 하고 도구를 안 부른 채 끝내면, 한 번 더 실제로 하게 시킨다
-            if not steps and len(text) < 400 and _PROMISE.search(text) and not nudged:
+            # (날씨만 보고 "찾아볼게요"로 멈춘 경우도 포함)
+            if not nudged and ((len(text) < 600 and _PROMISE.search(text)) or (not steps and _CROWD.search(text))):
                 nudged = True
                 messages.append({"role": "assistant", "content": text})
-                messages.append({"role": "user", "content": "말씀하신 대로 지금 도구를 불러 그 결과로 답해 주세요."})
+                messages.append({"role": "user", "content": "(안내: 방금 답은 사용자에게 보내지 않았어요. 이 과정은 말하지 말고, 도구를 불러 그 결과로 처음부터 답해 주세요.)"})
+                force = True
                 continue
             # 2) 답 검사: 도구 결과에 없는 장소를 추천했으면 내보내지 않고, 도구로 찾은 뒤 다시 답하게 한다
             bad = _ungrounded(text, seen, question)
@@ -158,9 +204,14 @@ def run(history: list[dict]) -> dict:
                 grounded = True
                 messages.append({"role": "assistant", "content": text})
                 messages.append({"role": "user", "content":
-                    f"답에 도구 결과에 없는 장소({', '.join(bad[:6])})가 있어요. 장소를 추천하려면 find_quiet_places 같은 도구를 "
-                    "먼저 부르고, 그 결과에 나온 장소와 값만 써서 처음부터 다시 답해 주세요."})
+                    f"(안내: 방금 답은 사용자에게 보내지 않았어요. 도구 결과에 없는 장소({', '.join(bad[:6])})가 있었어요. 이 과정은 말하지 말고, find_quiet_places 같은 도구를 "
+                    "먼저 부르고 그 결과에 나온 장소와 값만 써서 처음부터 답해 주세요.)"})
+                force = True
                 continue
+            if bad:                              # 다시 답하게 했는데도 남았으면 그 장소가 나온 줄을 지운다
+                kept = [ln for ln in text.splitlines() if not any(b in ln for b in bad)]
+                if any(ln.strip() for ln in kept):
+                    text = "\n".join(kept)
             return {"reply": _finish(text, links, steps), "steps": steps, "model": model,
                     "checked": {"retried_for_action": nudged, "retried_for_grounding": grounded}}
         messages.append({"role": "assistant", "content": msg.content or "",

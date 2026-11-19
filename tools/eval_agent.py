@@ -6,7 +6,7 @@
   1. 도구 선택   : 그 질문에 맞는 도구(expect 중 하나 이상)를 불렀는가
   2. 장소 근거   : 답에 나온 장소 이름이 모두 도구 결과에 있는가 (지어낸 장소가 없는가)
   3. 링크        : 답의 지도 링크가 모두 도구가 만든 주소인가, 채워지지 않은 {{표시}} 가 남지 않았는가
-  4. 깔끔한 답   : '근거:' 줄이나 영어 도구 이름(plan_course 등)이 답에 섞이지 않았는가 (출처는 화면이 따로 보여 줌)
+  4. 깔끔한 답   : '근거:' 줄, 영어 도구 이름(plan_course 등), '도구'라는 말이 답에 섞이지 않았는가 (출처는 화면이 따로 보여 줌)
   5. 수치 근거율 : 답에 나온 숫자(시간·분·%·°) 가운데 도구 결과에서 찾을 수 있는 비율 (참고 지표)
 업스테이지 API 를 질문 수만큼 부르므로 사용량이 든다.
 """
@@ -45,6 +45,12 @@ QUESTIONS = [
     ("구좌읍은 무슨 요일에 사람이 적어?", ["area_visitors"]),
     ("주민에 비해 방문객이 많이 몰리는 읍면동은 어디야?", ["area_visitors"]),
     ("구도심은 하루 중 언제 카드 결제가 많아?", ["jeju_card_time_pattern"]),
+    ("제주 동쪽에서 조용한 숲길 있어?", ["find_quiet_places"]),
+    ("성산일출봉 근처에 지금 덜 붐비는 곳 있어?", ["find_quiet_places"]),
+    ("다음 주 토요일 한산한 바다 어디야?", ["find_quiet_places"]),
+    # 이어지는 질문: 앞 질문을 먼저 묻고(채점 안 함), '|' 뒤 질문의 답을 채점
+    ("내일 오후 2시에 성산일출봉 어때?|그럼 그 시간에 근처 덜 붐비는 데는?", ["find_quiet_places"]),
+    ("고마워!", []),                    # 인사: 도구 없이 짧게
     ("서울 맛집 추천해줘", []),          # 범위 밖: 도구 없이 할 수 있는 일을 안내해야 함
 ]
 
@@ -75,10 +81,15 @@ def run_one(q, expect, names):
         calls.append({"tool": name, "args": args, "result": r})
         return r
 
+    history = []
+    if "|" in q:                          # 이어지는 질문: 앞 질문의 답을 대화에 넣고 마지막 질문만 채점
+        *before, q = q.split("|")
+        for b in before:
+            history += [{"role": "user", "content": b}, {"role": "assistant", "content": agent.run(history + [{"role": "user", "content": b}])["reply"]}]
     tools.call = spy
     t0 = time.time()
     try:
-        out = agent.run([{"role": "user", "content": q}])
+        out = agent.run(history + [{"role": "user", "content": q}])
         err = None
     except Exception as e:                # API 오류도 결과에 남긴다
         out, err = {"reply": "", "steps": []}, f"{type(e).__name__}: {e}"
@@ -115,7 +126,7 @@ def run_one(q, expect, names):
         "tool": (not expect and not used) or bool(set(expect) & set(used)),
         "places": not unsupported,
         "links": not bad_urls and "{{" not in reply,
-        "clean": not re.search(r"^\s*(?:[-*•]\s*)?(?:\*\*)?\s*근거\s*(?:\*\*)?\s*[:：]", reply, re.M)
+        "clean": "도구" not in reply and not re.search(r"^\s*(?:[-*•]\s*)?(?:\*\*)?\s*근거\s*(?:\*\*)?\s*[:：]", reply, re.M)
                  and not any(t["function"]["name"] in reply for t in tools.TOOLS),
     }
     return {"q": q, "expect": expect, "used": used, "sec": sec, "error": err,
@@ -165,7 +176,7 @@ def report(rows, model, day):
         f"- 평균 응답 시간 {avg}초",
         f"- 서버 답 검사가 다시 답하게 한 횟수: 말만 하고 안 찾음 {sum(bool((r.get('guard') or {}).get('retried_for_action')) for r in rows)}번 · 도구 결과에 없는 장소 {sum(bool((r.get('guard') or {}).get('retried_for_grounding')) for r in rows)}번 (사용자에게는 다시 답한 결과만 보임)", "",
         "확인 기준: 도구 선택 = 질문에 맞는 도구를 불렀는가 · 장소 근거 = 답의 장소가 모두 도구 결과나 질문에 있는가(지어낸 장소 없음) · "
-        "링크 = 지도 주소가 모두 도구가 만든 것인가 · 깔끔한 답 = '근거:' 줄이나 영어 도구 이름이 답에 없는가(출처는 화면이 답 아래 '조회한 데이터'로 보여 줌). "
+        "링크 = 지도 주소가 모두 도구가 만든 것인가 · 깔끔한 답 = '근거:' 줄·영어 도구 이름·'도구'라는 말이 답에 없는가(출처는 화면이 답 아래 '조회한 데이터'로 보여 줌). "
         "수치 근거율은 표기 차이(0.87 → 13% 줄어듦 등)로 낮게 잡힐 수 있어 참고 지표로만 둔다.", "",
         "| # | 질문 | 부른 도구 | 도구 | 장소 | 링크 | 깔끔 | 수치 | 초 |",
         "|---|---|---|---|---|---|---|---|---|",

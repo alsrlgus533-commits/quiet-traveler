@@ -29,22 +29,43 @@ def _meta(s, date):
 
 
 # ---------- 도구 ----------
-def find_quiet_places(date: str = "", hour: int = 10, theme: str = "전체", include_famous: bool = False, limit: int = 5):
+def find_quiet_places(date: str = "", hour: int = 10, theme: str = "전체", include_famous: bool = False,
+                      limit: int = 5, near: str = ""):
     s = store()
     date = norm_date(date, s)
     hour = max(6, min(20, int(hour)))
-    pool = list(s.places) + (list(s.famous) if include_famous else [])
+    pool = list(s.places) + (list(s.famous) if include_famous or near else [])
     if theme in THEMES:
         pool = [p for p in pool if p["theme"] == theme]
+    # '성산일출봉 근처', '애월 쪽', '동쪽' 처럼 기준이 있으면 그 둘레(20km → 30km → 45km)에서만 고른다
+    origin = _origin(s, near) if near else None
+    dist = {}
+    if origin:
+        for r in (20, 30, 45):
+            cand = [p for p in pool if core.km(origin, p) <= r and p["name"] != origin["name"]]
+            if len(cand) >= 3 or r == 45:
+                pool = cand
+                break
+        dist = {p["name"]: (round(core.km(origin, p), 1), drive_min(origin, p)) for p in pool}
     wet = s.rainy(date)
     rows = [_place_brief(s, p, hour, date) for p in pool]
+    for r in rows:
+        if r["name"] in dist:
+            r["distance_km"], r["drive_min_from_near"] = dist[r["name"]]
     # 비 오는 날 오름은 뒤로 (미끄럽고 바람이 세서)
     rows.sort(key=lambda r: ((wet and r["theme"] == "오름"), -r["quiet_score"]))
     for r in rows:
         if wet and r["theme"] == "오름":
             r["caution"] = "비 예보: 오름은 길이 미끄러워요"
-    return {**_meta(s, date), "hour": hour, "places": rows[:max(1, min(16, int(limit)))],
-            "basis": "관광공사 30일 예측(그 장소의 평소 대비) × 장소 규모 × 유형별 시간대 곡선으로 만든 한산함 추정(0~100)"}
+    out = {**_meta(s, date), "hour": hour, "places": rows[:max(1, min(16, int(limit)))],
+           "basis": "관광공사 30일 예측(그 장소의 평소 대비) × 장소 규모 × 유형별 시간대 곡선으로 만든 한산함 추정(0~100)"}
+    if near:
+        out["near"] = origin["name"] if origin else None
+        if not origin:
+            out["note"] = f"'{near}'의 위치를 알아보지 못해 제주 전체에서 골랐어요."
+        elif not rows:
+            out["note"] = f"{origin['name']} 둘레 45km 안에 조건에 맞는 곳이 없어요."
+    return out
 
 
 def place_forecast(place_name: str, date: str = ""):
@@ -94,6 +115,9 @@ REGIONS = [
     ("남원", 33.2790, 126.7190), ("모슬포", 33.2190, 126.2510), ("대정", 33.2190, 126.2510),
     ("안덕", 33.2560, 126.3200), ("고산", 33.3000, 126.1800), ("한경", 33.3000, 126.1800),
     ("교래", 33.4300, 126.6700),
+    # 방향 말 (지역 이름이 없을 때만 걸리도록 맨 뒤에)
+    ("동쪽", 33.4500, 126.8500), ("동부", 33.4500, 126.8500), ("서쪽", 33.3600, 126.2500), ("서부", 33.3600, 126.2500),
+    ("남쪽", 33.2700, 126.5500), ("남부", 33.2700, 126.5500), ("북쪽", 33.5000, 126.5500), ("북부", 33.5000, 126.5500),
 ]
 
 
@@ -102,6 +126,11 @@ def _origin(s, text):
     t = (text or "").replace(" ", "")
     if not t:
         return None
+    # 장소 이름이 그대로 맞으면 그 장소가 기준 ('성산일출봉 근처' → 성산일출봉, 결과에서 자기 자신은 빠짐)
+    for p in s.places + s.famous:
+        k = p["name"].replace(" ", "")
+        if t == k or t.startswith(k) and t[len(k):] in ("근처", "주변", "쪽", "옆"):
+            return {"name": p["name"], "lat": p["lat"], "lng": p["lng"]}
     for name, lat, lng in REGIONS:
         if name in t:
             return {"name": name, "lat": lat, "lng": lng}
@@ -222,13 +251,16 @@ _DATE = {"type": "string", "description": "날짜. 'YYYY-MM-DD', '11/22', '오�
 TOOLS = [
     {"type": "function", "function": {
         "name": "find_quiet_places",
-        "description": "고른 날짜·시간에 한산한 제주 장소를 한산함 점수 순으로 찾는다. 날씨·그날 제주 붐빔·주차 예상·여유로운 시간·길안내 링크를 함께 준다.",
+        "description": "고른 날짜·시간에 한산한 제주 장소를 한산함 점수 순으로 찾는다. near 로 특정 장소·지역·방향 둘레만 볼 수 있다. 날씨·그날 제주 붐빔·주차 예상·여유로운 시간·길안내 링크를 함께 준다.",
         "parameters": {"type": "object", "properties": {
             "date": _DATE,
             "hour": {"type": "integer", "description": "가는 시각(6~20시). 기본 10."},
             "theme": {"type": "string", "enum": ["전체", "숲길", "오름", "바다", "마을"]},
-            "include_famous": {"type": "boolean", "description": "유명 관광지 37곳도 포함할지. 기본 false(덜 알려진 조용한 곳 16곳만)."},
-            "limit": {"type": "integer", "description": "몇 곳까지. 기본 5."}}, "required": []}}},
+            "include_famous": {"type": "boolean", "description": "유명 관광지 37곳도 포함할지. 기본 false(덜 알려진 조용한 곳 16곳만). near 를 주면 자동 포함."},
+            "limit": {"type": "integer", "description": "몇 곳까지. 기본 5."},
+            "near": {"type": "string", "description": "이 둘레에서만 찾기. 장소 이름(성산일출봉), 지역(애월·서귀포·구좌), 방향(동쪽·서쪽·남쪽·북쪽). "
+                     "사용자가 '근처', '~쪽', '동쪽' 이라고 하거나, 앞 대화의 장소 '근처'를 물으면 꼭 넣는다. 결과에 거리(km)·차로 걸리는 분이 붙는다."}},
+            "required": []}}},
     {"type": "function", "function": {
         "name": "place_forecast",
         "description": "한 장소의 상세 예측: 그날 시간대별 한산함, 앞으로 14일의 평소 대비 예측과 날씨, 가장 한산한 날.",
@@ -250,7 +282,7 @@ TOOLS = [
             "start_from": {"type": "string", "description": "출발 지역이나 장소. 예: 성산, 제주공항, 서귀포, 중문, 애월, 협재, 함덕, 구좌읍, 사려니숲길. 사용자가 '어디 쪽에서', '숙소가 어디' 라고 하면 꼭 넣는다. 비우면 제주 전체에서 고름."}}, "required": []}}},
     {"type": "function", "function": {
         "name": "rank_spots",
-        "description": "기간 동안 제주 관광지(최대 448곳)를 '평소 대비' 예측으로 줄 세운다. 담당자의 '다음 주 붐빌 관광지 순위' 같은 분석 질문용.",
+        "description": "기간 동안 제주 관광지(최대 448곳)를 '평소 대비' 예측으로 줄 세운다. '평소보다 붐빌/한산할 관광지', '이번 주말 평소보다 한산한 곳', '다음 주 붐빌 관광지 순위' 같은 질문용.",
         "parameters": {"type": "object", "properties": {
             "date_from": {"type": "string", "description": "시작 날짜. '이번 주', '다음 주', '이번 주말', '다음 주말' 처럼 기간 말을 그대로 넣어도 된다 (그때는 date_to 불필요)."},
             "date_to": _DATE,

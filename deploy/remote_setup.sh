@@ -22,6 +22,7 @@ User=ubuntu
 Group=ubuntu
 WorkingDirectory=/opt/quiet-traveler
 Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Seoul
 ExecStart=/opt/quiet-traveler/.venv/bin/python -m agent.server --host 127.0.0.1 --port 8100
 Restart=always
 RestartSec=5
@@ -40,6 +41,7 @@ Description=Quiet Traveler daily data refresh
 Type=oneshot
 User=ubuntu
 WorkingDirectory=/opt/quiet-traveler
+Environment=TZ=Asia/Seoul
 ExecStart=/opt/quiet-traveler/.venv/bin/python fetch_forecast.py
 ExecStart=/bin/sh -c '[ "$$(date +%%u)" = 1 ] && /opt/quiet-traveler/.venv/bin/python -m agent.datahub || true'
 # 에이전트는 켜질 때 읽은 예측을 기억하므로, 새로 받은 뒤 다시 켜서 반영한다 (+ = root 로 실행)
