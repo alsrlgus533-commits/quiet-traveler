@@ -7,13 +7,13 @@
 <style>
 /* Layout: 한 손 세로 스크롤. 날짜 띠 → 시간 → 오늘의 제주 → 붐비는 곳 대신 → 조용한 곳 목록 → 아래에서 올라오는 상세 시트 */
 :root{
-  --bg:#F0F3EA; --surface:#FBFCF6; --ink:#1C2A24; --muted:#5C6A61; --line:#DBE2D4;
+  --bg:#F0F3EA; --surface:#F8FBFD; --ink:#1C2A24; --muted:#5A6870; --line:#D5E1EA;
   --accent:#2C786A; --accent-soft:#DCEBE3; --calm:#367A56; --busy:#A5542F; --mid:#836920;
   --f-display:"Gowun Batang","Nanum Myeongjo",serif;
   --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --r:14px;
-  --card:color-mix(in srgb,var(--bg) 58%,transparent);   /* 카드(반투명) */
-  --bar:color-mix(in srgb,var(--bg) 86%,transparent);    /* 아래 메뉴 바 */
+  --card:rgba(228,240,250,.62);   /* 카드: 낮 하늘에 맞춘 반투명 하늘빛 파스텔 */
+  --bar:rgba(234,244,250,.90);    /* 아래 메뉴 바 */
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#161929; --surface:#262A42; --ink:#ECEDF6; --muted:#A9ACC6; --line:#3B3F60;
