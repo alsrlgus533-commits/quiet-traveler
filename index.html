@@ -1271,9 +1271,11 @@ function kmBetween(a,b){
 function inAppBrowser(){ return /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent); }
 function isSamsung(){ return /SamsungBrowser/i.test(navigator.userAgent); }
 function isIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1); }
-function geoFailText(err){
+function geoFailText(err, site){
   if(err.code===1){                       // 권한 거부
     if(inAppBrowser()) return "앱 안 브라우저(카카오톡 등)에서는 위치를 쓸 수 없어요. 오른쪽 위 메뉴에서 '다른 브라우저로 열기'를 눌러 크롬·사파리로 열어 주세요.";
+    // 사이트 권한은 허용인데 거부가 오면: 휴대폰 전체 위치가 꺼졌거나 브라우저 앱 위치 권한이 막힌 경우(안드로이드 크로미움 계열)
+    if(site==="granted" && !isIOS()) return "이 사이트 위치 권한은 허용돼 있는데 휴대폰이 위치를 넘겨주지 않았어요(오류 1). 화면 위에서 아래로 내려 빠른 설정의 '위치'를 켜고, 설정 > 애플리케이션 > " + (isSamsung()?"삼성 인터넷":"브라우저") + " > 권한 > 위치가 '앱 사용 중에만 허용'인지 확인한 뒤 다시 눌러 주세요. 비밀 모드라면 일반 탭에서 열어 주세요.";
     if(isSamsung()) return "삼성 인터넷에서 이 사이트의 위치가 막혀 있어요(오류 1). 주소창 왼쪽 자물쇠 > 권한에서 위치를 허용하거나, ⋮(메뉴) > 설정 > 사이트 및 다운로드 > 사이트 권한 > 위치에서 이 주소를 지운 뒤 다시 눌러 주세요.";
     return isIOS()
       ? "위치 권한이 꺼져 있어요. 아이폰 설정 > 개인정보 보호 및 보안 > 위치 서비스에서 켜고, 아래 Safari 웹사이트(또는 Chrome)를 '앱을 사용하는 동안'으로 바꾼 뒤 다시 눌러 주세요. (오류 1)"
@@ -1289,8 +1291,9 @@ function locateMe(){
     const r=msg.getBoundingClientRect(); if(r.bottom > innerHeight-90 || r.top < 0) msg.scrollIntoView({block:"center", behavior:"smooth"}); };
   if(!navigator.geolocation){ say("이 브라우저는 위치를 알려 주지 않아요.", true); return; }
   say("내 위치를 찾는 중이에요…");
+  let site="";                           // 사이트 권한 상태(granted/prompt/denied), 오류 1의 원인을 가르는 데 쓴다
   if(navigator.permissions && navigator.permissions.query){
-    navigator.permissions.query({name:"geolocation"}).then(p=>{ if(p.state==="denied") say(geoFailText({code:1}), true); }).catch(()=>{});
+    navigator.permissions.query({name:"geolocation"}).then(p=>{ site=p.state; if(p.state==="denied") say(geoFailText({code:1}), true); }).catch(()=>{});
   }
   const ok = pos=>{
     state.me={lat:pos.coords.latitude, lng:pos.coords.longitude};
@@ -1305,9 +1308,9 @@ function locateMe(){
     }
   };
   navigator.geolocation.getCurrentPosition(ok, err=>{
-    if(err.code===1){ say(geoFailText(err), true); return; }
+    if(err.code===1){ say(geoFailText(err, site), true); return; }
     say("조금 더 정확하게 찾는 중이에요… (최대 20초)");
-    navigator.geolocation.getCurrentPosition(ok, e2=>{ say(geoFailText(e2), true); },
+    navigator.geolocation.getCurrentPosition(ok, e2=>{ say(geoFailText(e2, site), true); },
       {enableHighAccuracy:true, timeout:20000, maximumAge:0});
   }, {enableHighAccuracy:false, timeout:8000, maximumAge:300000});
 }
