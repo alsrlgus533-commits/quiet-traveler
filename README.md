@@ -4,6 +4,7 @@
 
 - 출품: 제주 AI·빅데이터 활용 AI Agent 개발 챌린지 (제주빅데이터센터)
 - 필수 데이터: **제주데이터허브 OpenAPI 3종** — 「와이파이 AP그룹별 일일 사용량」(매일 갱신), 「읍면동 단위 내국인 유동인구」, 「관광지·상업지구 시간대별 카드 데이터」 (자세한 내용: [docs/데이터_활용_명세.md](docs/데이터_활용_명세.md))
+- **시연 주소: https://quiet.129-225-172-177.nip.io** (공모전 시연 기간만 운영, 2027년 1월 삭제 · [deploy/README.md](deploy/README.md))
 - AI: **업스테이지 Solar Pro 4** (`solar-pro4`, OpenAI 호환 Chat Completions + 함수 호출)
 
 ## 빠른 실행 (3단계)
