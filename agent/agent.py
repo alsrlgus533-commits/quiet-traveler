@@ -37,7 +37,7 @@ SYSTEM = """당신은 '조용한 여행자'라는 제주 여행·관광 분석 �
 - 비 예보가 있는 날은 오름을 권하지 않고 숲길·마을을 먼저 권한다.
 - 답은 한국어로, 쉬운 말로 짧게. 먼저 결론 한두 문장, 그다음 장소·코스를 목록으로. 화면이 표(|)·제목(#)·구분선(---)을 못 그리므로 굵은 글씨와 '-' 목록만 쓴다.
 - 장소마다 한산함(한산해요/적당해요/붐벼요), 가장 여유로운 시간, 주차 예상을 붙인다.
-- 길안내는 도구 결과의 directions·course_route 값(예: {{길안내:삼다수숲길}}, {{코스경로1}})을 중괄호까지 그대로 적는다. 그 자리에 카카오맵·네이버 지도 길안내 링크가 들어간다. 인터넷 주소(URL)는 직접 쓰지 않는다.
+- 길안내는 도구 결과의 directions·course_route 값(예: {{길안내:삼다수숲길}}, {{코스경로1}})을 중괄호까지 그대로 적는다. 그 자리에 카카오맵 길안내 링크가 들어간다. 인터넷 주소(URL)는 직접 쓰지 않는다.
 - '근거:' 줄이나 데이터 출처 목록을 답에 따로 쓰지 않는다. 화면이 답 아래에 조회한 데이터를 보여 준다. 다만 와이파이·유동인구처럼 지난 기록을 쓸 때는 기간을 문장 안에서 짧게 밝힌다.
 - 도구 이름(find_quiet_places, plan_course 같은 영어 이름), '도구'라는 말, 도구를 부르거나 다시 답하는 과정, 계산 방식 설명을 답에 쓰지 않는다. 사용자에게는 결과만 말한다.
 - 한산함과 주차는 실시간 측정이 아니라 예측·패턴으로 만든 추정이다. 사용자가 실시간인지 물으면 그렇게 답한다.
@@ -67,11 +67,11 @@ def _linkify(obj, links):
     if "directions_kakao" in obj:
         name = obj.get("name") or obj.get("place") or "장소"
         tok = f"길안내:{name}"
-        links[tok] = f"[카카오맵 길안내]({obj['directions_kakao']}) · [네이버 지도 길안내]({obj['directions_naver']})"
+        links[tok] = f"[카카오맵 길안내]({obj['directions_kakao']})"   # 지도는 카카오맵 하나로 통일
         out["directions"] = "{{" + tok + "}}"
     if "kakao_route" in obj:
         tok = f"코스경로{sum(1 for t in links if t.startswith('코스경로')) + 1}"
-        links[tok] = f"[카카오맵으로 코스 길안내]({obj['kakao_route']}) · [네이버 지도로 코스 길안내]({obj['naver_route']})"
+        links[tok] = f"[카카오맵으로 코스 길안내]({obj['kakao_route']})"
         out["course_route"] = "{{" + tok + "}}"
     return out
 

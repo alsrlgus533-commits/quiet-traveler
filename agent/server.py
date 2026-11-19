@@ -57,15 +57,22 @@ class Handler(SimpleHTTPRequestHandler):
             return None
         return super().send_head()
 
+    def send_response(self, code, message=None):
+        self._code = code
+        super().send_response(code, message)
+
     def end_headers(self):
         # 화면(HTML)과 예측 파일은 브라우저가 예전 것을 쓰지 않게 매번 서버에 확인하고(no-cache),
         # 바뀔 일이 드문 그림·글꼴은 하루 동안 저장해 두게 한다. (이 표시가 없으면 폰 브라우저가 몇 시간씩 옛 화면을 보여 줌)
+        # 단, 하루 저장은 제대로 받은 응답(200)에만 붙인다. 404 에 붙이면 그림을 나중에 올려도 하루 동안 깨져 보인다.
         path = self.path.split("?")[0]
         if not path.startswith("/api/"):
             if path == "/" or path.endswith((".html", ".json")):
                 self.send_header("Cache-Control", "no-cache")
-            elif path.endswith((".webp", ".png", ".jpg", ".jpeg", ".svg", ".woff2", ".ico")):
+            elif getattr(self, "_code", 200) in (200, 304) and path.endswith((".webp", ".png", ".jpg", ".jpeg", ".svg", ".woff2", ".ico")):
                 self.send_header("Cache-Control", "public, max-age=86400")
+            elif getattr(self, "_code", 200) >= 400:
+                self.send_header("Cache-Control", "no-store")
         super().end_headers()
 
     def _json(self, code, obj):
