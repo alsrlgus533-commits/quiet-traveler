@@ -160,6 +160,14 @@ def _ungrounded(text, seen, question):
     return out
 
 
+# 오늘이 아닌 날의 코스를 묻는데 출발 시각이 없으면, AI 를 부르기 전에 몇 시에 출발할지 먼저 묻는다
+# (출발 시각에 따라 장소마다 도착할 때의 한산함이 달라지므로). 다음 답에 시각이 오면 바로 코스를 짠다.
+_COURSE = re.compile(r"(코스|일정|동선|루트)")
+_OTHER_DAY = re.compile(r"(내일|모레|글피|주말|토요일|일요일|월요일|화요일|수요일|목요일|금요일|다음 ?주|\d+\s*일|\d+/\d+)")
+_TIME = re.compile(r"(\d+\s*시|아침|오전|오후|점심|저녁|새벽|정오|지금|바로|일찍)")
+ASK_TIME = "몇 시에 출발하실 거예요? 출발 시각에 맞춰, 장소마다 도착할 때 한산한 순서로 코스를 짜 드릴게요. (예: 9시, 오후 2시)"
+
+
 def run(history: list[dict]) -> dict:
     """history = [{"role":"user"|"assistant","content":"…"}, …] (마지막은 user).
     돌려주는 값: {"reply": 답, "steps": [{"tool": 이름, "args": 인자, "ok": 성공 여부}]}"""
@@ -170,6 +178,9 @@ def run(history: list[dict]) -> dict:
     messages += [{"role": m["role"], "content": link.sub(lambda g: g.group(1), str(m["content"])) if m["role"] == "assistant" else str(m["content"])}
                  for m in history[-12:] if m.get("role") in ("user", "assistant") and m.get("content")]
     question = str(history[-1].get("content", ""))
+    if _COURSE.search(question) and _OTHER_DAY.search(question) and not _TIME.search(question) and "오늘" not in question:
+        return {"reply": ASK_TIME, "steps": [], "model": model}
+    asked_time = len(history) >= 2 and history[-2].get("role") == "assistant" and str(history[-2].get("content", "")).startswith("몇 시에 출발하실 거예요")
     # 여행·혼잡 질문이면 첫 차례부터 도구를 꼭 부르게 한다 (인사·범위 밖 질문은 그대로 말로 답함)
     steps, links, nudged, grounded = [], {}, False, False
     if re.search(r"(요즘|최근|실제로)", question) and re.search(r"(붐|한산|사람)", question):
@@ -180,6 +191,13 @@ def run(history: list[dict]) -> dict:
         force = {"type": "function", "function": {"name": "rank_spots"}}   # '평소보다 ~한 관광지' · '순위' 는 평소 대비 순위
     else:
         force = bool(_TRAVEL.search(question))
+    if asked_time and _TIME.search(question):
+        force = {"type": "function", "function": {"name": "plan_course"}}   # 앞에서 물은 출발 시각에 답했으면 바로 코스
+        # '9시'만 보내면 앞 질문의 날짜(토요일 등)를 놓치므로, 앞 질문과 합쳐 한 질문으로 넘긴다
+        prev_q = str(history[-3].get("content", "")) if len(history) >= 3 and history[-3].get("role") == "user" else ""
+        if prev_q:
+            question = f"{prev_q} (출발 시각: {question})"
+            messages[-1] = {"role": "user", "content": question}
     seen = ""                                   # 지금까지 받은 도구 결과 글자 (답 검사용)
     for _ in range(MAX_ROUNDS):
         # 검사 장치가 다시 시킨 차례에는 말로 미루지 못하게 도구 호출을 강제한다

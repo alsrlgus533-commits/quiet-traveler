@@ -86,6 +86,15 @@ header p{margin:0;color:var(--muted)}
 .msg.bot ul{margin:4px 0;padding-left:18px}
 .msg .steps{display:block;margin-top:6px;font-size:11.5px;color:var(--muted)}
 .msg.err{background:color-mix(in srgb,var(--busy) 12%,transparent);color:var(--busy)}
+/* 대화 속 제안: 저장해 드릴까요? → 내 코스에 반영해 드릴까요? (누르거나 '응/아니'로 답함) */
+.offer-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.ochip{padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:13px}
+.ochip[aria-pressed="true"]{background:var(--busy);border-color:var(--busy);color:#fff}
+.ochip:disabled{opacity:.7;cursor:default}
+.offer-btns{display:flex;gap:8px;margin-top:8px}
+.offer-btns button{padding:7px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-weight:600;font-size:13.5px}
+.offer-btns .ok{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.offer-btns button:disabled{opacity:.5;cursor:default}
 .ask-form{display:flex;gap:8px;align-items:flex-end}
 .ask-form textarea{flex:1;min-width:0;resize:none;font:inherit;font-size:15px;padding:10px 12px;border-radius:12px;
   border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -391,7 +400,7 @@ html.sheet-open .tabbar{visibility:hidden}
 /* ===== 첫 화면: 지금 가기 좋은 곳 6곳 (사진 판) =====
    지도·코스·물어보기·목록은 화면에서만 숨긴다(코드는 남김). 한 화면 안에 다 들어가게 판 높이는 스크립트(fitPicks)가 정한다. */
 .legacy{display:none !important}
-.wrap{gap:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+.wrap{gap:12px;padding-bottom:calc(88px + env(safe-area-inset-bottom))}   /* 아래 메뉴 바 자리 */
 .wrap > section.picks-sec{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;margin-inline:-8px}
 .pick-note{margin:0 0 8px;font-size:13px;font-weight:600;text-align:center;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;
   text-shadow:0 0 2px var(--bg),0 0 6px var(--bg),0 0 12px var(--bg)}
@@ -434,6 +443,37 @@ html.sheet-open .tabbar{visibility:hidden}
 .go b{display:block;font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .go small{display:block;font-size:12px;opacity:.95;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .sheet .one{font-size:14px;color:var(--muted)}
+/* 아래 메뉴 바: 추천·저장·내 코스·물어보기. 저장 수를 작은 숫자로 */
+.tabbar button{position:relative}
+.tabbar .cnt{position:absolute;top:2px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 4px;border-radius:99px;
+  background:var(--busy);color:#fff;font:700 11px/17px var(--f-body);font-style:normal;text-align:center}
+.tabbar .cnt[hidden]{display:none}
+/* 상세의 ♡ 저장 */
+.sheet-top .top-btns{display:flex;gap:6px;flex:0 0 auto}
+.heart[aria-pressed="true"]{background:var(--busy);border-color:var(--busy);color:#fff}
+/* 저장한 곳: 작은 사진 판 2칸 */
+.saved-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:118px;gap:10px}
+.saved-grid .pick{animation:none}
+.saved-grid .unsave{position:absolute;top:6px;left:6px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;cursor:pointer;
+  background:rgba(255,255,255,.9);color:#A5542F;font-size:16px;line-height:30px;padding:0}
+.empty{margin:0;padding:18px 4px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+/* 내 코스 */
+.course{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.course .leg{font-size:12px;color:var(--muted);padding:3px 0 3px 74px;position:relative}
+.course .leg::before{content:"";position:absolute;left:31px;top:0;bottom:0;border-left:2px dashed var(--line)}
+.stop2{display:grid;grid-template-columns:52px 64px 1fr;gap:10px;align-items:center;width:100%;padding:6px 0;border:0;background:none;
+  text-align:left;cursor:pointer;color:inherit}
+.stop2 .t{font-weight:700;font-size:15px;text-align:center}
+.stop2 img{width:64px;height:64px;border-radius:12px;object-fit:cover}
+.stop2 b{display:block;font-size:15px}
+.stop2 small{font-size:12px;color:var(--muted)}
+.go.one{grid-template-columns:1fr}
+.ask-start{margin:4px 0 0;font-size:15px;line-height:1.6}
+.ask-start small{color:var(--muted);font-size:12.5px}
+.start-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.start-chips .ochip{font-size:14px;padding:8px 14px}
+.linkish{border:0;background:none;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+.fill-btn{width:100%;padding:12px;border-radius:14px;border:1px dashed var(--accent);background:none;color:var(--accent);font-weight:600;cursor:pointer}
 /* 여섯째 판: 물어보세요 (AI 가 켜져 있을 때만). 배경과 같은 손그림 풍의 돌하르방. 밝게/어둡게에 따라 낮·밤 그림 */
 .pick.ask-pick img{object-position:50% 22%}
 .pick.ask-pick .night{display:none}
@@ -552,11 +592,11 @@ try{ const saved=localStorage.getItem("qt-theme"); if(saved) document.documentEl
   </section>
 </div>
 
-<nav class="tabbar legacy" id="tabbar" aria-label="화면 고르기">
-  <button type="button" data-go="ask" id="tabAsk" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-4 4v-4H5z"/></svg><span>물어보기</span></button>
-  <button type="button" data-go="map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-6.2-6-11a6 6 0 0 1 12 0c0 4.8-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span>지도</span></button>
-  <button type="button" data-go="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg><span>코스</span></button>
+<nav class="tabbar" id="tabbar" aria-label="메뉴">
   <button type="button" data-go="home" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c7 0 14-6 14-14C11 5 5 11 5 19z"/><path d="M5 19l7-7"/></svg><span>추천</span></button>
+  <button type="button" data-go="saved"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>저장</span><i class="cnt" id="savedCnt" hidden></i></button>
+  <button type="button" data-go="course"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></svg><span>내 코스</span></button>
+  <button type="button" data-go="ask" id="tabAsk" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-4 4v-4H5z"/></svg><span>물어보기</span></button>
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -1511,7 +1551,7 @@ function askAiPicks(cand, n){
 function renderPicks(){
   if(!state.date){ $("picks").innerHTML=""; return; }
   const me = state.me && inJeju(state.me);
-  const n = state.askOn ? 5 : 6, base = picks(), cand = base.cand || [];
+  const n = 6, base = picks(), cand = base.cand || [];   // 물어보기는 아래 메뉴로 옮겨, 판은 6곳 모두 장소
   // AI 가 켜져 있으면 후보 12곳 중에서 AI 가 고른 순서를 쓰고, 아직 답이 없으면 계산식 순서로 먼저 보여 준다
   const ai = state.askOn && state.geo!=="finding" ? aiPick.memo[aiPickKey(cand, n)] : null;
   const rows = ai ? ai.ids.map(id=>cand.find(o=>o.p.id===id)).filter(Boolean).slice(0, n) : base.slice(0, n);
@@ -1523,8 +1563,7 @@ function renderPicks(){
     return `<button class="pick" type="button" data-id="${p.id}" data-h="${o.h}" style="--i:${i}" aria-label="${p.name}, ${sub}, ${quietWord(o.q)}">
       <img src="${src}" alt="" decoding="async">${scoreBadge(o.q)}
       <span class="pick-txt"><b>${p.name}</b><small>${why ? `${why} · <span class="nw">${where}</span>` : sub}</small></span></button>`;
-  }).join("") + (state.askOn ? `<button class="pick ask-pick" type="button" id="askPick" style="--i:5" aria-label="물어보세요. 어디 갈지 같이 고민해요">
-      <img class="day" src="images/ask-haru-day.webp?v=3" alt=""><img class="night" src="images/ask-haru-night.webp?v=3" alt="" loading="lazy"><span class="pick-txt"><b>물어보세요</b><small>어디 갈지 같이 고민해요</small></span></button>` : "");
+  }).join("");
   const today = isTodayYmd(state.date);
   const base_note = state.geo==="finding" ? "내 위치를 찾는 중이에요…"
     : me ? (today ? "지금 내 근처 한산한 곳" : "이날 내 근처 한산한 곳")
@@ -1540,7 +1579,8 @@ function renderPicks(){
 function fitPicks(){
   const g=$("picks"); if(!g.firstChild) return;
   const top=g.getBoundingClientRect().top+scrollY, w=g.clientWidth;
-  const avail=innerHeight - top - 12 - 20;               // 아래 여백
+  const bar=$("tabbar"), bh = bar && bar.offsetParent ? bar.offsetHeight + 14 : 0;   // 아래 메뉴 바 높이만큼 비움
+  const avail=innerHeight - top - 12 - 20 - bh;          // 아래 여백
   const row=Math.max(120, Math.min((w-10)/2*1.05, (avail-20)/3));
   g.style.setProperty("--row", Math.floor(row)+"px");
 }
@@ -1564,6 +1604,114 @@ $("picks").addEventListener("click", e=>{ const b=e.target.closest(".pick"); if(
   if(b.id==="askPick") openAsk(b); else openSheet(b.dataset.id, false, null, b); });
 // 물어보기: 대화 칸(askSec)을 통째로 시트 안으로 옮겨 띄운다(대화 기록·이벤트가 그대로 남음).
 // 답 속 장소 이름을 눌러 상세를 열었다가 닫으면 다시 대화로 돌아온다.
+// ---------- 저장한 곳 · 내 코스 ----------
+const anyPlace = id => PLACES.find(x=>x.id===id) || FAMOUS.find(x=>x.id===id);
+const photoOf = p => p.famous ? famPhoto(p) : `images/places/full/${p.id}.webp`;
+const stayOf = p => STAY[kindOfP(p)] || 1;
+state.back = [];
+function updateBar(){ const n=state.saved.size, c=$("savedCnt"); c.hidden=!n; c.textContent=n; }
+// 시트 껍데기(제목·닫기)만 그리고 몸통은 html 로
+function shell(key, eyebrow, title, body, opener){
+  if(opener) lastFocus = opener;
+  parkAsk(); state.open=key;
+  $("sheet").classList.remove("has-photo");
+  $("sheet").innerHTML = `<div class="sheet-in"><div class="grab"></div>
+    <div class="sheet-top"><div><span class="eyebrow">${eyebrow}</span><h2 id="sheetTitle">${title}</h2></div>
+    <button class="icon-btn" id="closeBtn">닫기</button></div>${body}</div>`;
+  $("sheet").hidden=false; $("scrim").hidden=false; setModal(true);
+  $("closeBtn").onclick=closeSheet; $("closeBtn").focus();
+}
+function openSaved(opener){
+  const ps=[...state.saved].map(anyPlace).filter(Boolean);
+  const h=p=>pickHour(p), body = ps.length
+    ? `<div class="saved-grid">${ps.map(p=>{ const q=100-crowdAt(p,h(p),state.date);
+        return `<div style="position:relative"><button class="pick" type="button" data-open="${p.id}" style="width:100%;height:100%" aria-label="${p.name}, ${quietWord(q)}">
+          <img src="${photoOf(p)}" alt="">${scoreBadge(q)}<span class="pick-txt"><b>${p.name}</b><small>${kindOfP(p)}</small></span></button>
+          <button class="unsave" type="button" data-un="${p.id}" aria-label="${p.name} 저장 빼기">♥</button></div>`; }).join("")}</div>
+       <div class="go one"><a href="#" id="toCourse"><img src="images/picto/car.webp?v=3" alt=""><span><b>이 곳들로 내 코스 보기</b><small>한산한 시간·이동 시간으로 순서를 정해요</small></span></a></div>`
+    : `<p class="empty">아직 저장한 곳이 없어요.<br>사진을 눌러 들어간 뒤 <b>♡ 저장</b>을 누르면 여기에 모여요.</p>`;
+  shell("__saved", `${ps.length}곳`, "저장한 곳", body, opener);
+  $("sheet").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openSheet(b.dataset.open, false, null, b));
+  $("sheet").querySelectorAll("[data-un]").forEach(b=>b.onclick=()=>{ state.saved.delete(b.dataset.un); storeSaved(); updateBar(); openSaved(); });
+  if($("toCourse")) $("toCourse").onclick=e=>{ e.preventDefault(); openCourse(); };
+}
+// 코스 출발 시각: 오늘이면 지금(30분 단위로 올림), 다른 날은 9시
+// 출발 시각: 오늘이면 지금(30분 단위로 올림). 다른 날은 사용자가 고른 시각(state.startAt), 안 골랐으면 null → 먼저 묻는다.
+state.startAt = {};
+function courseStart(date){
+  const m=parseYmd(date).getMonth();
+  if(!isTodayYmd(date)) return state.startAt[date] ?? null;
+  const n=new Date(); return Math.max(SUN_UP[m], Math.ceil((n.getHours()+n.getMinutes()/60)*2)/2);
+}
+// 저장한 곳(최대 6곳)의 모든 순서를 따져, 머무는 동안의 한산함 − 이동 분×0.5 가 가장 좋은 순서를 고른다.
+// 해 지기 전에 못 들르는 곳은 뒤에서 뺀다. 내 위치를 알면 거기서 출발한다.
+function savedCourse(startAt){
+  const ps=[...state.saved].map(anyPlace).filter(Boolean).slice(0,6);
+  const date=state.date, m=parseYmd(date).getMonth(), end=SUN_DOWN[m], start=startAt ?? courseStart(date) ?? 9, wet=isRainy(date);
+  const me = state.me && inJeju(state.me) ? state.me : null;
+  const qStay=(p,t)=>100-(crowdAt(p,t,date)+crowdAt(p,t+stayOf(p)/2,date))/2;
+  let best=null;
+  const walk=(left, order)=>{
+    if(left.length){ left.forEach((p,i)=>walk([...left.slice(0,i),...left.slice(i+1)], [...order,p])); return; }
+    let t=start, prev=me, score=0; const stops=[];
+    for(const p of order){
+      const d = prev ? driveFrom(prev,p) : 0;
+      if(t+d/60+stayOf(p) > end) break;
+      t+=d/60; const q=qStay(p,t);
+      score += q - (q<45?30:0) - d*.5 - (wet && kindOfP(p)==="오름" ? 40 : 0);
+      stops.push({p,t,q,drive:d}); t+=stayOf(p); prev=p;
+    }
+    score += stops.length*1000;                        // 많이 들르는 순서가 먼저
+    if(!best || score>best.score) best={stops, score, end:t};
+  };
+  walk(ps, []);
+  return {ps, best, start, me};
+}
+// 다른 날인데 출발 시각을 안 정했으면 먼저 묻는다. 시각마다 코스를 미리 짜 보고 가장 한산한 시각에 '추천'을 붙인다.
+function askStartBody(ps, when){
+  const m=parseYmd(state.date).getMonth(), hours=[];
+  for(let h=SUN_UP[m]; h<=SUN_DOWN[m]-2; h++) hours.push(h);
+  let rec=null;
+  if(ps.length>=2){
+    let bestScore=-1e9;
+    for(const h of hours){ const r=savedCourse(h).best; if(r && r.score>bestScore){ bestScore=r.score; rec=h; } }
+  }
+  return `<p class="ask-start">${when}, <b>몇 시에 출발하실 거예요?</b><br><small>출발 시각에 맞춰 장소마다 도착할 때 한산한 순서로 짜 드려요.</small></p>
+    <div class="start-chips">${hours.map(h=>`<button type="button" class="ochip" data-start="${h}" aria-pressed="${h===rec}">${h}시${h===rec?" · 가장 한산":""}</button>`).join("")}</div>`;
+}
+function openCourse(opener){
+  const today=isTodayYmd(state.date), dt=parseYmd(state.date), when=`${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일`;
+  const savedPs=[...state.saved].map(anyPlace).filter(Boolean).slice(0,6);
+  if(!today && courseStart(state.date)==null){
+    shell("__course", when, "내 코스", askStartBody(savedPs, when), opener);
+    $("sheet").querySelectorAll("[data-start]").forEach(b=>b.onclick=()=>{ state.startAt[state.date]=+b.dataset.start; openCourse(); });
+    return;
+  }
+  const {ps, best, start, me} = savedCourse();
+  let body;
+  if(ps.length<2){
+    body = `<p class="empty">저장한 곳이 ${ps.length? "1곳뿐이에요" : "없어요"}. 2곳 이상 저장하면<br>한산한 시간과 이동 시간에 맞춰 순서를 짜 드려요.</p>
+      <button class="fill-btn" type="button" id="fillBtn">한산한 곳 3곳으로 코스 채우기</button>`;
+  } else if(!best || !best.stops.length){
+    body = `<p class="empty">${clock(start)}에 출발하면 해 지기 전에 들를 수 있는 곳이 없어요.<br>‹ › 로 다른 날을 골라 보세요.</p>`;
+  } else {
+    const st=best.stops, drop=ps.length-st.length;
+    const pts = me ? [{name:"내 위치", ...me}, ...st.map(x=>x.p)] : st.map(x=>x.p);
+    body = `<ol class="course">${st.map((x,i)=>`${x.drive ? `<li class="leg">차로 ${x.drive}분</li>` : ""}<li><button class="stop2" type="button" data-open="${x.p.id}">
+        <span class="t num">${clock(x.t)}</span><img src="${photoOf(x.p)}" alt=""><span><b>${x.p.name}</b><small>${kindOfP(x.p)} · ${dur(Math.round(stayOf(x.p)*60))} · <span class="${level(x.q).c}">${quietWord(x.q)}</span></small></span></button></li>`).join("")}</ol>
+      <p class="note">${clock(st[0].t - (st[0].drive||0)/60)} 출발${today ? "" : ` <button type="button" class="linkish" id="reStart">시각 바꾸기</button>`} · ${clock(best.end)} 끝${drop ? ` · 해 지기 전에 못 들르는 ${drop}곳은 뺐어요` : ""}${ps.length>6 ? " · 저장한 곳 중 앞의 6곳만 따졌어요" : ""}</p>
+      <div class="go one"><a href="${kakaoCourse(pts)}" target="_blank" rel="noopener"><img src="images/picto/car.webp?v=3" alt=""><span><b>카카오맵으로 코스 길안내</b><small>${me ? "내 위치에서 출발" : "첫 장소에서 출발"} · 경유 ${st.length}곳</small></span></a></div>`;
+  }
+  shell("__course", when, "내 코스", body, opener);
+  $("sheet").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openSheet(b.dataset.open, false, null, b));
+  if($("reStart")) $("reStart").onclick=()=>{ delete state.startAt[state.date]; openCourse(); };
+  if($("fillBtn")) $("fillBtn").onclick=()=>{
+    const plan=makePlan(state.date, courseStart(state.date) ?? 9, 3);
+    if(plan) plan.stops.forEach(x=>state.saved.add(x.p.id));
+    storeSaved(); updateBar(); openCourse();
+  };
+}
+updateBar();
 function parkAsk(){
   const a=$("askSec"), wrap=document.querySelector(".wrap");
   if(a.parentElement===wrap) return false;
@@ -1592,7 +1740,7 @@ function renderAll(){
   $("hourLabel").textContent = state.hour+"시";
   $("hour").setAttribute("aria-valuetext", state.hour+"시");
   renderDates(); renderMap(); renderSwaps(); renderFamous(); renderPlan(); renderThemes(); renderList(); renderPicks(); paintWx();
-  if(state.open && state.open!=="__ask") openSheet(state.open, true);
+  if(state.open && !String(state.open).startsWith("__")) openSheet(state.open, true);
 }
 
 // ---------- 상세 시트 ----------
@@ -1617,7 +1765,8 @@ function openSheet(id, refresh, famous, opener){
   // 조용한 곳(PLACES)과 유명한 곳(FAMOUS) 모두 같은 상세 화면으로 연다.
   const p = PLACES.find(x=>x.id===id) || FAMOUS.find(x=>x.id===id); if(!p) return;
   const fam = !!p.famous;
-  if(parkAsk()) state.backToAsk = true;
+  if(!refresh && state.open && String(state.open).startsWith("__")) state.back.push(state.open);
+  parkAsk();
   if(!refresh){ lastFocus = opener || document.activeElement; state.openFrom = famous||null;
     state.sheetHour = opener && opener.dataset.h ? +opener.dataset.h : state.hour; }   // 코스에서 열면 그 도착 시간
   state.open=id;
@@ -1664,7 +1813,8 @@ function openSheet(id, refresh, famous, opener){
     <div class="grab"></div>
     <div class="sheet-top">
       <div><span class="eyebrow">${eyebrow}</span><h2 id="sheetTitle">${p.name}</h2></div>
-      <button class="icon-btn" id="closeBtn">닫기</button>
+      <div class="top-btns"><button class="icon-btn heart" id="saveBtn" aria-pressed="${saved}">${saved?"♥ 저장됨":"♡ 저장"}</button>
+      <button class="icon-btn" id="closeBtn">닫기</button></div>
     </div>
     ${p.desc ? `<p class="one">${p.desc.split(/(?<=[.!?요])\s/)[0]}</p>` : ""}
     <ul class="picto" aria-label="한눈에 보기">
@@ -1685,12 +1835,13 @@ function openSheet(id, refresh, famous, opener){
       if(again) again.focus();                // 다시 그리면서 날아간 포커스를 되돌린다
     };
   });
-  if($("saveBtn")) $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); renderList(); renderMap(); openSheet(id,true); };
+  if($("saveBtn")) $("saveBtn").onclick=()=>{ state.saved.has(id)?state.saved.delete(id):state.saved.add(id); storeSaved(); updateBar(); renderList(); renderMap(); openSheet(id,true); $("saveBtn").focus(); };
   if(!refresh) $("closeBtn").focus();
 }
 function closeSheet(){
-  if(state.open!=="__ask" && state.backToAsk){ state.backToAsk=false; openAsk(); return; }
-  parkAsk(); state.backToAsk=false;
+  // 저장·코스·물어보기에서 열었던 화면이면 닫을 때 그 화면으로 돌아간다
+  if(state.back.length){ const b=state.back.pop(); state.open=null; ({__ask:openAsk, __saved:openSaved, __course:openCourse})[b](); return; }
+  parkAsk();
   const id = state.open;
   state.open=null; $("sheet").hidden=true; $("scrim").hidden=true; setModal(false);
   // 시트를 연 버튼이 그 사이 다시 그려져 사라졌으면 같은 장소의 행으로 돌아간다.
@@ -1782,7 +1933,12 @@ function showTab(t){
   const top = $("dayHero").getBoundingClientRect().top + scrollY - 12;
   if(scrollY > top) window.scrollTo({top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
 }
-$("tabbar").addEventListener("click", e=>{ const b=e.target.closest("[data-go]"); if(b){ state.tabPicked=true; showTab(b.dataset.go); } });
+// 아래 메뉴: 추천은 첫 화면 맨 위로, 나머지는 시트로 띄운다
+$("tabbar").addEventListener("click", e=>{
+  const b=e.target.closest("[data-go]"); if(!b) return; const g=b.dataset.go;
+  if(g==="home"){ if(state.open) closeSheet(); window.scrollTo({top:0, behavior:"smooth"}); }
+  else if(g==="saved") openSaved(b); else if(g==="course") openCourse(b); else if(g==="ask") openAsk(b);
+});
 showTab("home");
 $("listMore").addEventListener("click", ()=>{ state.listAll=!state.listAll; renderList(); });
 // 위치를 쓸 수 없는 화면(게시 화면 iframe, https 아닌 주소)에서는 내 위치 버튼을 숨긴다
@@ -1947,8 +2103,55 @@ function addMsg(role, html, steps){
     s.textContent="조회한 데이터: "+[...new Set(steps.map(x=>TOOL_WORD[x.tool]||x.tool))].join(" · "); d.appendChild(s); }
   $("askLog").appendChild(d); $("askLog").scrollTop=$("askLog").scrollHeight; return d;
 }
+// ---------- 대화 속 저장·코스 제안 (사용자 동의를 받고 한다) ----------
+// 답에 장소가 나오면 '저장해 드릴까요?'를 묻고, 저장하면 '내 코스에 반영해 드릴까요?'를 묻는다.
+// 그날 붐비는 곳은 AI 가 '피하라'고 말한 곳일 수 있어 처음엔 고르지 않은 채로 둔다. 짧게 '응/아니'로 답해도 된다.
+const YES=/^(응|ㅇㅇ|네|넵|예|좋아|좋아요|그래|그래요|저장|해\s*줘|해주세요|부탁|보여\s*줘|ok|오케이)/i, NO=/^(아니|아뇨|ㄴㄴ|괜찮|됐어|싫어|나중)/;
+let offer=null;
+function endOffer(){ if(offer){ offer.el.querySelectorAll("button").forEach(b=>b.disabled=true); offer=null; } }
+function offerSave(msgEl){
+  const ids=[...new Set([...msgEl.querySelectorAll(".plink")].map(b=>b.dataset.id))].filter(id=>anyPlace(id));
+  if(!ids.length) return;
+  const sel=new Set(ids.filter(id=>{ const p=anyPlace(id); return !state.saved.has(id) && 100-crowdAt(p,pickHour(p),state.date)>=45; }));
+  offer={stage:"save", ids, sel, el:addMsg("bot offer","")}; drawOffer();
+}
+function drawOffer(note){
+  const o=offer; if(!o) return;
+  if(o.stage==="save") o.el.innerHTML = `이 중에서 마음에 드는 곳을 <b>저장해 드릴까요?</b>
+    <div class="offer-chips">${o.ids.map(id=>{ const p=anyPlace(id), had=state.saved.has(id), on=had||o.sel.has(id);
+      return `<button type="button" class="ochip" data-id="${id}" aria-pressed="${on}" ${had?"disabled":""}>${on?"♥":"♡"} ${p.name}${had?" · 저장됨":""}</button>`; }).join("")}</div>
+    ${note?`<div class="note">${note}</div>`:""}
+    <div class="offer-btns"><button type="button" class="ok" data-a="yes">저장해 줘</button><button type="button" data-a="no">괜찮아요</button></div>`;
+  else o.el.innerHTML = `♥ ${o.n}곳을 저장했어요. <b>내 코스에 반영해 드릴까요?</b>
+    <div class="offer-btns"><button type="button" class="ok" data-a="yes">내 코스 보기</button><button type="button" data-a="no">나중에</button></div>`;
+  $("askLog").scrollTop=$("askLog").scrollHeight;
+}
+function offerAct(yes){
+  const o=offer; if(!o) return;
+  if(o.stage==="save"){
+    if(!yes){ o.el.innerHTML="알겠어요, 저장하지 않았어요. 장소 이름을 누르면 하나씩 자세히 볼 수 있어요."; offer=null; return; }
+    const add=[...o.sel].filter(id=>!state.saved.has(id));
+    if(!add.length){ drawOffer("고른 곳이 없어요. ♡ 를 눌러 고른 뒤 '저장해 줘'를 눌러 주세요."); return; }
+    add.forEach(id=>state.saved.add(id)); storeSaved(); updateBar();
+    o.stage="course"; o.n=add.length; drawOffer(); return;
+  }
+  if(!yes){ o.el.innerHTML=`♥ ${o.n}곳을 저장해 뒀어요. 아래 메뉴의 <b>내 코스</b>에서 언제든 볼 수 있어요.`; offer=null; return; }
+  o.el.innerHTML=`♥ ${o.n}곳을 저장하고 내 코스를 열었어요.`; offer=null;
+  state.back.push("__ask"); openCourse();
+}
+$("askLog").addEventListener("click", e=>{
+  const c=e.target.closest(".ochip"); if(c && offer && offer.stage==="save"){ const id=c.dataset.id; offer.sel.has(id)?offer.sel.delete(id):offer.sel.add(id); drawOffer(); return; }
+  const b=e.target.closest(".offer-btns button"); if(b && offer && offer.el.contains(b)) offerAct(b.dataset.a==="yes");
+});
 async function ask(q){
   q=q.trim(); if(!q) return;
+  // 제안에 짧게 '응/아니'로 답하면 AI 에 보내지 않고 바로 처리한다
+  if(offer && q.length<=12 && (YES.test(q)||NO.test(q)) && !/[?？]/.test(q)){ addMsg("user", esc(q)); $("askInput").value="";
+    // 입력으로 답하면 다음 말은 내 답 아래 새 말풍선으로 (위 말풍선은 단추만 끈다)
+    const old=offer.el; old.querySelectorAll(".offer-btns button").forEach(b=>b.disabled=true);
+    offer.el=addMsg("bot offer",""); if(offer.stage==="save") offer.el.innerHTML="";
+    offerAct(YES.test(q) && !NO.test(q)); return; }
+  endOffer();
   askHist.push({role:"user", content:q}); addMsg("user", esc(q));
   const wait=addMsg("bot","데이터를 찾고 있어요…"); $("askBtn").disabled=true; $("askInput").value="";
   try{
@@ -1957,7 +2160,7 @@ async function ask(q){
     let r; try{ r=await send(); }catch(e){ wait.textContent="연결이 잠깐 끊겨 다시 보내는 중이에요…"; r=await send(); }
     const j=await r.json(); wait.remove();
     if(!r.ok) { addMsg("bot err", esc(j.error||"오류가 났어요.")); askHist.pop(); return; }
-    askHist.push({role:"assistant", content:j.reply}); addMsg("bot", linkPlaces(mdLite(j.reply||"")), j.steps);
+    askHist.push({role:"assistant", content:j.reply}); offerSave(addMsg("bot", linkPlaces(mdLite(j.reply||"")), j.steps));
   }catch(e){ wait.remove(); addMsg("bot err", location.hostname==="localhost" || location.hostname==="127.0.0.1"
       ? "서버에 연결하지 못했어요. 'python -m agent.server' 로 실행했는지 확인해 주세요."
       : "연결이 끊겨 답을 받지 못했어요. 잠시 뒤 다시 보내 주세요."); askHist.pop(); }
