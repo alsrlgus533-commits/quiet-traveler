@@ -1527,7 +1527,7 @@ function renderPicks(){
       <img class="day" src="images/ask-haru-day.webp?v=3" alt=""><img class="night" src="images/ask-haru-night.webp?v=3" alt="" loading="lazy"><span class="pick-txt"><b>물어보세요</b><small>어디 갈지 같이 고민해요</small></span></button>` : "");
   const today = isTodayYmd(state.date);
   const base_note = state.geo==="finding" ? "내 위치를 찾는 중이에요…"
-    : me ? (today ? "지금 내 둘레에서 한산한 곳" : "이날 내 둘레에서 한산한 곳")
+    : me ? (today ? "지금 내 근처 한산한 곳" : "이날 내 근처 한산한 곳")
     : state.geo==="far" ? "제주 밖이라 한산한 순서로 골랐어요"
     : (today ? "지금 제주에서 한산한 곳" : "이날 제주에서 한산한 곳");
   const note = ai ? `AI가 고른 ${base_note}` : base_note;
