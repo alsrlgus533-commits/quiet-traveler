@@ -1260,7 +1260,6 @@ function kmBetween(a,b){
   const x=Math.sin(dla/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dlo/2)**2;
   return 2*6371*Math.asin(Math.sqrt(x));
 }
-// 내 위치는 이 기기 안에서만 쓰고 어디에도 보내지 않는다. 제주 안이면 그 둘레를 크게 보여 준다.
 // 위치를 못 쓰는 브라우저 구분: 카카오톡·네이버·인스타그램 등 앱 안 브라우저는 위치를 막아 두는 경우가 많다
 function inAppBrowser(){ return /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent); }
 function isIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1); }
