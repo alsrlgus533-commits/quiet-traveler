@@ -1529,7 +1529,7 @@ function renderPicks(){
   const base_note = state.geo==="finding" ? "내 위치를 찾는 중이에요…"
     : me ? (today ? "지금 내 근처 한산한 곳" : "이날 내 근처 한산한 곳")
     : state.geo==="far" ? "제주 밖이라 한산한 순서로 골랐어요"
-    : (today ? "지금 제주에서 한산한 곳" : "이날 제주에서 한산한 곳");
+    : (today ? "지금 제주에서 한산한 곳" : "이날 제주에서 한산한 곳") + (state.geo==="none" && state.geoErr ? (state.geoErr===1 ? " · 위치 권한이 꺼져 있어요" : " · 위치를 못 찾았어요") : "");
   const note = ai ? `AI가 고른 ${base_note}` : base_note;
   const retry = !me && state.geoOk && state.geo!=="finding" && state.geo!=="far" ? ` <button type="button" id="geoBtn">내 위치로 보기</button>` : "";
   $("pickNote").innerHTML = note + retry;
@@ -1553,10 +1553,10 @@ function findMe(ask){
     state.me={lat:pos.coords.latitude, lng:pos.coords.longitude};
     state.geo = inJeju(state.me) ? "ok" : "far"; renderPicks();
   };
-  const fail = ()=>{ state.geo="none"; renderPicks(); };
+  const fail = err=>{ state.geo="none"; state.geoErr = err ? err.code : 0; renderPicks(); };
   // 먼저 빠르게(기지국·와이파이) 찾고, 못 찾으면 GPS 정밀 모드로 한 번 더 찾는다 (와이파이·기지국 위치가 꺼진 폰도 GPS 로는 잡힌다)
   navigator.geolocation.getCurrentPosition(ok, err=>{
-    if(err.code===1) return fail();
+    if(err.code===1) return fail(err);
     navigator.geolocation.getCurrentPosition(ok, fail, {enableHighAccuracy:true, timeout:20000, maximumAge:0});
   }, {enableHighAccuracy:false, timeout:ask?10000:8000, maximumAge:600000});
 }
