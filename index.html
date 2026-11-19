@@ -1721,12 +1721,17 @@ async function ask(q){
   askHist.push({role:"user", content:q}); addMsg("user", esc(q));
   const wait=addMsg("bot","데이터를 찾고 있어요…"); $("askBtn").disabled=true; $("askInput").value="";
   try{
-    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:askHist})});
+    // 휴대폰 데이터망에서 연결이 잠깐 끊기면 fetch 가 실패한다. 그때는 한 번만 다시 보낸다.
+    const send=()=>fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:askHist})});
+    let r; try{ r=await send(); }catch(e){ wait.textContent="연결이 잠깐 끊겨 다시 보내는 중이에요…"; r=await send(); }
     const j=await r.json(); wait.remove();
     if(!r.ok) { addMsg("bot err", esc(j.error||"오류가 났어요.")); askHist.pop(); return; }
     askHist.push({role:"assistant", content:j.reply}); addMsg("bot", linkPlaces(mdLite(j.reply||"")), j.steps);
-  }catch(e){ wait.remove(); addMsg("bot err","서버에 연결하지 못했어요. 'python -m agent.server' 로 실행했는지 확인해 주세요."); askHist.pop(); }
-  finally{ $("askBtn").disabled=false; $("askInput").focus(); }
+  }catch(e){ wait.remove(); addMsg("bot err", location.hostname==="localhost" || location.hostname==="127.0.0.1"
+      ? "서버에 연결하지 못했어요. 'python -m agent.server' 로 실행했는지 확인해 주세요."
+      : "연결이 끊겨 답을 받지 못했어요. 잠시 뒤 다시 보내 주세요."); askHist.pop(); }
+  // 휴대폰에서는 입력칸에 다시 커서를 두면 키보드가 올라와 답을 가린다. 마우스·키보드 기기에서만 되돌린다.
+  finally{ $("askBtn").disabled=false; if(!matchMedia("(pointer:coarse)").matches) $("askInput").focus(); }
 }
 (async()=>{
   try{
