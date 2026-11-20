@@ -476,6 +476,28 @@ html.sheet-open .tabbar{visibility:hidden}
 .clear-row{display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
 .clear-row .linkish{color:var(--muted)}
 .clear-row .danger{padding:6px 12px;border-radius:99px;border:0;background:var(--busy);color:#fff;font-weight:600;cursor:pointer}
+.date-pick{border:0;background:none;padding:0;color:inherit;cursor:pointer;text-shadow:inherit}
+.date-pick .caret{font-size:.7em;margin-left:4px;opacity:.7;vertical-align:middle}
+/* 날짜 고르기 달력 */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .wd{font-size:12px;color:var(--muted);padding:2px 0}
+.cal .wd.sun{color:var(--busy)}
+.cal button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0 5px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);cursor:pointer;min-height:58px;font-size:15px}
+.cal button:disabled{opacity:.25;cursor:default;border-color:transparent;background:none}
+.cal button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.cal button .m{font-size:10px;line-height:1}
+.cal button .wx{width:16px;height:16px}
+.cal button .dot{margin:0;width:7px;height:7px}
+.cal-key{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:4px}
+.cal-key .dot{margin:0 3px 0 0}
+/* 내 코스: 여행 기간 · 날짜별 */
+.trip-days{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}
+.trip-days > span{color:var(--muted);margin-right:2px}
+.day-h{font-size:16px;margin:10px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+.day-h:first-of-type{border-top:0;padding-top:0}
+/* 사진을 못 불러오면 깨진 그림 대신 색 바탕 */
+img.noimg{background:linear-gradient(135deg,#cfe3da,#bcd4e6)}
 .fill-btn{width:100%;padding:12px;border-radius:14px;border:1px dashed var(--accent);background:none;color:var(--accent);font-weight:600;cursor:pointer}
 /* 여섯째 판: 물어보세요 (AI 가 켜져 있을 때만). 배경과 같은 손그림 풍의 돌하르방. 밝게/어둡게에 따라 낮·밤 그림 */
 .pick.ask-pick img{object-position:50% 22%}
@@ -704,7 +726,7 @@ const FAMOUS = [
   {name:"사려니숲길", api:null, prof:"forest", lat:33.3989, lng:126.6793},  // 사려니숲길 (예측 대상 아님 → 패턴 추정)
 ];
 // 유명한 곳 카드 배경 사진 (images/famous/<contentid>.webp, TourAPI). 출처: images/famous/README.md
-const FAMOUS_PHOTO = {"성산일출봉": "126435.webp", "우도": "127336.webp", "협재해수욕장": "127490.webp", "비자림": "126472.webp", "월정리해변": "1918639.webp", "새별오름": "572973.webp", "쇠소깍": "129617.webp", "섭지코지": "127813.webp", "함덕해수욕장": "126451.webp", "천지연폭포": "126438.webp", "정방폭포": "126437.webp", "중문색달해변": "126449.webp", "용두암": "228853.webp", "만장굴": "126452.webp", "오설록 티뮤지엄": "2660802.webp", "카멜리아힐": "741109.webp", "곽지해수욕장": "127870.webp", "금능해수욕장": "591866.webp", "용머리해안": "228854.webp", "김녕해수욕장": "129400.webp", "표선해수욕장": "128794.webp", "천제연폭포": "126439.webp", "외돌개": "126470.webp", "송악산": "126672.webp", "아부오름": "1351320.webp", "용눈이오름": "572960.webp", "금오름": "129699.webp", "절물자연휴양림": "127479.webp", "광치기해변": "2564158.webp", "한라산": "127635.webp", "1100고지습지": "1861656.webp", "동문재래시장": "1013246.webp", "서귀포매일올레시장": "1013258.webp", "보롬왓": "2714659.webp", "사려니숲길": "2414827.webp"};
+const FAMOUS_PHOTO = {"성산일출봉": "126435.webp", "우도": "127336.webp", "협재해수욕장": "127490.webp", "비자림": "126472.webp", "월정리해변": "1918639.webp", "새별오름": "572973.webp", "쇠소깍": "129617.webp", "섭지코지": "127813.webp", "함덕해수욕장": "126451.webp", "천지연폭포": "126438.webp", "정방폭포": "126437.webp", "중문색달해변": "126449.webp", "용두암": "228853.webp", "만장굴": "126452.webp", "오설록 티뮤지엄": "2660802.webp", "카멜리아힐": "741109.webp", "곽지해수욕장": "127870.webp", "금능해수욕장": "591866.webp", "용머리해안": "228854.webp", "김녕해수욕장": "129400.webp", "표선해수욕장": "128794.webp", "천제연폭포": "126439.webp", "외돌개": "126470.webp", "송악산": "126672.webp", "아부오름": "1351320.webp", "용눈이오름": "572960.webp", "금오름": "129699.webp", "절물자연휴양림": "127479.webp", "광치기해변": "2564158.webp", "한라산": "127635.webp", "1100고지습지": "1861656.webp", "동문재래시장": "1013246.webp", "서귀포매일올레시장": "1013258.webp", "보롬왓": "2714659.webp", "사려니숲길": "2414827.webp", "산방산": "vj500285.webp", "한담해변": "vj500682.webp"};
 // 유명한 곳도 조용한 곳과 같은 식으로 붐빔을 어림한다. 원래 찾는 사람이 많으니 기본 규모(pop)를 크게 둔다.
 FAMOUS.forEach((f,i)=>{ f.id="f"+i; f.pop=.5; f.famous=true; });
 
@@ -797,7 +819,7 @@ function computeDayStats(){
   const today = ymd(new Date());
   let ds = Object.keys(by).sort();
   const future = ds.filter(d=>d>=today);
-  state.dates = (future.length?future:ds).slice(0,14);
+  state.dates = (future.length?future:ds).slice(0,30);   // 여행 계획은 며칠 앞서 세우므로 예측이 있는 30일까지
   state.date = state.dates[0];
 }
 function dayFactor(date){
@@ -1116,7 +1138,7 @@ function renderDates(){
   const rel = ["오늘","내일","모레"][diff] || (diff>0 ? `${diff}일 뒤` : "");
   const temp = w && w.tmax!=null ? ` ${w.tmax}°${w.tmin!=null?` / ${w.tmin}°`:""}` : "";
   box.innerHTML = `<span class="rel">${rel}</span>
-    <strong class="date">${md(d)} ${WD[dt.getDay()]}요일</strong>
+    <button type="button" class="date date-pick" id="datePick" aria-label="날짜 고르기, 지금 ${md(d)} ${WD[dt.getDay()]}요일">${md(d)} ${WD[dt.getDay()]}요일<span class="caret" aria-hidden="true">▾</span></button>
     <span class="sub"><span><i class="dot ${st}" aria-hidden="true"></i>${dayLine(rel, st)}</span>${w ? `<span>${wxIcon(w)}${w.word}<span class="num">${temp}</span></span>` : ""}</span>`;
   const prev=state.dates[i-1], next=state.dates[i+1];
   $("dayPrev").disabled=!prev; $("dayNext").disabled=!next;
@@ -1611,6 +1633,10 @@ $("picks").addEventListener("click", e=>{ const b=e.target.closest(".pick"); if(
   if(b.id==="askPick") openAsk(b); else openSheet(b.dataset.id, false, null, b); });
 // 물어보기: 대화 칸(askSec)을 통째로 시트 안으로 옮겨 띄운다(대화 기록·이벤트가 그대로 남음).
 // 답 속 장소 이름을 눌러 상세를 열었다가 닫으면 다시 대화로 돌아온다.
+// 사진을 못 불러오면(주소 없음·404) 투명 그림으로 바꿔 색 바탕이 보이게 한다
+const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+document.addEventListener("error", e=>{ const im=e.target;
+  if(im && im.tagName==="IMG" && !im.dataset.fb){ im.dataset.fb="1"; im.classList.add("noimg"); im.src=BLANK; } }, true);
 // ---------- 저장한 곳 · 내 코스 ----------
 const anyPlace = id => PLACES.find(x=>x.id===id) || FAMOUS.find(x=>x.id===id);
 const photoOf = p => p.famous ? famPhoto(p) : `images/places/full/${p.id}.webp`;
@@ -1628,6 +1654,27 @@ function shell(key, eyebrow, title, body, opener){
   $("sheet").hidden=false; $("scrim").hidden=false; setModal(true);
   $("closeBtn").onclick=closeSheet; $("closeBtn").focus();
 }
+// 가운데 날짜를 누르면 달력: 예측이 있는 날만 고를 수 있고, 날마다 그날 제주 붐빔(점)·날씨를 함께 보여 준다
+function openDates(opener){
+  const ds=state.dates; if(!ds.length) return;
+  const first=parseYmd(ds[0]), last=parseYmd(ds[ds.length-1]);
+  const start=new Date(first); start.setDate(start.getDate()-start.getDay());          // 그 주 일요일부터
+  const ymd=t=>`${t.getFullYear()}${String(t.getMonth()+1).padStart(2,"0")}${String(t.getDate()).padStart(2,"0")}`;
+  let cells="";
+  for(let t=new Date(start); t<=last || t.getDay()!==0; t.setDate(t.getDate()+1)){
+    const d=ymd(t), ok=ds.includes(d), w=ok?wxOf(d):null, st=ok?dayState(dayFactor(d)):"";
+    const lab = (t.getDate()===1 || +t===+first) ? `<span class="m">${t.getMonth()+1}월</span>` : "";
+    cells += ok ? `<button type="button" data-d="${d}" aria-pressed="${d===state.date}" aria-label="${t.getMonth()+1}월 ${t.getDate()}일 ${WD[t.getDay()]}요일, ${DAY_WORD[st]}${w?`, ${w.word}`:""}">${lab}<b class="num">${t.getDate()}</b>${w?wxIcon(w):""}<i class="dot ${st}" aria-hidden="true"></i></button>`
+                : `<button type="button" disabled aria-hidden="true">${lab}<b class="num">${t.getDate()}</b></button>`;
+  }
+  const md=t=>`${t.getMonth()+1}월 ${t.getDate()}일`;
+  shell("__dates", `${md(first)} ~ ${md(last)}`, "날짜 고르기",
+    `<div class="cal">${[..."일월화수목금토"].map((w,i)=>`<span class="wd${i===0?" sun":""}">${w}</span>`).join("")}${cells}</div>
+     <p class="cal-key"><span><i class="dot calm"></i>한산한 날</span><span><i class="dot mid"></i>보통</span><span><i class="dot busy"></i>붐비는 날</span><span>날씨는 2주쯤 앞까지</span></p>`, opener);
+  $("sheet").querySelectorAll(".cal [data-d]").forEach(b=>b.onclick=()=>{ state.date=b.dataset.d; state.back=[]; closeSheet(); renderAll(); });
+  const cur=$("sheet").querySelector('.cal [aria-pressed="true"]'); if(cur) cur.focus();
+}
+$("dayNow").addEventListener("click", e=>{ const b=e.target.closest("#datePick"); if(b) openDates(b); });
 function openSaved(opener){
   const ps=[...state.saved].map(anyPlace).filter(Boolean);
   const h=p=>pickHour(p), body = ps.length
@@ -1659,17 +1706,15 @@ function courseStart(date){
   if(!isTodayYmd(date)) return state.startAt[date] ?? null;
   const n=new Date(); return Math.max(SUN_UP[m], Math.ceil((n.getHours()+n.getMinutes()/60)*2)/2);
 }
-// 저장한 곳(최대 6곳)의 모든 순서를 따져, 머무는 동안의 한산함 − 이동 분×0.5 가 가장 좋은 순서를 고른다.
-// 해 지기 전에 못 들르는 곳은 뒤에서 뺀다. 내 위치를 알면 거기서 출발한다.
-function savedCourse(startAt){
-  const ps=[...state.saved].map(anyPlace).filter(Boolean).slice(0,6);
-  const date=state.date, m=parseYmd(date).getMonth(), end=SUN_DOWN[m], start=startAt ?? courseStart(date) ?? 9, wet=isRainy(date);
-  const me = state.me && inJeju(state.me) ? state.me : null;
+// 하루 코스: 장소(최대 6곳)의 모든 순서를 따져, 장소마다 도착 시각의 한산함 − 이동 분×0.5 가 가장 좋은 순서를 고른다.
+// 해 지기 전에 못 들르는 곳은 뒤에서 뺀다. from 을 주면(내 위치) 거기서 출발한다.
+function planDay(ps, date, start, from){
+  const m=parseYmd(date).getMonth(), end=SUN_DOWN[m], wet=isRainy(date);
   const qStay=(p,t)=>100-(crowdAt(p,t,date)+crowdAt(p,t+stayOf(p)/2,date))/2;
   let best=null;
   const walk=(left, order)=>{
     if(left.length){ left.forEach((p,i)=>walk([...left.slice(0,i),...left.slice(i+1)], [...order,p])); return; }
-    let t=start, prev=me, score=0; const stops=[];
+    let t=start, prev=from, score=0; const stops=[];
     for(const p of order){
       const d = prev ? driveFrom(prev,p) : 0;
       if(t+d/60+stayOf(p) > end) break;
@@ -1678,12 +1723,48 @@ function savedCourse(startAt){
       stops.push({p,t,q,drive:d}); t+=stayOf(p); prev=p;
     }
     score += stops.length*1000;                        // 많이 들르는 순서가 먼저
-    if(!best || score>best.score) best={stops, score, end:t};
+    if(!best || score>best.score) best={stops, score, end:t, date, start, from};
   };
-  walk(ps, []);
-  return {ps, best, start, me};
+  walk(ps.slice(0,6), []);
+  return best;
 }
-// 다른 날인데 출발 시각을 안 정했으면 먼저 묻는다. 시각마다 코스를 미리 짜 보고 가장 한산한 시각에 '추천'을 붙인다.
+// 하루짜리(첫날) — 출발 시각 추천에 쓴다
+function savedCourse(startAt){
+  const ps=[...state.saved].map(anyPlace).filter(Boolean).slice(0,6);
+  const me = state.me && inJeju(state.me) ? state.me : null;
+  const start = startAt ?? courseStart(state.date) ?? 9;
+  return {ps, best: ps.length ? planDay(ps, state.date, start, me) : null, start, me};
+}
+// 며칠 여행: 저장한 곳을 동서(경도)·남북(위도) 순으로 늘어놓고 이어진 묶음으로 나누는 모든 방법 중
+// 날마다 짠 코스 점수의 합이 가장 좋은 것을 고른다(가까운 곳끼리 같은 날). 하루 최대 6곳, 첫날만 내 위치에서 출발.
+state.tripDays = 1;
+function planTrip(){
+  const i0=state.dates.indexOf(state.date), dates=state.dates.slice(i0, i0+state.tripDays), N=dates.length;
+  const all=[...state.saved].map(anyPlace).filter(Boolean), ps=all.slice(0, 6*N);
+  const me = state.me && inJeju(state.me) ? state.me : null;
+  const s0 = courseStart(dates[0]) ?? 9, later = state.startAt[dates[0]] ?? 9;
+  const startOf = k => k===0 ? s0 : later;
+  if(N<=1 || ps.length<2){ const d=ps.length ? planDay(ps, dates[0], s0, me) : null; return {all, days:d?[d]:[], N:1, dates}; }
+  const cuts=(n,k)=>{ const out=[]; const rec=(st,k,acc)=>{
+      if(k===1){ const sz=n-st; if(sz>=1 && sz<=6) out.push([...acc,n]); return; }
+      for(let e=st+1; e<=n-(k-1) && e-st<=6; e++) rec(e,k-1,[...acc,e]); };
+    rec(0,k,[]); return out; };
+  let best=null;
+  for(const key of ["lng","lat"]){
+    const sorted=[...ps].sort((a,b)=>a[key]-b[key]);
+    for(const order of [sorted, [...sorted].reverse()]){
+      for(const cut of cuts(order.length, Math.min(N, order.length))){
+        let st=0, total=0; const days=[];
+        cut.forEach((e,k)=>{ const r=planDay(order.slice(st,e), dates[k], startOf(k), k===0?me:null);
+          total -= Math.abs((e-st) - order.length/cut.length) * 45;   // 날마다 장소 수가 비슷하게 (한쪽 날에 몰리지 않게)
+          st=e; if(r){ days.push(r); total+=r.score; } });
+        if(!best || total>best.total) best={total, days};
+      }
+    }
+  }
+  return {all, days:best?best.days:[], N, dates};
+}
+// 다른 날인데 출발 시각을 안 정했으면 먼저 묻는다. 시각마다 첫날 코스를 미리 짜 보고 가장 한산한 시각에 '추천'을 붙인다.
 function askStartBody(ps, when){
   const m=parseYmd(state.date).getMonth(), hours=[];
   for(let h=SUN_UP[m]; h<=SUN_DOWN[m]-2; h++) hours.push(h);
@@ -1696,29 +1777,39 @@ function askStartBody(ps, when){
     <div class="start-chips">${hours.map(h=>`<button type="button" class="ochip" data-start="${h}" aria-pressed="${h===rec}">${h}시${h===rec?" · 가장 한산":""}</button>`).join("")}</div>`;
 }
 function openCourse(opener){
-  const today=isTodayYmd(state.date), dt=parseYmd(state.date), when=`${dt.getMonth()+1}월 ${dt.getDate()}일 ${WD[dt.getDay()]}요일`;
-  const savedPs=[...state.saved].map(anyPlace).filter(Boolean).slice(0,6);
+  const today=isTodayYmd(state.date), dt=parseYmd(state.date), md=t=>`${t.getMonth()+1}월 ${t.getDate()}일 ${WD[t.getDay()]}요일`, when=md(dt);
+  const savedPs=[...state.saved].map(anyPlace).filter(Boolean);
+  const me = state.me && inJeju(state.me) ? state.me : null;
+  const daysChips = savedPs.length>=2 ? `<div class="trip-days" role="group" aria-label="여행 기간"><span>여행 기간</span>${[1,2,3].map(n=>
+      `<button type="button" class="ochip" data-days="${n}" aria-pressed="${n===state.tripDays}">${["하루","이틀","사흘"][n-1]}</button>`).join("")}</div>` : "";
+  const hookDays=()=>$("sheet").querySelectorAll("[data-days]").forEach(b=>b.onclick=()=>{ state.tripDays=+b.dataset.days; openCourse(); });
   if(!today && courseStart(state.date)==null){
-    shell("__course", when, "내 코스", askStartBody(savedPs, when), opener);
+    shell("__course", when, "내 코스", daysChips + askStartBody(savedPs.slice(0,6), when), opener);
     $("sheet").querySelectorAll("[data-start]").forEach(b=>b.onclick=()=>{ state.startAt[state.date]=+b.dataset.start; openCourse(); });
-    return;
+    hookDays(); return;
   }
-  const {ps, best, start, me} = savedCourse();
+  const trip=planTrip();
   let body;
-  if(ps.length<2){
-    body = `<p class="empty">저장한 곳이 ${ps.length? "1곳뿐이에요" : "없어요"}. 2곳 이상 저장하면<br>한산한 시간과 이동 시간에 맞춰 순서를 짜 드려요.</p>
+  if(savedPs.length<2){
+    body = `<p class="empty">저장한 곳이 ${savedPs.length? "1곳뿐이에요" : "없어요"}. 2곳 이상 저장하면<br>한산한 시간과 이동 시간에 맞춰 순서를 짜 드려요.</p>
       <button class="fill-btn" type="button" id="fillBtn">한산한 곳 3곳으로 코스 채우기</button>`;
-  } else if(!best || !best.stops.length){
-    body = `<p class="empty">${clock(start)}에 출발하면 해 지기 전에 들를 수 있는 곳이 없어요.<br>‹ › 로 다른 날을 골라 보세요.</p>`;
+  } else if(!trip.days.some(d=>d.stops.length)){
+    body = daysChips + `<p class="empty">${clock(trip.days[0] ? trip.days[0].start : (courseStart(state.date) ?? 9))}에 출발하면 해 지기 전에 들를 수 있는 곳이 없어요.<br>날짜를 바꾸거나 출발 시각을 앞당겨 보세요.</p>`;
   } else {
-    const st=best.stops, drop=ps.length-st.length;
-    const pts = me ? [{name:"내 위치", ...me}, ...st.map(x=>x.p)] : st.map(x=>x.p);
-    body = `<ol class="course">${st.map((x,i)=>`${x.drive ? `<li class="leg">차로 ${x.drive}분</li>` : ""}<li><button class="stop2" type="button" data-open="${x.p.id}">
-        <span class="t num">${clock(x.t)}</span><img src="${photoOf(x.p)}" alt=""><span><b>${x.p.name}</b><small>${kindOfP(x.p)} · ${dur(Math.round(stayOf(x.p)*60))} · <span class="${level(x.q).c}">${quietWord(x.q)}</span></small></span></button></li>`).join("")}</ol>
-      <p class="note">${clock(st[0].t - (st[0].drive||0)/60)} 출발${today ? "" : ` <button type="button" class="linkish" id="reStart">시각 바꾸기</button>`} · ${clock(best.end)} 끝${drop ? ` · 해 지기 전에 못 들르는 ${drop}곳은 뺐어요` : ""}${ps.length>6 ? " · 저장한 곳 중 앞의 6곳만 따졌어요" : ""}</p>
-      <div class="go one"><a href="${kakaoCourse(pts)}" target="_blank" rel="noopener"><img src="images/picto/car.webp?v=3" alt=""><span><b>카카오맵으로 코스 길안내</b><small>${me ? "내 위치에서 출발" : "첫 장소에서 출발"} · 경유 ${st.length}곳</small></span></a></div>`;
+    const used=trip.days.reduce((a,d)=>a+d.stops.length,0), drop=savedPs.length-used;
+    body = daysChips + trip.days.map((day,k)=>{
+      const st=day.stops; if(!st.length) return "";
+      const pts = (day.from ? [{name:"내 위치", ...day.from}] : []).concat(st.map(x=>x.p));
+      return `${trip.N>1 ? `<h3 class="day-h">${k+1}일차 · ${md(parseYmd(day.date))}</h3>` : ""}
+        <ol class="course">${st.map(x=>`${x.drive ? `<li class="leg">차로 ${x.drive}분</li>` : ""}<li><button class="stop2" type="button" data-open="${x.p.id}">
+          <span class="t num">${clock(x.t)}</span><img src="${photoOf(x.p)}" alt=""><span><b>${x.p.name}</b><small>${kindOfP(x.p)} · ${dur(Math.round(stayOf(x.p)*60))} · <span class="${level(x.q).c}">${quietWord(x.q)}</span></small></span></button></li>`).join("")}</ol>
+        <p class="note">${clock(st[0].t - (st[0].drive||0)/60)} 출발${k===0 && !today ? ` <button type="button" class="linkish" id="reStart">시각 바꾸기</button>` : ""} · ${clock(day.end)} 끝</p>
+        <div class="go one"><a href="${kakaoCourse(pts)}" target="_blank" rel="noopener"><img src="images/picto/car.webp?v=3" alt=""><span><b>카카오맵으로 ${trip.N>1?`${k+1}일차 `:""}코스 길안내</b><small>${day.from ? "내 위치에서 출발" : "첫 장소에서 출발"} · 경유 ${st.length}곳</small></span></a></div>`;
+    }).join("") + (drop ? `<p class="note">해 지기 전에 못 들르거나 하루 6곳을 넘는 ${drop}곳은 뺐어요.${trip.N<3 ? " 여행 기간을 늘려 보세요." : ""}</p>` : "")
+      + (trip.N < state.tripDays ? `<p class="note">예측이 있는 날까지만 짰어요.</p>` : "");
   }
-  shell("__course", when, "내 코스", body, opener);
+  shell("__course", trip.N>1 ? `${when}부터 ${trip.N}일` : when, "내 코스", body, opener);
+  hookDays();
   $("sheet").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openSheet(b.dataset.open, false, null, b));
   if($("reStart")) $("reStart").onclick=()=>{ delete state.startAt[state.date]; openCourse(); };
   if($("fillBtn")) $("fillBtn").onclick=()=>{
@@ -1856,7 +1947,7 @@ function openSheet(id, refresh, famous, opener){
 }
 function closeSheet(){
   // 저장·코스·물어보기에서 열었던 화면이면 닫을 때 그 화면으로 돌아간다
-  if(state.back.length){ const b=state.back.pop(); state.open=null; ({__ask:openAsk, __saved:openSaved, __course:openCourse})[b](); return; }
+  if(state.back.length){ const b=state.back.pop(); state.open=null; ({__ask:openAsk, __saved:openSaved, __course:openCourse, __dates:openDates})[b](); return; }
   parkAsk();
   const id = state.open;
   state.open=null; $("sheet").hidden=true; $("scrim").hidden=true; setModal(false);
