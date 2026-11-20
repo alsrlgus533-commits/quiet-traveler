@@ -443,6 +443,11 @@ html.sheet-open .tabbar{visibility:hidden}
 .go b{display:block;font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .go small{display:block;font-size:12px;opacity:.95;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .sheet .one{font-size:14px;color:var(--muted)}
+.access{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.access .eyebrow{width:100%}
+.access .acc{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:99px;background:color-mix(in srgb,var(--accent) 12%,transparent);font-size:13px;font-weight:600}
+.access .acc.none{background:none;border:1px dashed var(--line);font-weight:400;color:var(--muted)}
+.access small{width:100%;font-size:11px;color:var(--muted)}
 /* 아래 메뉴 바: 추천·저장·내 코스·물어보기. 저장 수를 작은 숫자로 */
 .tabbar button{position:relative}
 .tabbar .cnt{position:absolute;top:2px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 4px;border-radius:99px;
@@ -498,6 +503,9 @@ html.sheet-open .tabbar{visibility:hidden}
 .day-h:first-of-type{border-top:0;padding-top:0}
 /* 사진을 못 불러오면 깨진 그림 대신 색 바탕 */
 img.noimg{background:linear-gradient(135deg,#cfe3da,#bcd4e6)}
+.fill-note{margin:0;font-size:13px;color:var(--muted)}
+.stop2 .rec{font-style:normal;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:4px;vertical-align:middle;
+  background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
 .fill-btn{width:100%;padding:12px;border-radius:14px;border:1px dashed var(--accent);background:none;color:var(--accent);font-weight:600;cursor:pointer}
 /* 여섯째 판: 물어보세요 (AI 가 켜져 있을 때만). 배경과 같은 손그림 풍의 돌하르방. 밝게/어둡게에 따라 낮·밤 그림 */
 .pick.ask-pick img{object-position:50% 22%}
@@ -727,6 +735,8 @@ const FAMOUS = [
 ];
 // 유명한 곳 카드 배경 사진 (images/famous/<contentid>.webp, TourAPI). 출처: images/famous/README.md
 const FAMOUS_PHOTO = {"성산일출봉": "126435.webp", "우도": "127336.webp", "협재해수욕장": "127490.webp", "비자림": "126472.webp", "월정리해변": "1918639.webp", "새별오름": "572973.webp", "쇠소깍": "129617.webp", "섭지코지": "127813.webp", "함덕해수욕장": "126451.webp", "천지연폭포": "126438.webp", "정방폭포": "126437.webp", "중문색달해변": "126449.webp", "용두암": "228853.webp", "만장굴": "126452.webp", "오설록 티뮤지엄": "2660802.webp", "카멜리아힐": "741109.webp", "곽지해수욕장": "127870.webp", "금능해수욕장": "591866.webp", "용머리해안": "228854.webp", "김녕해수욕장": "129400.webp", "표선해수욕장": "128794.webp", "천제연폭포": "126439.webp", "외돌개": "126470.webp", "송악산": "126672.webp", "아부오름": "1351320.webp", "용눈이오름": "572960.webp", "금오름": "129699.webp", "절물자연휴양림": "127479.webp", "광치기해변": "2564158.webp", "한라산": "127635.webp", "1100고지습지": "1861656.webp", "동문재래시장": "1013246.webp", "서귀포매일올레시장": "1013258.webp", "보롬왓": "2714659.webp", "사려니숲길": "2414827.webp", "산방산": "vj500285.webp", "한담해변": "vj500682.webp"};
+// 장소별 무장애 편의시설 (제주관광공사 비짓제주 태그, tools/build_access.py 가 채움). 없는 곳은 정보가 없다는 뜻이지 시설이 없다는 뜻이 아니다
+const ACCESS = {"머체왓숲길": ["장애인 주차", "청각장애인 안내"], "성산일출봉": ["장애인 주차", "장애인 화장실"], "비자림": ["장애인 주차", "장애인 화장실", "휠체어 대여"], "섭지코지": ["장애인 주차", "장애인 화장실"], "함덕해수욕장": ["장애인 주차", "장애인 화장실"], "천지연폭포": ["장애인 주차", "장애인 화장실", "휠체어 대여", "시각장애인 안내"], "용두암": ["장애인 화장실"], "산방산": ["장애인 주차", "장애인 화장실"], "오설록 티뮤지엄": ["장애인 주차", "장애인 화장실", "휠체어 대여", "시각장애인 안내"], "카멜리아힐": ["장애인 주차", "장애인 화장실", "휠체어 대여"], "용머리해안": ["장애인 주차", "장애인 화장실"], "표선해수욕장": ["장애인 화장실"], "송악산": ["장애인 주차"], "절물자연휴양림": ["장애인 주차", "장애인 화장실", "휠체어 대여", "시각장애인 안내", "청각장애인 안내"], "광치기해변": ["장애인 주차", "장애인 화장실"], "한라산": ["장애인 주차", "장애인 화장실"], "서귀포매일올레시장": ["장애인 주차", "장애인 화장실"]};
 // 유명한 곳도 조용한 곳과 같은 식으로 붐빔을 어림한다. 원래 찾는 사람이 많으니 기본 규모(pop)를 크게 둔다.
 FAMOUS.forEach((f,i)=>{ f.id="f"+i; f.pop=.5; f.famous=true; });
 
@@ -1737,32 +1747,66 @@ function savedCourse(startAt){
 }
 // 며칠 여행: 저장한 곳을 동서(경도)·남북(위도) 순으로 늘어놓고 이어진 묶음으로 나누는 모든 방법 중
 // 날마다 짠 코스 점수의 합이 가장 좋은 것을 고른다(가까운 곳끼리 같은 날). 하루 최대 6곳, 첫날만 내 위치에서 출발.
-state.tripDays = 1;
+state.tripDays = 1; state.fillTrip = true; state.added = new Set();
+const TRIP_TARGET = 4;                 // 저장한 곳이 적은 날은 근처 한산한 곳으로 하루 이만큼까지 채운다
+const centroid = g => ({lat:g.reduce((a,p)=>a+p.lat,0)/g.length, lng:g.reduce((a,p)=>a+p.lng,0)/g.length});
 function planTrip(){
   const i0=state.dates.indexOf(state.date), dates=state.dates.slice(i0, i0+state.tripDays), N=dates.length;
   const all=[...state.saved].map(anyPlace).filter(Boolean), ps=all.slice(0, 6*N);
   const me = state.me && inJeju(state.me) ? state.me : null;
   const s0 = courseStart(dates[0]) ?? 9, later = state.startAt[dates[0]] ?? 9;
   const startOf = k => k===0 ? s0 : later;
-  if(N<=1 || ps.length<2){ const d=ps.length ? planDay(ps, dates[0], s0, me) : null; return {all, days:d?[d]:[], N:1, dates}; }
-  const cuts=(n,k)=>{ const out=[]; const rec=(st,k,acc)=>{
-      if(k===1){ const sz=n-st; if(sz>=1 && sz<=6) out.push([...acc,n]); return; }
-      for(let e=st+1; e<=n-(k-1) && e-st<=6; e++) rec(e,k-1,[...acc,e]); };
-    rec(0,k,[]); return out; };
-  let best=null;
-  for(const key of ["lng","lat"]){
-    const sorted=[...ps].sort((a,b)=>a[key]-b[key]);
-    for(const order of [sorted, [...sorted].reverse()]){
-      for(const cut of cuts(order.length, Math.min(N, order.length))){
-        let st=0, total=0; const days=[];
-        cut.forEach((e,k)=>{ const r=planDay(order.slice(st,e), dates[k], startOf(k), k===0?me:null);
-          total -= Math.abs((e-st) - order.length/cut.length) * 45;   // 날마다 장소 수가 비슷하게 (한쪽 날에 몰리지 않게)
-          st=e; if(r){ days.push(r); total+=r.score; } });
-        if(!best || total>best.total) best={total, days};
+  // 1) 저장한 곳을 날짜별로 나눈다
+  let groups;
+  if(N<=1 || ps.length<2) groups=[ps];
+  else {
+    const cuts=(n,k)=>{ const out=[]; const rec=(st,k,acc)=>{
+        if(k===1){ const sz=n-st; if(sz>=1 && sz<=6) out.push([...acc,n]); return; }
+        for(let e=st+1; e<=n-(k-1) && e-st<=6; e++) rec(e,k-1,[...acc,e]); };
+      rec(0,k,[]); return out; };
+    let best=null;
+    for(const key of ["lng","lat"]){
+      const sorted=[...ps].sort((a,b)=>a[key]-b[key]);
+      for(const order of [sorted, [...sorted].reverse()]){
+        for(const cut of cuts(order.length, Math.min(N, order.length))){
+          let st=0, total=0; const gs=[];
+          cut.forEach((e,k)=>{ const g=order.slice(st,e), r=planDay(g, dates[k], startOf(k), k===0?me:null);
+            total -= Math.abs(g.length - order.length/cut.length) * 45;   // 날마다 장소 수가 비슷하게
+            st=e; gs.push(g); if(r) total+=r.score; });
+          if(!best || total>best.total) best={total, gs};
+        }
       }
     }
+    groups = best ? best.gs : [ps];
   }
-  return {all, days:best?best.days:[], N, dates};
+  while(groups.length < N) groups.push([]);
+  // 2) 저장한 곳이 적은 날은 그날 묶음 근처(20km 안)의 한산한 곳으로 채운다. 빈 날은 다른 날과 떨어진 한산한 곳에서 시작
+  state.added = new Set();
+  if(state.fillTrip){
+    const used = new Set(all.map(p=>p.id));
+    groups = groups.map((g,k)=>{
+      const date=dates[k], wet=isRainy(date);
+      const pool=[...PLACES.filter(p=>PHOTO.has(p.id)), ...FAMOUS.filter(f=>famPhoto(f))]
+        .filter(p=>!(wet && kindOfP(p)==="오름"));
+      const q11 = p => 100-crowdAt(p, 11, date);
+      if(!g.length){
+        const others = groups.filter(x=>x.length).map(centroid).concat(k===0 && me ? [me] : []);
+        const seed = pool.filter(p=>!used.has(p.id))
+          .map(p=>({p, s:q11(p) + (others.length ? Math.min(40, Math.min(...others.map(c=>km(c,p)))) : 0) - (k===0 && me ? km(me,p) : 0)}))
+          .sort((a,b)=>b.s-a.s)[0];
+        if(!seed) return g;
+        g=[seed.p]; used.add(seed.p.id); state.added.add(seed.p.id);
+      }
+      const c = centroid(g);
+      const cand = pool.filter(p=>!used.has(p.id)).map(p=>({p, d:km(c,p), q:q11(p)}))
+        .filter(o=>o.d<=20 && o.q>=55).sort((a,b)=>(b.q-b.d*2)-(a.q-a.d*2));
+      for(const o of cand){ if(g.length>=TRIP_TARGET) break; g=[...g, o.p]; used.add(o.p.id); state.added.add(o.p.id); }
+      return g;
+    });
+  }
+  // 3) 날마다 한산한 순서로 짠다
+  const days = groups.map((g,k)=> g.length ? planDay(g, dates[k], startOf(k), k===0?me:null) : null).filter(Boolean);
+  return {all, days, N: Math.max(1, N), dates};
 }
 // 다른 날인데 출발 시각을 안 정했으면 먼저 묻는다. 시각마다 첫날 코스를 미리 짜 보고 가장 한산한 시각에 '추천'을 붙인다.
 function askStartBody(ps, when){
@@ -1780,7 +1824,7 @@ function openCourse(opener){
   const today=isTodayYmd(state.date), dt=parseYmd(state.date), md=t=>`${t.getMonth()+1}월 ${t.getDate()}일 ${WD[t.getDay()]}요일`, when=md(dt);
   const savedPs=[...state.saved].map(anyPlace).filter(Boolean);
   const me = state.me && inJeju(state.me) ? state.me : null;
-  const daysChips = savedPs.length>=2 ? `<div class="trip-days" role="group" aria-label="여행 기간"><span>여행 기간</span>${[1,2,3].map(n=>
+  const daysChips = savedPs.length>=1 ? `<div class="trip-days" role="group" aria-label="여행 기간"><span>여행 기간</span>${[1,2,3].map(n=>
       `<button type="button" class="ochip" data-days="${n}" aria-pressed="${n===state.tripDays}">${["하루","이틀","사흘"][n-1]}</button>`).join("")}</div>` : "";
   const hookDays=()=>$("sheet").querySelectorAll("[data-days]").forEach(b=>b.onclick=()=>{ state.tripDays=+b.dataset.days; openCourse(); });
   if(!today && courseStart(state.date)==null){
@@ -1790,19 +1834,23 @@ function openCourse(opener){
   }
   const trip=planTrip();
   let body;
-  if(savedPs.length<2){
-    body = `<p class="empty">저장한 곳이 ${savedPs.length? "1곳뿐이에요" : "없어요"}. 2곳 이상 저장하면<br>한산한 시간과 이동 시간에 맞춰 순서를 짜 드려요.</p>
+  if(savedPs.length<1 || (savedPs.length<2 && !(state.fillTrip && state.tripDays>1))){
+    body = daysChips + `<p class="empty">저장한 곳이 ${savedPs.length? "1곳뿐이에요" : "없어요"}. 2곳 이상 저장하면<br>한산한 시간과 이동 시간에 맞춰 순서를 짜 드려요.</p>
       <button class="fill-btn" type="button" id="fillBtn">한산한 곳 3곳으로 코스 채우기</button>`;
   } else if(!trip.days.some(d=>d.stops.length)){
     body = daysChips + `<p class="empty">${clock(trip.days[0] ? trip.days[0].start : (courseStart(state.date) ?? 9))}에 출발하면 해 지기 전에 들를 수 있는 곳이 없어요.<br>날짜를 바꾸거나 출발 시각을 앞당겨 보세요.</p>`;
   } else {
-    const used=trip.days.reduce((a,d)=>a+d.stops.length,0), drop=savedPs.length-used;
-    body = daysChips + trip.days.map((day,k)=>{
+    const used=trip.days.reduce((a,d)=>a+d.stops.filter(x=>!state.added.has(x.p.id)).length,0), drop=savedPs.length-used;
+    const nAdded=trip.days.reduce((a,d)=>a+d.stops.filter(x=>state.added.has(x.p.id)).length,0);
+    const fillNote = (state.fillTrip && nAdded) || !state.fillTrip
+      ? `<p class="fill-note">${state.fillTrip ? `저장한 곳이 적은 날은 근처 한산한 곳 ${nAdded}곳을 <b>추천</b>으로 채웠어요.` : "저장한 곳만으로 짰어요."}
+         <button type="button" class="linkish" id="fillToggle">${state.fillTrip ? "저장한 곳만 보기" : "추천으로 채우기"}</button></p>` : "";
+    body = daysChips + fillNote + trip.days.map((day,k)=>{
       const st=day.stops; if(!st.length) return "";
       const pts = (day.from ? [{name:"내 위치", ...day.from}] : []).concat(st.map(x=>x.p));
       return `${trip.N>1 ? `<h3 class="day-h">${k+1}일차 · ${md(parseYmd(day.date))}</h3>` : ""}
         <ol class="course">${st.map(x=>`${x.drive ? `<li class="leg">차로 ${x.drive}분</li>` : ""}<li><button class="stop2" type="button" data-open="${x.p.id}">
-          <span class="t num">${clock(x.t)}</span><img src="${photoOf(x.p)}" alt=""><span><b>${x.p.name}</b><small>${kindOfP(x.p)} · ${dur(Math.round(stayOf(x.p)*60))} · <span class="${level(x.q).c}">${quietWord(x.q)}</span></small></span></button></li>`).join("")}</ol>
+          <span class="t num">${clock(x.t)}</span><img src="${photoOf(x.p)}" alt=""><span><b>${x.p.name}${state.added.has(x.p.id) ? ` <em class="rec">추천</em>` : ""}</b><small>${kindOfP(x.p)} · ${dur(Math.round(stayOf(x.p)*60))} · <span class="${level(x.q).c}">${quietWord(x.q)}</span></small></span></button></li>`).join("")}</ol>
         <p class="note">${clock(st[0].t - (st[0].drive||0)/60)} 출발${k===0 && !today ? ` <button type="button" class="linkish" id="reStart">시각 바꾸기</button>` : ""} · ${clock(day.end)} 끝</p>
         <div class="go one"><a href="${kakaoCourse(pts)}" target="_blank" rel="noopener"><img src="images/picto/car.webp?v=3" alt=""><span><b>카카오맵으로 ${trip.N>1?`${k+1}일차 `:""}코스 길안내</b><small>${day.from ? "내 위치에서 출발" : "첫 장소에서 출발"} · 경유 ${st.length}곳</small></span></a></div>`;
     }).join("") + (drop ? `<p class="note">해 지기 전에 못 들르거나 하루 6곳을 넘는 ${drop}곳은 뺐어요.${trip.N<3 ? " 여행 기간을 늘려 보세요." : ""}</p>` : "")
@@ -1812,6 +1860,7 @@ function openCourse(opener){
   hookDays();
   $("sheet").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openSheet(b.dataset.open, false, null, b));
   if($("reStart")) $("reStart").onclick=()=>{ delete state.startAt[state.date]; openCourse(); };
+  if($("fillToggle")) $("fillToggle").onclick=()=>{ state.fillTrip=!state.fillTrip; openCourse(); };
   if($("fillBtn")) $("fillBtn").onclick=()=>{
     const plan=makePlan(state.date, courseStart(state.date) ?? 9, 3);
     if(plan) plan.stops.forEach(x=>state.saved.add(x.p.id));
@@ -1927,6 +1976,9 @@ function openSheet(id, refresh, famous, opener){
     <ul class="picto" aria-label="한눈에 보기">
       ${cells.map(([img,lab,val,c])=>`<li><img src="images/picto/${img}.webp?v=3" alt=""><small>${lab}</small><b class="${c}">${val}</b></li>`).join("")}
     </ul>
+    <div class="access"><span class="eyebrow">장애인 편의시설</span>${(ACCESS[p.name]||[]).length
+      ? (ACCESS[p.name]).map(a=>`<span class="acc">${({"휠체어 대여":"♿","장애인 화장실":"🚻","장애인 주차":"🅿️","리프트":"🛗","시각장애인 안내":"👁️","청각장애인 안내":"👂","유모차 대여":"👶","수유실":"🍼"})[a]||"•"} ${a}</span>`).join("")
+      : `<span class="acc none">아직 정보가 없어요</span>`}<small>비짓제주 무장애 정보 기준</small></div>
     <div class="go">
       <a href="${carUrl}" target="_blank" rel="noopener"><img src="images/picto/car.webp?v=3" alt=""><span><b>자동차</b><small>${me ? `약 ${driveFrom(me,p)}분` : "카카오맵"}</small></span></a>
       <a href="${busUrl}" target="_blank" rel="noopener"><img src="images/picto/bus.webp?v=3" alt=""><span><b>대중교통</b><small>카카오맵</small></span></a>
